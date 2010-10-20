@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<PokerTH>
+  <TableStyle>
+     <StyleDescription value="Stardust PokerTH V 1.1" /><!-- This string will be shown in settings/game table style list -->
+     <StyleMaintainerName value="Etienne Graphic Designer" /> <!-- This string should contain the name of the style maintainer and will be shown in style information -->
+     <StyleMaintainerEMail value="etienne@etiennegenot.com" /> <!-- This string should contain the email address of the style maintainer and will be shown in style information and also in error message if there is a problem with the style. If you dont like to post your mail address here please write value="NULL". -->
+     <StyleCreateDate value="09.06.2009" /> <!-- This string should contain the create date or last date of modification and will be shown in style information-->
+     <PokerTHStyleFileVersion value="1" /> <!-- This number matches the current PokerTH internal version that is supported, you should not change it unless PokerTH tells you to update the style -->
+     <Preview value="preview.png" /> <!-- This preview picture will be shown in settings/game table style if this style is selected. The value should contain a filename of the preview picture which have to be stored in the same folder as this xml file. -->
+     
+      <!-- Windows Settings --> 
+     <IfFixedWindowSize value="0" /><!-- value [1,0] 1 = fixed window size, 0 = resizeable window -->
+     <FixedWindowWidth value="1024" /> <!-- value [min 1024] This will set the fixed window width if IfFixedWindowsSize=1 -->
+     <FixedWindowHeight value="600" />  <!-- value [min 600] This will set the fixed window height if IfFixedWindowsSize=1 -->
+     <MinimumWindowWidth value="1024" /> <!-- value [min 1024] This will set the minimum window width if IfFixedWindowsSize=0 -->
+     <MinimumWindowHeight value="600" /> <!-- value [min 600] This will set the minimum window height if IfFixedWindowsSize=0 -->
+     <MaximumWindowWidth value="1980" /> <!-- value [min 1024] This will set the maximum window width if IfFixedWindowsSize=0 -->
+     <MaximumWindowHeight value="1200" /> <!-- value [min 600] This will set the maximum window height if IfFixedWindowsSize=0 -->
+     
+     <!-- Table Pictures - values should contain filenames of pictures which have to be stored in the same folder as this xml file. if you wanna have an item to be not shown please write "NULL" instead of the picture file name -->
+     <BigBlindPuck value="bigblindPuck.png" /> <!-- optimal size width:height in px [40:42] -->
+     <SmallBlindPuck value="smallblindPuck.png" />  <!-- optimal size width:height in px [40:42] -->
+     <DealerPuck value="dealerPuck.png" />  <!-- optimal size width:height in px [40:42] -->
+     <DefaultAvatar value="genereticAvatar.png" />  <!-- optimal size width:height in px [50:50] -->
+     <CardHolderFlop value="cardholder_flop.png" /> <!-- optimal size width:height in px [54:82] -->
+     <CardHolderTurn value="cardholder_turn.png" /> <!-- optimal size width:height in px [54:82] -->
+     <CardHolderRiver value="cardholder_river.png" /> <!-- optimal size width:height in px [54:82] -->
+     <FoldButtonDefault value="playeraction_red.png" /> <!-- optimal size width:height in px [168:43] -->
+     <FoldButtonHover value="playeraction_red_hover.png" /> <!-- optimal size width:height in px [168:43] -->
+     <FoldButtonChecked value="playeraction_red_checked.png" /> <!-- optimal size width:height in px [168:43] -->
+     <FoldButtonCheckedHover value="playeraction_red_checked_hover.png" /> <!-- optimal size width:height in px [168:43] -->
+     <CheckCallButtonDefault value="playeraction_blue.png" /> <!-- optimal size width:height in px [168:43] -->
+     <CheckCallButtonHover value="playeraction_blue_hover.png" /> <!-- optimal size width:height in px [168:43] -->
+     <CheckCallButtonChecked value="playeraction_blue_checked.png" /> <!-- optimal size width:height in px [168:43] -->
+     <CheckCallButtonCheckedHover value="playeraction_blue_checked_hover.png" /> <!-- optimal size width:height in px [168:43] -->
+     <BetRaiseButtonDefault value="playeraction_green.png" /> <!-- optimal size width:height in px [168:43] -->
+     <BetRaiseButtonHover value="playeraction_green_hover.png" /> <!-- optimal size width:height in px [168:43] -->
+     <BetRaiseButtonChecked value="playeraction_green_checked.png" /> <!-- optimal size width:height in px [168:43] -->
+     <BetRaiseButtonCheckedHover value="playeraction_green_checked_hover.png" /> <!-- optimal size width:height in px [168:43] -->
+     <AllInButtonDefault value="playeraction_orange.png" /> <!-- optimal size width:height in px [95:25] -->
+     <AllInButtonHover value="playeraction_orange_hover.png" /> <!-- optimal size width:height in px [95:25] -->
+     <AllInButtonChecked value="playeraction_orange_checked.png" /> <!-- optimal size width:height in px [95:25] -->
+     <AllInButtonCheckedHover value="playeraction_orange_checked_hover.png" /> <!-- optimal size width:height in px [95:25] -->
+     <RadioButtonPressed value="radiobutton_pressed.png" /> <!-- optimal size width:height in px [13:13] -->
+     <RadioButtonChecked value="radiobutton_checked.png" /> <!-- optimal size width:height in px [13:13] -->
+     <RadioButtonCheckedHover value="radiobutton_checked_hover.png" /> <!-- optimal size width:height in px [13:13] -->
+     <RadioButtonUnchecked value="radiobutton_unchecked.png" /> <!-- optimal size width:height in px [13:13] -->
+     <RadioButtonUncheckedHover value="radiobutton_unchecked_hover.png" /> <!-- optimal size width:height in px [13:13] -->
+     <PlayerTopSeatInactive value="playerSeatInactive.png" />  <!-- optimal size width:height in px [190:142] -->
+     <PlayerTopSeatActive value="playerSeatActive.png" />  <!-- optimal size width:height in px [190:142] -->
+     <PlayerBottomSeatInactive value="playerSeatInactive.png" />  <!-- optimal size width:height in px [190:142] -->
+     <PlayerBottomSeatActive value="playerSeatActive.png" />  <!-- optimal size width:height in px [190:142] -->
+     <Table value="table.png" /> <!-- minimal size width:height in px [1024:600] -->
+     <ToolBoxBackground value="toolboxbg.png" />  <!-- minimal size width:height in px [260:188] -->
+     <HandRanking value="handranking.png" />  <!-- minimal size width:height in px [240:153] -->
+     
+     <!-- Action*I18NPic: If you wanna set action pics with specific language strings you can set them here. If you wanna use the default english strings just write "NULL" instead of picture files names. PokerTH will automatically display the english ones. -->
+     <ActionAllInI18NPic value="ActionAllInI18NPic.png" /> <!-- optimal size width:height in px [100:40] -->
+     <ActionRaiseI18NPic value="ActionRaiseI18NPic.png" /> <!-- optimal size width:height in px [100:40] -->
+     <ActionBetI18NPic value="ActionBetI18NPic.png" /> <!-- optimal size width:height in px [100:40] -->
+     <ActionCallI18NPic value="ActionCallI18NPic.png" /> <!-- optimal size width:height in px [100:40] -->
+     <ActionCheckI18NPic value="ActionCheckI18NPic.png" /> <!-- optimal size width:height in px [100:40] -->
+     <ActionFoldI18NPic value="ActionFoldI18NPic.png" /> <!-- optimal size width:height in px [100:40] -->
+     <ActionWinnerI18NPic value="ActionWinnerI18NPic.png" /> <!-- optimal size width:height in px [100:40] -->
+     
+     <!-- I18NString: If you wanna set specific language strings for poker actions like call, check, raise etc. which will be shown on human players buttons for this style, and some other game strings you can define them here, If you wanna use the default english strings just write value="NULL". PokerTH will automatically display the english ones. -->
+     <ActionAllInI18NString value="NULL" />
+     <ActionRaiseI18NString value="NULL" />
+     <ActionBetI18NString value="NULL" />
+     <ActionCallI18NString value="NULL" />
+     <ActionCheckI18NString value="NULL" />
+     <ActionFoldI18NString value="NULL" />
+     <PotI18NString value="NULL" />
+     <TotalI18NString value="NULL" />
+     <BetsI18NString value="NULL" />
+     <GameI18NString value="NULL" />
+     <HandI18NString value="NULL" />
+     <PreflopI18NString value="NULL" />
+     <FlopI18NString value="NULL" />
+     <TurnI18NString value="NULL" />
+     <RiverI18NString value="NULL" />
+     
+      <!-- Table Colors - values should be set in hexcode RGB style without "#" -->
+     <FKeyIndicatorColor value="FFFFFF" />
+     <ChanceLabelPossibleColor value="009ee0" />
+     <ChanceLabelImpossibleColor value="003b54" />
+     <ChatTextNickNotifyColor value="FFFF00" />
+     <ChatLogTextColor value="F0F0F0" />
+     <ChatLogBgColor value="1a242b" />
+     <ChatLogScrollBarBorderColor value="222f38" />
+     <ChatLogScrollBarBgColor value="222f38" />
+     <ChatLogScrollBarHandleBorderColor value="009ee0" />
+     <ChatLogScrollBarHandleBgColor value="00405b" />
+     <ChatLogScrollBarArrowBorderColor value="009ee0" />
+     <ChatLogScrollBarArrowBgColor value="009ee0" />
+     <LogWinnerMainPotColor value="009ee0" />
+     <LogWinnerSidePotColor value="016c99" />
+     <LogPlayerSitsOutColor value="7ed7fd" />
+     <LogNewGameAdminColor value="ff3333" />
+     <TabWidgetBorderColor value="121c1f" />
+     <TabWidgetBgColor value="1a242b" />
+     <TabWidgetTextColor value="009ee0" />
+     <MenuBgColor value="1a242b" />
+     <MenuTextColor value="009ee0" />
+     <BreakLobbyButtonBgColor value="1a242b" />
+     <BreakLobbyButtonTextColor value="009ee0" />
+     <BreakLobbyButtonBgDisabledColor value="1a242b" />
+     <BreakLobbyButtonTextDisabledColor value="009ee0" />
+     <BreakLobbyButtonBgBlinkColor value="6E9E00" />
+     <BreakLobbyButtonTextBlinkColor value="000000" />
+     <PlayerCashTextColor value="72bfe0" />
+     <PlayerBetTextColor value="00cc66" />
+     <PlayerNickTextColor value="F0F0F0" />
+     <BoardBigTextColor value="F0F0F0" />
+     <BoardSmallTextColor value="F0F0F0" />
+     <SpeedTextColor value="009ee0" />
+     <VoteButtonBgColor value="1a242b" />
+     <VoteButtonTextColor value="009ee0" />
+     <BetInputTextColor value="FFFFFF" />
+     <BetInputBgColor value="009ee0" />
+     <BetInputDisabledTextColor value="014c6b" />
+     <BetInputDisabledBgColor value="212931" />
+     <FoldButtonTextColor value="F0F0F0" />
+     <FoldButtonCheckableTextColor value="FF8787" />
+     <CheckCallButtonTextColor value="F0F0F0" />
+     <CheckCallButtonCheckableTextColor value="87CDFF" />
+     <BetRaiseButtonTextColor value="F0F0F0" />
+     <BetRaiseButtonCheckableTextColor value="c1d287" />
+     <AllInButtonTextColor value="F0F0F0" />
+     <AllInButtonCheckableTextColor value="80c4e1" />
+     <BetSpeedSliderGrooveBgColor value="00405b" />
+     <BetSpeedSliderGrooveBorderColor value="121c1f" />
+     <BetSpeedSliderHandleBgColor value="009ee0" />
+     <BetSpeedSliderHandleBorderColor value="121c1f" />
+     
+      <!-- Table Font Sizes - values should be set in px -->
+     <ChatLogTextSize value="10" />
+  </TableStyle>
+</PokerTH>
