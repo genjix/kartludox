@@ -1,0 +1,9 @@
+icons on fold/call/raise buttons
+css everything
+fix -1,-1 message
+rewrite to MVC
+resize handle on sidebar
+change toolbox to window thingies + view -> menu for each entry
+settings -> hide menubar, hide sidebar, hide toolbar, full screen mode, show statusbar
+proper scaling of tables when resizing.
+icons and prettiness
