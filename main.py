@@ -14,6 +14,12 @@ class NonScrollGraphicsView(QtGui.QGraphicsView):
     def wheelEvent(self, event):
         event.ignore()
 
+class Interactable(QtGui.QGraphicsPixmapItem):
+    def __init__(self, pixmap):
+        super(Interactable, self).__init__(pixmap)
+    def mousePressEvent(self, event):
+        print('coooey!')
+
 class MdiTable(QtGui.QMdiSubWindow):
     sequenceNumber = 1
 
@@ -61,8 +67,10 @@ class MdiTable(QtGui.QMdiSubWindow):
         other.setPos(120, 200)
         other = scene.addPixmap(self.other)
         other.setPos(440, 120)
-        other = scene.addPixmap(self.other)
+        #other = scene.addPixmap(self.other)
+        other = Interactable(self.other)
         other.setPos(380, 50)
+        scene.addItem(other)
 
         self.card8 = QtGui.QPixmap('./data/gfx/cards/xanax_card_deck_03/6.png')
         self.cardK = QtGui.QPixmap('./data/gfx/cards/xanax_card_deck_03/50.png')
@@ -128,7 +136,7 @@ class MdiTable(QtGui.QMdiSubWindow):
         #self.view.scale(0.5, 0.5)
     def resizeEvent(self, event):
         super(MdiTable, self).resizeEvent(event)
-        return
+        #return
         size = self.contentsRect().size()
 
         #newpic = self.pic.scaled(size, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
@@ -142,6 +150,13 @@ class MdiTable(QtGui.QMdiSubWindow):
             margins = self.contentsMargins()
             self.resize(aspect * size.height() + margins.left() + margins.right(),
                 size.height() + margins.top() + margins.bottom())
+
+        winw = self.contentsRect().size().width()
+        picw = self.pic.size().width()
+        scale = winw / float(picw)
+        trans = QtGui.QTransform()
+        trans.scale(scale, scale)
+        self.view.setTransform(trans)
     def sliderMoved(self, value):
         # should round to the nearest number of big blinds
         self.edit.setText('%.0f'%(1 + 100*value/100.0))
