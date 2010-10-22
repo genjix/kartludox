@@ -1,4 +1,5 @@
 from PySide import QtCore, QtGui, QtWebKit
+import autohide_dock
 
 class ScrollEater(QtCore.QObject):
     def __init__(self, par):
@@ -82,17 +83,20 @@ class MdiTable(QtGui.QMdiSubWindow):
         self.wgt = QtGui.QWidget()
         hbox = QtGui.QHBoxLayout()
         fold = QtGui.QPushButton('Fold')
-        fold.setStyleSheet('background-color: #1169a4; height: 40px; width: 60px; font-size: 10pt; font-weight: bold; color: white;')
+        fold.setStyleSheet('background-color: #1169a4; width: 60px; font-size: 10pt; font-weight: bold; color: white;')
         fold.setCheckable(True)
+        fold.setSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Minimum)
         hbox.addWidget(fold)
         call = QtGui.QPushButton('Call\n$1')
-        call.setStyleSheet('background-color: #1169a4; height: 40px; width: 60px; font-size: 10pt; font-weight: bold; color: white;')
+        call.setStyleSheet('background-color: #1169a4; width: 60px; font-size: 10pt; font-weight: bold; color: white;')
         call.setCheckable(True)
+        call.setSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Minimum)
         hbox.addWidget(call)
         hbox.addSpacing(20)
         rai = QtGui.QPushButton('Raise\n$2')
-        rai.setStyleSheet('background-color: #1169a4; color: #ddf; height: 40px; width: 60px; font-size: 10pt; font-weight: bold;')
+        rai.setStyleSheet('background-color: #1169a4; color: #ddf; width: 60px; height: 40px; font-size: 10pt; font-weight: bold;')
         rai.setCheckable(True)
+        rai.setSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Minimum)
         hbox.addWidget(rai)
         self.edit = QtGui.QLineEdit()
         self.edit.setValidator(QtGui.QDoubleValidator(0.0, -1.0, 2, self.edit))
@@ -108,7 +112,7 @@ class MdiTable(QtGui.QMdiSubWindow):
         self.wgt.resize(500,100)
         #self.btn = QtGui.QPushButton('play')
         #self.btn.setAttribute(QtCore.Qt.WA_NoSystemBackground)
-        #self.wgt.setAttribute(QtCore.Qt.WA_NoSystemBackground)
+        self.wgt.setAttribute(QtCore.Qt.WA_NoSystemBackground)
         hbox2 = QtGui.QHBoxLayout()
         hbox2.addStretch()
         hbox2.addLayout(hbox)
@@ -123,8 +127,9 @@ class MdiTable(QtGui.QMdiSubWindow):
         #vbox.addStretch()
         vbox.addLayout(hboxslider)
         vbox.addLayout(hbox2)
+        scene.addWidget(self.wgt)
         #item = scene.addWidget(self.wgt)
-        self.view.setLayout(vbox)
+        #self.view.setLayout(vbox)
         #item.setZValue(1)
         #item.setPos(100,100)
         #item.setVisible(True)
@@ -184,7 +189,7 @@ class MainWindow(QtGui.QMainWindow):
 
         self.createActions()
         #self.createMenus()
-        #self.createToolBox()
+        self.createToolBox()
         self.createToolBars()
         #self.createStatusBar()
         #self.updateMenus()
@@ -202,10 +207,10 @@ class MainWindow(QtGui.QMainWindow):
         self.widget.setLayout(layout)
         self.setCentralWidget(self.widget)"""
 
-        #self.splitter = QtGui.QSplitter()
-        #self.splitter.addWidget(self.mdiArea)
-        #self.splitter.addWidget(self.toolBox)
-        #self.setCentralWidget(self.splitter)
+        self.splitter = QtGui.QSplitter()
+        self.splitter.addWidget(self.mdiArea)
+        self.splitter.addWidget(self.toolBox)
+        self.setCentralWidget(self.splitter)
 
         dock = QtGui.QDockWidget(self.tr('Customers'), self)
         dock2 = QtGui.QDockWidget(self.tr('Blaaa'), self)
@@ -213,8 +218,10 @@ class MainWindow(QtGui.QMainWindow):
         dock.setWidget(QtGui.QTextEdit())
         dock2.setWidget(QtGui.QTextEdit())
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, dock)
-        self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, dock2)
+        self.tabifyDockWidget(dock, dock2)
         self.setTabPosition(QtCore.Qt.AllDockWidgetAreas, QtGui.QTabWidget.North)
+
+        v = autohide_dock.QAutoHideDockWidgets(QtCore.Qt.LeftDockWidgetArea, self)
 
         self.setWindowTitle('Hypatia')
         self.setUnifiedTitleAndToolBarOnMac(True)
@@ -296,7 +303,7 @@ class MainWindow(QtGui.QMainWindow):
         self.toolBox.addItem(QtGui.QTextEdit(), "Chance")
         self.toolBox.addItem(QtGui.QTextEdit(), "Information")
         self.toolBox.setAttribute(QtCore.Qt.WA_NoSystemBackground, False)
-        self.toolBox.setStyleSheet('background-color: #ddd;')
+        #self.toolBox.setStyleSheet('background-color: #ddd;')
         #self.toolBox.setWindowOpacity(1)
         #self.toolBox.setFrameStyle(QtGui.QFrame.StyledPanel)
 
