@@ -1,7 +1,9 @@
 icons on fold/call/raise buttons
+shade other buttons when toggle fold/call/raise
 css everything
 fix -1,-1 message
 rewrite to MVC
+note editor that is autosaving depending on the user set
 resize handle on sidebar
 change toolbox to window thingies + view -> menu for each entry
 settings -> hide menubar, hide sidebar, hide toolbar, full screen mode, show statusbar

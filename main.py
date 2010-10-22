@@ -24,7 +24,7 @@ class MdiTable(QtGui.QMdiSubWindow):
         self.setWindowFlags(QtCore.Qt.WindowMinimizeButtonHint)
         self.setMinimumHeight(200)
 
-        self.pic = QtGui.QPixmap('./data/images/table.png')
+        self.pic = QtGui.QPixmap('./data/gfx/gui/default/table.png')
         scene = QtGui.QGraphicsScene(self)
         scene.addPixmap(self.pic)
         self.disppic = scene.items()[0]
@@ -41,7 +41,7 @@ class MdiTable(QtGui.QMdiSubWindow):
         #self.view.clearFocus()
         #self.view.setFocusPolicy(QtCore.Qt.NoFocus)
 
-        self.seat = QtGui.QPixmap('./data/images/seat_empty.png')
+        self.seat = QtGui.QPixmap('./data/gfx/gui/default/seat_empty.png')
         seat = scene.addPixmap(self.seat)
         seat.setPos(400,30)
         seat = scene.addPixmap(self.seat)
@@ -52,7 +52,7 @@ class MdiTable(QtGui.QMdiSubWindow):
         seat.setPos(20,120)
         seat = scene.addPixmap(self.seat)
         seat.setPos(460,120)
-        self.other = QtGui.QPixmap('./data/images/other_cards.png')
+        self.other = QtGui.QPixmap('./data/gfx/gui/default/other_cards.png')
         other = scene.addPixmap(self.other)
         other.setPos(120, 50)
         other = scene.addPixmap(self.other)
@@ -64,8 +64,8 @@ class MdiTable(QtGui.QMdiSubWindow):
         other = scene.addPixmap(self.other)
         other.setPos(380, 50)
 
-        self.card8 = QtGui.QPixmap('./data/decks/xanax_card_deck_03/6.png')
-        self.cardK = QtGui.QPixmap('./data/decks/xanax_card_deck_03/50.png')
+        self.card8 = QtGui.QPixmap('./data/gfx/cards/xanax_card_deck_03/6.png')
+        self.cardK = QtGui.QPixmap('./data/gfx/cards/xanax_card_deck_03/50.png')
         card = scene.addPixmap(self.card8)
         card.setPos(340,210)
         card = scene.addPixmap(self.cardK)
@@ -74,16 +74,16 @@ class MdiTable(QtGui.QMdiSubWindow):
         self.wgt = QtGui.QWidget()
         hbox = QtGui.QHBoxLayout()
         fold = QtGui.QPushButton('Fold')
-        fold.setStyleSheet('background-color: #856d6d; height: 40px; width: 60px')
+        fold.setStyleSheet('background-color: #1169a4; height: 40px; width: 60px; font-size: 10pt; font-weight: bold; color: white;')
         fold.setCheckable(True)
         hbox.addWidget(fold)
-        call = QtGui.QPushButton('Call')
-        call.setStyleSheet('background-color: #856d6d; height: 40px; width: 60px')
+        call = QtGui.QPushButton('Call\n$1')
+        call.setStyleSheet('background-color: #1169a4; height: 40px; width: 60px; font-size: 10pt; font-weight: bold; color: white;')
         call.setCheckable(True)
         hbox.addWidget(call)
         hbox.addSpacing(20)
-        rai = QtGui.QPushButton('Raise')
-        rai.setStyleSheet('background-color: #856d6d; color: white; height: 40px; width: 60px')
+        rai = QtGui.QPushButton('Raise\n$2')
+        rai.setStyleSheet('background-color: #1169a4; color: #ddf; height: 40px; width: 60px; font-size: 10pt; font-weight: bold;')
         rai.setCheckable(True)
         hbox.addWidget(rai)
         self.edit = QtGui.QLineEdit()
@@ -165,11 +165,11 @@ class MainWindow(QtGui.QMainWindow):
         self.mdiArea = QtGui.QMdiArea()
         self.mdiArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.mdiArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        #self.setCentralWidget(self.mdiArea)
+        self.setCentralWidget(self.mdiArea)
 
         self.createActions()
         #self.createMenus()
-        self.createToolBox()
+        #self.createToolBox()
         self.createToolBars()
         #self.createStatusBar()
         #self.updateMenus()
@@ -180,12 +180,26 @@ class MainWindow(QtGui.QMainWindow):
         self.showtoolbox.setFlat(True)
         self.showtoolbox.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Ignored)
         layout.addWidget(self.showtoolbox)"""
-        layout.addWidget(self.mdiArea)
+        """layout.addWidget(self.mdiArea)
         layout.addWidget(self.toolCont)
 
         self.widget = QtGui.QWidget()
         self.widget.setLayout(layout)
-        self.setCentralWidget(self.widget)
+        self.setCentralWidget(self.widget)"""
+
+        #self.splitter = QtGui.QSplitter()
+        #self.splitter.addWidget(self.mdiArea)
+        #self.splitter.addWidget(self.toolBox)
+        #self.setCentralWidget(self.splitter)
+
+        dock = QtGui.QDockWidget(self.tr('Customers'), self)
+        dock2 = QtGui.QDockWidget(self.tr('Blaaa'), self)
+        dock.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea|QtCore.Qt.RightDockWidgetArea)
+        dock.setWidget(QtGui.QTextEdit())
+        dock2.setWidget(QtGui.QTextEdit())
+        self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, dock)
+        self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, dock2)
+        self.setTabPosition(QtCore.Qt.AllDockWidgetAreas, QtGui.QTabWidget.North)
 
         self.setWindowTitle('Hypatia')
         self.setUnifiedTitleAndToolBarOnMac(True)
@@ -212,7 +226,7 @@ class MainWindow(QtGui.QMainWindow):
         self.newTableAct = QtGui.QAction('New Table', self, 
             shortcut=QtGui.QKeySequence.Print, statusTip='Open new table',
             triggered=self.createMdiChild)
-        self.loginAct = QtGui.QAction(QtGui.QIcon('./data/images/new.png'),
+        self.loginAct = QtGui.QAction(QtGui.QIcon('./data/gfx/gui/default/new.png'),
             '&Login', self, shortcut=QtGui.QKeySequence.New,
             statusTip='Login to play!', triggered=self.login)
         self.exitAct = QtGui.QAction("E&xit", self, shortcut="Ctrl+Q",
@@ -271,7 +285,7 @@ class MainWindow(QtGui.QMainWindow):
         #self.toolBox.setWindowOpacity(1)
         #self.toolBox.setFrameStyle(QtGui.QFrame.StyledPanel)
 
-        layout = QtGui.QHBoxLayout()
+        """layout = QtGui.QHBoxLayout()
         self.hidetoolbox = QtGui.QPushButton('<')
         self.hidetoolbox.setMaximumWidth(20)
         self.hidetoolbox.setFlat(True)
@@ -284,7 +298,7 @@ class MainWindow(QtGui.QMainWindow):
         layout.addWidget(self.toolBox)
 
         self.toolCont = QtGui.QWidget()
-        self.toolCont.setLayout(layout)
+        self.toolCont.setLayout(layout)"""
     def createToolBars(self):
         self.fileToolBar = self.addToolBar('File')
         self.fileToolBar.addAction(self.newTableAct)
@@ -307,7 +321,7 @@ if __name__ == '__main__':
 
     translator = QtCore.QTranslator()
     #translator.load('en_GB')
-    translator.load('il8n/eo_EO')
+    translator.load('data/translations/eo_EO')
     app = QtGui.QApplication(sys.argv)
     app.installTranslator(translator)
     mainWin = MainWindow()
