@@ -9,6 +9,8 @@ settings -> hide menubar, hide sidebar, hide toolbar, full screen mode, show sta
 load table layout from config positions incl stylesheets also.
 icons and prettiness
 
+BUG: show/hide docks doesnt save tab sel pos
+
 grid password entry. select colours and paint a small pic
 notification after played X hands or length time. Start/stop it.
 
@@ -98,6 +100,13 @@ Same dialog as About Quassel
 
 * (preferences/settings quick access button
    like in amarok toolbar)
+  Show Menu Bar
+
+* Lock Side Panel
+
+--------
+
+Server: [ liqudipoker.net ] >Cashier >Account >Tables
 
 ==== Connections dock window ====
 tree list view with roll down sections and icons like amarok
