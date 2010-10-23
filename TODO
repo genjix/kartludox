@@ -3,7 +3,122 @@ css everything
 fix -1,-1 message
 rewrite to MVC
 note editor that is autosaving depending on the user set
+note editor with bold, italic, colours (colour pick) + font size
 view -> menu for each dock window
 settings -> hide menubar, hide sidebar, hide toolbar, full screen mode, show statusbar
 load table layout from config positions incl stylesheets also.
 icons and prettiness
+
+grid password entry. select colours and paint a small pic
+notification after played X hands or length time. Start/stop it.
+
+File
+  _Networks
+    * Configure _Networks
+    --
+    * various network names
+    ...
+  * _Quit
+_Requests
+  _Cashier
+  _Account
+_View
+  _Toolbars
+    [ ] Main Toolbar
+  --
+  [ ] * Show _Menu Bar key
+  [ ] Show Status _Bar
+  --
+  [ ] various dock windows
+  ...
+_Tools
+  (table arranging stuff here)
+  (scripts)
+_Settings
+  * Configure _Notifications
+  * Configure S_hortcuts
+  * Configure Tool_bars (from Kontact)
+  * _Configure Kartludox key
+Help
+  * Kartludox Handbook key
+  * What's _This? key (from Kontact)
+  --
+  * Report Bug
+  --
+  * Switch Application Language
+  --
+  * About Kartludox
+
+==== Configure Networks dialog ====
+Same as Konversation.
+Says:
+  Which casino would you like to join?
+  > liquidpoker.net
+  ...
+user/pass
+Opens on application startup (can be turned off)
+select server -> opens new mdi window
+
+==== Game MDI Window ====
+2 tabs: Games, Account
+Account:
+  cashier + options
+    withdraw opens dialog ->
+      Bitcoins have been sent to your account.
+      They will appear in your account after they have been confirmed.
+      Usually this takes a few minutes but can take up to 30 mins.
+    deposit opens dialog ->
+      Please send bitcoins to the address below.
+      They will appear in your account after they have been confirmed.
+      Usually this takes a few minutes but can take up to 30 mins.
+  account details
+    bitcoin address (does this change??)
+    possible to have 1 bitcoin address per username?
+
+==== About Kartludox ====
+Same dialog as About Quassel
+
+==== Main Toolbar ====
+
+* Connect
+  various network names
+  ...
+  --
+  Disconnect from all
+* Disconnect
+  various network names
+  ...
+  --
+  Disconnect from all
+
+* Session Status
+  > Playing
+  > Sit-Out
+  > Sit-Out and Close Tables
+
+* (preferences/settings quick access button
+   like in amarok toolbar)
+
+==== Connections dock window ====
+tree list view with roll down sections and icons like amarok
+> table entries flash alert when require action
+double click to open server views (showing lists of games) or go to table.
+
+==== Server Window ====
+Show list of current games.
+Filter window option.
+
+==== Chat dock window ====
+[ ] Show dealer messages
+Chat window
+[                ]
+
+==== Chance dock window ====
+bars from PokerTH with scope to later
+add pokerstove
+
+==== Information dock window ====
+Sessions info like number hands played
+
+==== Settings ====
+qtdemo -> Dialogs -> Configuration Dialog
