@@ -1,3 +1,5 @@
+install FTP, check it out
+
 shade other buttons when toggle fold/call/raise
 css everything
 fix -1,-1 message
@@ -40,9 +42,10 @@ _View
   --
   [ ] various dock windows
   ...
-_Tools
+_Scripts
   (table arranging stuff here)
-  (scripts)
+  (auto folding shit hands)
+  (HUD)
 _Settings
   * Configure _Notifications (sound effects and stuff here)
   * Configure S_hortcuts
@@ -63,10 +66,19 @@ Same as Konversation.
 Says:
   Which casino would you like to join?
   > liquidpoker.net
+  > play money
   ...
 user/pass
 Opens on application startup (can be turned off)
 select server -> opens new mdi window
+
+==== Add Server dialog (from conf networks ====
+Tab1 Normal add like in Konversation.
+Tab2 Advanced
+  bot name for game listing
+  bot name for running games (same?)
+  default game list channel
+  use ssl
 
 ==== Game MDI Window ====
 2 tabs: Games, Account
@@ -101,9 +113,10 @@ Same dialog as About Quassel
   Disconnect from all
 
 * Session Status
-  > Playing
-  > Sit-Out
-  > Sit-Out and Close Tables
+  > Playing [green]
+  > Sit-Out [yellow]
+  > Sit-Out and Close Tables [red text]
+  > Sit-Out (don't wait for BB) [red text]
 
 * (preferences/settings quick access button
    like in amarok toolbar)
@@ -121,6 +134,9 @@ tree list view with roll down sections and icons like amarok
 double click to open server views (showing lists of games) or go to table.
 list of games  |  players at table
 lobby chat     |  details of table (tourney blaa blaa)
+
+cash game details example:
+min max buyin
 
 ==== Server Window ====
 Show list of current games.
@@ -153,3 +169,18 @@ Rebuy
 Auto Post Blinds
 Sit Out
 Report Incident
+
+==== Rich Click other player menu ====
+Note
+Block Image
+Block Chat
+Sit Here
+Search This Player...
+
+================================
+IRC
+
+/list
+#johnathon "blaa blaa blaa" holdem nl cash 6 2 5 0.1
+(tablename userdef-string holdem|omaha nl|pl|l cash|tourney 2-10 SB BB ante)
+

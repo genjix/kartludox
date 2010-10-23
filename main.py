@@ -205,7 +205,7 @@ class MainWindow(QtGui.QMainWindow):
         self.setCentralWidget(self.mdiArea)
 
         self.createActions()
-        #self.createMenus()
+        self.createMenus()
         self.createDockWidgets()
         self.createToolBars()
         #self.createStatusBar()
@@ -260,8 +260,8 @@ class MainWindow(QtGui.QMainWindow):
         self.loginAct = QtGui.QAction(QtGui.QIcon('./data/gfx/gui/default/new.png'),
             '&Login', self, shortcut=QtGui.QKeySequence.New,
             statusTip='Login to play!', triggered=self.login)
-        self.exitAct = QtGui.QAction("E&xit", self, shortcut="Ctrl+Q",
-            statusTip="Exit the application",
+        self.quitAct = QtGui.QAction("&Quit", self, shortcut="Ctrl+Q",
+            statusTip="Quit the application",
             triggered=QtGui.qApp.closeAllWindows)
         # ordering
         self.cascadeTablesAct = QtGui.QAction('Cascade Tables', self,
@@ -271,11 +271,66 @@ class MainWindow(QtGui.QMainWindow):
             statusTip='Tiling arrangement',
             triggered=self.mdiArea.tileSubWindows)
     def createMenus(self):
-        self.fileMenu = self.menuBar().addMenu('&File')
-        self.fileMenu.addAction(self.newTableAct)
-        self.fileMenu.addAction(self.loginAct)
-        self.fileMenu.addSeparator()
-        self.fileMenu.addAction(self.exitAct)
+        menub = self.menuBar()
+        fileMenu = menub.addMenu('&File')
+        networksSubMenu = fileMenu.addMenu(self.tr('&Networks'))
+        # has icon
+        networksSubMenu.addAction('Configure &Networks')
+        networksSubMenu.addSeparator()
+        # has changeable icon for statuses- see Quassel
+        networksSubMenu.addAction('liquidpoker.net')
+        networksSubMenu.addAction('play money')
+        fileMenu.addSeparator()
+        # has red X icon
+        fileMenu.addAction(self.quitAct)
+
+        requestsMenu = menub.addMenu(self.tr('&Requests'))
+        # add menus for each network here
+        liquidpokerSubMenu = requestsMenu.addMenu('liquidpoker.net')
+        liquidpokerSubMenu.addAction('&Cashier')
+        liquidpokerSubMenu.addAction('&Account')
+        playmoneySubMenu = requestsMenu.addMenu('play money')
+        playmoneySubMenu.addAction('&Cashier')
+        playmoneySubMenu.addAction('&Account')
+
+        viewMenu = menub.addMenu(self.tr('&View'))
+        toolbarsSubMenu = viewMenu.addMenu(self.tr('&Toolbars'))
+        toolbarsSubMenu.addAction('Main Toolbar')
+        # has icon
+        viewMenu.addAction('Show &Menu Bar')
+        viewMenu.addAction('Show Status &Bar')
+        viewMenu.addSeparator()
+        viewMenu.addAction('Chat')
+        viewMenu.addAction('Hand History')
+        viewMenu.addAction('Notes')
+        viewMenu.addAction('Chance')
+        viewMenu.addAction('Information')
+
+        scriptsMenu = menub.addMenu(self.tr('Sc&ripts'))
+        arrangeTablesSubMenu = scriptsMenu.addMenu('Arrange Tables')
+        arrangeTablesSubMenu.addAction('Tile')
+        arrangeTablesSubMenu.addAction('Cascade')
+        hudSubMenu = scriptsMenu.addMenu('Heads Up Display')
+        hudSubMenu.addAction('PokerTracker3')
+        scriptsMenu.addAction('Auto-Fold')
+
+        # these all have icons
+        settingsMenu = menub.addMenu(self.tr('&Settings'))
+        settingsMenu.addAction('Configure &Notifications')
+        settingsMenu.addAction('Configure S&hortcuts')
+        settingsMenu.addAction('Configure Tool&bars')
+        settingsMenu.addAction('&Configure Kartludox')
+
+        # again all have icons
+        helpMenu = menub.addMenu(self.tr('&Help'))
+        helpMenu.addAction('Kartludox Handbook')
+        helpMenu.addAction('What\'s &This?')
+        helpMenu.addSeparator()
+        helpMenu.addAction('Report Bug')
+        helpMenu.addSeparator()
+        helpMenu.addAction('Switch Application Language')
+        helpMenu.addSeparator()
+        helpMenu.addAction('About Kartludox')
     def createDockWidgets(self):
         self.setTabPosition(QtCore.Qt.AllDockWidgetAreas, QtGui.QTabWidget.North)
         dock = QtGui.QDockWidget(self.tr("Chat Window"))
@@ -314,7 +369,7 @@ class MainWindow(QtGui.QMainWindow):
 
         notes = QtGui.QTextEdit()
         notes.setHtml('This player is a <i>real</i> <b>donk</b>!<br /><h1>NEVER BLUFF HIM!!</h1>')
-        dock2 = QtGui.QDockWidget(self.tr("Player Notes"))
+        dock2 = QtGui.QDockWidget(self.tr("Notes"))
         dock2.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea|QtCore.Qt.RightDockWidgetArea)
         dock2.setWidget(notes)
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, dock2)
@@ -352,7 +407,7 @@ class MainWindow(QtGui.QMainWindow):
         self.fileToolBar = self.addToolBar('File')
         self.fileToolBar.addAction(self.newTableAct)
         self.fileToolBar.addAction(self.loginAct)
-        self.fileToolBar.addAction(self.exitAct)
+        self.fileToolBar.addAction(self.quitAct)
 
         self.orderToolBar = self.addToolBar('Order')
         self.orderToolBar.addAction(self.cascadeTablesAct)
