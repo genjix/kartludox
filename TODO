@@ -1,16 +1,15 @@
+test in XP
+download win7 por testing
 install FTP, check it out
 overlay table with PS in inkscape to sort gfx out.
 
 shade other buttons when toggle fold/call/raise
 css everything
-fix -1,-1 message
 rewrite to MVC
 note editor that is autosaving depending on the user set
 note editor with bold, italic, colours (colour pick) + font size
-view -> menu for each dock window
-settings -> hide menubar, hide sidebar, hide toolbar, full screen mode, show statusbar
 load table layout from config positions incl stylesheets also.
-icons and prettiness
+app remember prev settings
 
 BUG: show/hide docks doesnt save tab sel pos
 
