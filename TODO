@@ -37,7 +37,7 @@ _Tools
   (table arranging stuff here)
   (scripts)
 _Settings
-  * Configure _Notifications
+  * Configure _Notifications (sound effects and stuff here)
   * Configure S_hortcuts
   * Configure Tool_bars (from Kontact)
   * _Configure Kartludox key
@@ -112,6 +112,8 @@ Server: [ liqudipoker.net ] >Cashier >Account >Tables
 tree list view with roll down sections and icons like amarok
 > table entries flash alert when require action
 double click to open server views (showing lists of games) or go to table.
+list of games  |  players at table
+lobby chat     |  details of table (tourney blaa blaa)
 
 ==== Server Window ====
 Show list of current games.
@@ -129,5 +131,13 @@ add pokerstove
 ==== Information dock window ====
 Sessions info like number hands played
 
-==== Settings ====
+==== Configure Kartludox (settings menu) ====
 qtdemo -> Dialogs -> Configuration Dialog
+
+* Styles
+  Game Table
+  Card Deck
+  (from PokerTH- same style)
+  (get new styles! button
+     or KDE systemsettings style -> Get New Themes)
+
