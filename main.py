@@ -260,9 +260,6 @@ class MainWindow(QtGui.QMainWindow):
         self.loginAct = QtGui.QAction(QtGui.QIcon('./data/gfx/gui/default/new.png'),
             '&Login', self, shortcut=QtGui.QKeySequence.New,
             statusTip='Login to play!', triggered=self.login)
-        self.quitAct = QtGui.QAction("&Quit", self, shortcut="Ctrl+Q",
-            statusTip="Quit the application",
-            triggered=QtGui.qApp.closeAllWindows)
         # ordering
         self.cascadeTablesAct = QtGui.QAction('Cascade Tables', self,
             statusTip='Cascade tables diagonally',
@@ -270,16 +267,97 @@ class MainWindow(QtGui.QMainWindow):
         self.tileTablesAct = QtGui.QAction('Tile Tables', self,
             statusTip='Tiling arrangement',
             triggered=self.mdiArea.tileSubWindows)
+
+        # new tidy items
+        # actions can either have an icon or not
+        # they must all follow the same format for readability
+        icon = lambda s: QtGui.QIcon('./data/gfx/icons/' + s)
+        configIcon = icon('configure.png') 
+
+        # file
+        self.quitAct = QtGui.QAction(icon('application-exit.png'),
+            self.tr("&Quit"), self,
+            shortcut=QtGui.QKeySequence.Quit,
+            statusTip=self.tr('Quit the application'),
+            triggered=QtGui.qApp.closeAllWindows)
+        # network sub menu
+        self.confNetsAct = QtGui.QAction(configIcon,
+            self.tr('Configure &Networks...'), self,
+            statusTip=self.tr('Add, remove and modify the different networks you\'ve configured'))
+        self.connNetActs = []
+        netNames = ('liquidpoker.net', 'play money')
+        disconnIcon = icon('network-disconnect.png')
+        for net in netNames:
+            self.connNetActs.append(QtGui.QAction(disconnIcon, net, self,
+            statusTip=self.tr('Connect to') + ' ' + net))
+
+        # view
+        self.showMenuBarAct = QtGui.QAction(icon('show-menu.png'),
+            self.tr('Show &Menu Bar'), self, shortcut='CTRL+M',
+            statusTip=self.tr('Show the menu bar'), checkable=True, checked=True)
+        self.showStatusBarAct = QtGui.QAction(self.tr('Show Status &Bar'), self,
+            statusTip=self.tr('Show the status bar'), checkable=True, checked=False)
+        self.showMainToolBarAct = QtGui.QAction(self.tr('&Main Toolbar'), self,
+            statusTip=self.tr('Show the main toolbar'), checkable=True, checked=True)
+        # the various panels
+        self.showPanelChatAct = QtGui.QAction(self.tr('Chat'), self,
+            statusTip=self.tr('Show the chat window panel'), checkable=True, checked=True)
+        self.showPanelHHAct = QtGui.QAction(self.tr('Hand History'), self,
+            statusTip=self.tr('Show the hand history panel'), checkable=True, checked=True)
+        self.showPanelNotesAct = QtGui.QAction(self.tr('Notes'), self,
+            statusTip=self.tr('Show the player notes panel'), checkable=True, checked=True)
+        self.showPanelChanceAct = QtGui.QAction(self.tr('Chance'), self,
+            statusTip=self.tr('Show the chance and odds panel'), checkable=True, checked=True)
+        self.showPanelInfoAct = QtGui.QAction(self.tr('Information'), self,
+            statusTip=self.tr('Show the information panel'), checkable=True, checked=True)
+        # sidebar pos sub menu
+        self.sidebarPosLeftAct = QtGui.QAction(self.tr('&Left', 'View|Sidebar Position'), self,
+            statusTip=self.tr('Display the sidebar on the left'), checkable=True, checked=True)
+        self.sidebarPosRightAct = QtGui.QAction(self.tr('&Right', 'View|Sidebar Position'), self,
+            statusTip=self.tr('Display the sidebar on the right'), checkable=True, checked=False)
+        # ----
+        self.lockSidebarAct = QtGui.QAction(icon('unlock.png'),
+            self.tr('&Lock Sidebar'), self,
+            statusTip=self.tr('Lock the sidebar in place and prevent it from moving'),
+            checkable=True, checked=False)
+
+        # tools
+        self.PT3HUDAct = QtGui.QAction(icon('pokertracker3.png'),
+            self.tr('PokerTracker3'), self,
+            statusTip=self.tr('Enable the PokerTracker3 Heads-Up Display'))
+
+        # settings
+        self.confNotifyAct = QtGui.QAction(icon('preferences-desktop-notification.png'),
+            self.tr('&Configure &Notifications...'), self,
+            statusTip=self.tr('Configure various notifications'))
+        self.confShortcutsAct = QtGui.QAction(icon('configure-shortcuts.png'),
+            self.tr('&Configure S&hortcuts...'), self,
+            statusTip=self.tr('Configure shortcut keys'))
+        self.confToolbarsAct = QtGui.QAction(icon('configure-toolbars.png'),
+            self.tr('&Configure Tool&bars...'), self,
+            statusTip=self.tr('Configure toolbar contents'))
+        self.confAct = QtGui.QAction(configIcon,
+            self.tr('&Configure Kartludox...'), self,
+            shortcut=QtGui.QKeySequence.Preferences,
+            statusTip=self.tr('Configure common application settings'))
+
+        # help
+        self.reportBugAct = QtGui.QAction(icon('tools-report-bug.png'),
+            self.tr('Report Bug'), self,
+            statusTip=self.tr('Make a bug report to help us improve the software!'))
+        self.switchLangAct = QtGui.QAction(icon('config-language.png'),
+            self.tr('Switch Application Language'), self,
+            statusTip=self.tr('Select an alternative language'))
     def createMenus(self):
         menub = self.menuBar()
         fileMenu = menub.addMenu('&File')
         networksSubMenu = fileMenu.addMenu(self.tr('&Networks'))
         # has icon
-        networksSubMenu.addAction('Configure &Networks')
+        networksSubMenu.addAction(self.confNetsAct)
         networksSubMenu.addSeparator()
         # has changeable icon for statuses- see Quassel
-        networksSubMenu.addAction('liquidpoker.net')
-        networksSubMenu.addAction('play money')
+        for netAct in self.connNetActs:
+            networksSubMenu.addAction(netAct)
         fileMenu.addSeparator()
         # has red X icon
         fileMenu.addAction(self.quitAct)
@@ -292,43 +370,49 @@ class MainWindow(QtGui.QMainWindow):
         playmoneySubMenu = requestsMenu.addMenu('play money')
         playmoneySubMenu.addAction('&Cashier')
         playmoneySubMenu.addAction('&Account')
+        playmoneySubMenu.setEnabled(False)
 
         viewMenu = menub.addMenu(self.tr('&View'))
-        toolbarsSubMenu = viewMenu.addMenu(self.tr('&Toolbars'))
-        toolbarsSubMenu.addAction('Main Toolbar')
         # has icon
-        viewMenu.addAction('Show &Menu Bar')
-        viewMenu.addAction('Show Status &Bar')
+        viewMenu.addAction(self.showMenuBarAct)
+        viewMenu.addAction(self.showStatusBarAct)
+        toolbarsSubMenu = viewMenu.addMenu(self.tr('&Toolbars Shown'))
+        toolbarsSubMenu.addAction(self.showMainToolBarAct)
         viewMenu.addSeparator()
-        viewMenu.addAction('Chat')
-        viewMenu.addAction('Hand History')
-        viewMenu.addAction('Notes')
-        viewMenu.addAction('Chance')
-        viewMenu.addAction('Information')
+        viewMenu.addAction(self.showPanelChatAct)
+        viewMenu.addAction(self.showPanelHHAct)
+        viewMenu.addAction(self.showPanelNotesAct)
+        viewMenu.addAction(self.showPanelChanceAct)
+        viewMenu.addAction(self.showPanelInfoAct)
+        viewMenu.addSeparator()
+        sidebarPosSubMenu = viewMenu.addMenu(self.tr('Sidebar &Position'))
+        sidebarPosSubMenu.addAction(self.sidebarPosLeftAct)
+        sidebarPosSubMenu.addAction(self.sidebarPosRightAct)
+        viewMenu.addAction(self.lockSidebarAct)
 
-        scriptsMenu = menub.addMenu(self.tr('Sc&ripts'))
-        arrangeTablesSubMenu = scriptsMenu.addMenu('Arrange Tables')
+        toolsMenu = menub.addMenu(self.tr('&Tools'))
+        arrangeTablesSubMenu = toolsMenu.addMenu('Arrange Tables')
         arrangeTablesSubMenu.addAction('Tile')
         arrangeTablesSubMenu.addAction('Cascade')
-        hudSubMenu = scriptsMenu.addMenu('Heads Up Display')
-        hudSubMenu.addAction('PokerTracker3')
-        scriptsMenu.addAction('Auto-Fold')
+        hudSubMenu = toolsMenu.addMenu('Heads Up Display')
+        hudSubMenu.addAction(self.PT3HUDAct)
+        toolsMenu.addAction('Auto-Fold')
 
         # these all have icons
         settingsMenu = menub.addMenu(self.tr('&Settings'))
-        settingsMenu.addAction('Configure &Notifications')
-        settingsMenu.addAction('Configure S&hortcuts')
-        settingsMenu.addAction('Configure Tool&bars')
-        settingsMenu.addAction('&Configure Kartludox')
+        settingsMenu.addAction(self.confNotifyAct)
+        settingsMenu.addAction(self.confShortcutsAct)
+        settingsMenu.addAction(self.confToolbarsAct)
+        settingsMenu.addAction(self.confAct)
 
         # again all have icons
         helpMenu = menub.addMenu(self.tr('&Help'))
         helpMenu.addAction('Kartludox Handbook')
         helpMenu.addAction('What\'s &This?')
         helpMenu.addSeparator()
-        helpMenu.addAction('Report Bug')
+        helpMenu.addAction(self.reportBugAct)
         helpMenu.addSeparator()
-        helpMenu.addAction('Switch Application Language')
+        helpMenu.addAction(self.switchLangAct)
         helpMenu.addSeparator()
         helpMenu.addAction('About Kartludox')
     def createDockWidgets(self):
