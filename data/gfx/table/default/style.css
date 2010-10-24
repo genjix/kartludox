@@ -9,3 +9,6 @@ QPushButton {
 QPushButton:checked {
     background-color: #1180a4;
 }
+QPushButton#FoldBtn {
+    /* Also #CallBtn and #RaiseBtn */
+}

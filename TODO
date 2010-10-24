@@ -14,14 +14,24 @@ load table layout from config positions incl stylesheets also.
 app remember prev settings
 
 BUG: show/hide docks doesnt save tab sel pos
+BUG: closing all panels and they reappear on next hover event
+WANT: panels move the main view.
 
 grid password entry. select colours and paint a small pic
 notification after played X hands or length time. Start/stop it.
 
 first time install intro:
+please choose your language
+
 choose between SDI and MDI
-MDI- play lots of tables
-SDI- casual player that only plays 1 or 2 tables.
+SDI:
+Casual player who plays 1 or 2 tables while doing other
+activities like browsing the web.
+Simple and easy to use for beginners. Familiar interface to most poker sites.
+MDI:
+Poker addict playing many tables that clutter your desktop.
+Advanced features like table management, statistics and auto folding.
+
 >explanation of the project
 >usage: you select different 'casinos' and choose your table there.
 
@@ -148,6 +158,16 @@ Filter window option.
 [ ] Show dealer messages
 Chat window
 [                ]
+
+==== Hand History dock window ====
+[ roll down list shows:  winner(s)      potsize ]
+(they're colour coded more green, more red depending on how much player
+won/lost
+Genjix - $48    15 hands ago
+<   copy  >
+slkddl hh text here 
+sddsdsds
+dsds
 
 ==== Chance dock window ====
 bars from PokerTH with scope to later
