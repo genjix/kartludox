@@ -1,5 +1,6 @@
 from PySide import QtCore, QtGui, QtWebKit
 import autohide_dock
+import common
 
 class ScrollEater(QtCore.QObject):
     def __init__(self, par):
@@ -96,18 +97,21 @@ class MdiTable(QtGui.QMdiSubWindow):
         self.wgt = QtGui.QWidget()
         hbox = QtGui.QHBoxLayout()
         fold = QtGui.QPushButton('Fold')
-        fold.setStyleSheet('background-color: #1169a4; width: 80px; font-size: 10pt; font-weight: bold; color: white;')
+        fold.setObjectName('FoldBtn')
+        #fold.setStyleSheet('background-color: #1169a4; width: 80px; font-size: 10pt; font-weight: bold; color: white;')
         fold.setCheckable(True)
         fold.setSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Minimum)
         hbox.addWidget(fold)
         call = QtGui.QPushButton('Call\n$1')
-        call.setStyleSheet('background-color: #1169a4; width: 80px; font-size: 10pt; font-weight: bold; color: white;')
+        call.setObjectName('CallBtn')
+        #call.setStyleSheet('background-color: #1169a4; width: 80px; font-size: 10pt; font-weight: bold; color: white;')
         call.setCheckable(True)
         call.setSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Minimum)
         hbox.addWidget(call)
         hbox.addSpacing(20)
         rai = QtGui.QPushButton('Raise\n$2')
-        rai.setStyleSheet('background-color: #1169a4; color: #ddf; width: 80px; height: 50px; font-size: 10pt; font-weight: bold;')
+        rai.setObjectName('RaiseBtn')
+        #rai.setStyleSheet('background-color: #1169a4; color: #ddf; width: 80px; height: 50px; font-size: 10pt; font-weight: bold;')
         rai.setCheckable(True)
         rai.setSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Minimum)
         hbox.addWidget(rai)
@@ -142,6 +146,7 @@ class MdiTable(QtGui.QMdiSubWindow):
         vbox.addLayout(hbox2)
         size = self.pic.size()
         self.wgt.resize(size.width(), size.height())
+        self.wgt.setStyleSheet(common.loadStyleSheet('./data/gfx/table/default/style.css'))
         scene.addWidget(self.wgt)
         self.view.setRenderHints(QtGui.QPainter.Antialiasing|QtGui.QPainter.SmoothPixmapTransform)
         #item = scene.addWidget(self.wgt)
