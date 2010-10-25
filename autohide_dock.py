@@ -32,6 +32,8 @@ class QAutoHideDockWidgets(QToolBar):
         self.parent().addToolBar(self.DOCK_AREA_TO_TB[self._area], self)
         self.parent().centralWidget().installEventFilter(self)
         
+        self.currentState = None
+        self.exceptions = []
         self.setVisible(False)
         self.hideDockWidgets()
 
@@ -53,18 +55,26 @@ class QAutoHideDockWidgets(QToolBar):
             p.drawPolygon((QPointF(8,0), QPointF(2,5), QPointF(8,10)))
 
     def _multiSetVisible(self, widgets, state):
+        if self.currentState == state:
+            return
+        newExceptions = []
         if state:
             self.setVisible(False)
+        else:
+            if self.currentState != None:
+                newExceptions = [w for w in widgets if not w.isVisible()]
+        self.currentState = state
 
         for w in widgets:
             w.setUpdatesEnabled(False)
-        for w in widgets:
+        for w in [w for w in widgets if w not in self.exceptions]:
             w.setVisible(state)
         for w in widgets:
             w.setUpdatesEnabled(True)
 
         if not state and widgets:
             self.setVisible(True)
+        self.exceptions = newExceptions
 
     def enterEvent(self, event):
         self.showDockWidgets()
