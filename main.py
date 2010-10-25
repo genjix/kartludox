@@ -280,12 +280,11 @@ class MainWindow(QtGui.QMainWindow):
         configIcon = icon('configure.png') 
 
         # file
-        self.quitAct = QtGui.QAction(icon('application-exit.png'),
-            self.tr("&Quit"), self,
-            shortcut=QtGui.QKeySequence.Quit,
-            statusTip=self.tr('Quit the application'),
-            triggered=QtGui.qApp.closeAllWindows)
         # network sub menu
+        self.serverListAct = QtGui.QAction(icon('network-server.png'),
+            self.tr('Server List...'), self,
+            shortcut=self.tr('F2'),
+            statusTip=self.tr('List of available servers to connect to'))
         self.confNetsAct = QtGui.QAction(configIcon,
             self.tr('Configure &Networks...'), self,
             statusTip=self.tr('Add, remove and modify the different networks you\'ve configured'))
@@ -295,6 +294,12 @@ class MainWindow(QtGui.QMainWindow):
         for net in netNames:
             self.connNetActs.append(QtGui.QAction(disconnIcon, net, self,
             statusTip=self.tr('Connect to') + ' ' + net))
+        # ----
+        self.quitAct = QtGui.QAction(icon('application-exit.png'),
+            self.tr("&Quit"), self,
+            shortcut=QtGui.QKeySequence.Quit,
+            statusTip=self.tr('Quit the application'),
+            triggered=QtGui.qApp.closeAllWindows)
 
         # view
         self.showMenuBarAct = QtGui.QAction(icon('show-menu.png'),
@@ -356,6 +361,7 @@ class MainWindow(QtGui.QMainWindow):
     def createMenus(self):
         menub = self.menuBar()
         fileMenu = menub.addMenu('&File')
+        fileMenu.addAction(self.serverListAct)
         networksSubMenu = fileMenu.addMenu(self.tr('&Networks'))
         # has icon
         networksSubMenu.addAction(self.confNetsAct)

@@ -84,6 +84,10 @@ user/pass
 Opens on application startup (can be turned off)
 select server -> opens new mdi window
 
+Network list
+[ ] Show at application startup       [ * Connect ] [ * Close ]
+(maybe button to configure list?- config screen like in quassel)
+
 ==== Add Server dialog (from conf networks ====
 Tab1 Normal add like in Konversation.
 Tab2 Advanced
