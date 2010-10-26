@@ -34,6 +34,7 @@ class QAutoHideDockWidgets(QToolBar):
         
         self.currentState = None
         self.exceptions = []
+        self.activeTabs = []
         self.setVisible(False)
         self.hideDockWidgets()
 
@@ -58,11 +59,31 @@ class QAutoHideDockWidgets(QToolBar):
         if self.currentState == state:
             return
         newExceptions = []
+        print '---------------'
         if state:
             self.setVisible(False)
         else:
             if self.currentState != None:
                 newExceptions = [w for w in widgets if not w.isVisible()]
+                
+                tabWidgetsAll = self.parent().findChildren(QTabWidget, None)
+                # tab widgets which contain QDockWidget
+                tabWidgets = []
+                if len(tabWidgets) > 0:
+                    print 'yay'
+                    for w in widgets:
+                        for tab in tabWidgetsAll:
+                            if tab in tabWidgets:
+                                continue
+                            if tab.indexOf(w) != -1:
+                                tabWidgets.append(tab)
+                    for tab in tabWidgets:
+                        self.activeTabs.append((tab, tab.currentIndex()))
+                # get the tab bar to reset the active tab position
+                #tabList = self.parent().findChildren(QTabBar, None)
+                #if len(tabList) > 0:
+                #    tabBar = tabList[0]
+                #    self.activeTab = tabBar.currentIndex()
         self.currentState = state
 
         for w in widgets:
@@ -75,6 +96,15 @@ class QAutoHideDockWidgets(QToolBar):
         if not state and widgets:
             self.setVisible(True)
         self.exceptions = newExceptions
+
+        if state:
+            for tab in self.activeTabs:
+                tab[0].setCurrentIndex(tab[1])
+            self.activeTabs = []
+            #tabList = self.parent().findChildren(QTabBar, None)
+            #if len(tabList) > 0:
+            #    tabBar = tabList[0]
+            #    tabBar.setCurrentIndex(self.activeTab)
 
     def enterEvent(self, event):
         self.showDockWidgets()
