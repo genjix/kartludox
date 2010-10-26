@@ -210,8 +210,8 @@ class MainWindow(QtGui.QMainWindow):
         self.setCentralWidget(self.mdiArea)
 
         self.createActions()
-        self.createMenus()
         self.createDockWidgets()
+        self.createMenus()
         self.createToolBars()
         #self.createStatusBar()
         #self.updateMenus()
@@ -395,6 +395,7 @@ class MainWindow(QtGui.QMainWindow):
         viewMenu.addAction(self.showPanelNotesAct)
         viewMenu.addAction(self.showPanelChanceAct)
         viewMenu.addAction(self.showPanelInfoAct)
+        #viewMenu.addAction(self.infoPanel.toggleViewAction())
         viewMenu.addSeparator()
         sidebarPosSubMenu = viewMenu.addMenu(self.tr('Sidebar &Position'))
         sidebarPosSubMenu.addAction(self.sidebarPosLeftAct)
@@ -499,6 +500,7 @@ class MainWindow(QtGui.QMainWindow):
         dock2 = QtGui.QDockWidget(self.tr("Information"))
         dock2.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea|QtCore.Qt.RightDockWidgetArea)
         dock2.setWidget(QtGui.QTextEdit())
+        self.infoPanel = dock2
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, dock2)
         self.tabifyDockWidget(dock, dock2)
         #self.toolBox.setStyleSheet('background-color: #ddd;')
@@ -528,6 +530,8 @@ class MainWindow(QtGui.QMainWindow):
         self.orderToolBar = self.addToolBar('Order')
         self.orderToolBar.addAction(self.cascadeTablesAct)
         self.orderToolBar.addAction(self.tileTablesAct)
+    def createStatusBar(self):
+        self.statusBar().showMessage("Ready")
     def toggleToolBox(self, checked):
         if checked:
             self.toolBox.show()
