@@ -58,6 +58,9 @@ class QAutoHideDockWidgets(QToolBar):
     def _multiSetVisible(self, widgets, state):
         if self.currentState == state:
             return
+        widgetsNotInExceptions = [w for w in widgets if w not in self.exceptions]
+        if len(widgetsNotInExceptions) == 0:
+            return
         newExceptions = []
         if state:
             self.setVisible(False)
@@ -73,7 +76,7 @@ class QAutoHideDockWidgets(QToolBar):
 
         for w in widgets:
             w.setUpdatesEnabled(False)
-        for w in [w for w in widgets if w not in self.exceptions]:
+        for w in widgetsNotInExceptions:
             w.setVisible(state)
         for w in widgets:
             w.setUpdatesEnabled(True)
