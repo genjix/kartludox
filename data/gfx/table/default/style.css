@@ -1,14 +1,35 @@
 QPushButton {
+    /*border-image: url(button.png) 3 10 3 10;*/
     color: white;
-    background-color: #1169a4;
-    width: 80px;
+    /*background-color: #1169a4;*/
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 1 #0a4871, stop: 0 #319cbe);
+    width: 90px;
     height: 50px;
     font-size: 10pt;
     font-weight: bold;
+    /*border-style: outset;*/
+    border-style: solid;
+    border-width: 2px;
+    border-color: #aaa;
+    border-radius: 10px;
+    padding: 3px;
 }
 QPushButton:checked {
-    background-color: #1180a4;
+    /*background-color: #1180a4;
+    border-style: inset;*/
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #1169a4, stop: 1 #1180a4);
 }
 QPushButton#FoldBtn {
     /* Also #CallBtn and #RaiseBtn */
+}
+
+QLineEdit {
+    border: 2px solid gray;
+    /*width: 10px;*/
+    height: 20px;
+    font-size: 12pt;
+    border-radius: 4px;
+    padding: 0 4px;
+    background: #b6d8e3;
+    selection-background-color: darkgray;
 }

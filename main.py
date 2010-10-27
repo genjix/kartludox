@@ -117,7 +117,7 @@ class MdiTable(QtGui.QMdiSubWindow):
         hbox.addWidget(rai)
         self.edit = QtGui.QLineEdit()
         self.edit.setValidator(QtGui.QDoubleValidator(0.0, -1.0, 2, self.edit))
-        self.edit.setMaximumSize(50,28)
+        self.edit.setMaximumSize(60,28)
         self.edit.setText('1')
         #hbox.addWidget(self.edit, 0.2)
         self.slider = QtGui.QSlider(QtCore.Qt.Vertical)
@@ -146,7 +146,8 @@ class MdiTable(QtGui.QMdiSubWindow):
         vbox.addLayout(hbox2)
         size = self.pic.size()
         self.wgt.resize(size.width(), size.height())
-        self.wgt.setStyleSheet(common.loadStyleSheet('./data/gfx/table/default/style.css'))
+        if QtCore.QDir.setCurrent('./data/gfx/table/default/'):
+            self.wgt.setStyleSheet(common.loadStyleSheet('style.css'))
         scene.addWidget(self.wgt)
         self.view.setRenderHints(QtGui.QPainter.Antialiasing|QtGui.QPainter.SmoothPixmapTransform)
         #item = scene.addWidget(self.wgt)
@@ -188,7 +189,7 @@ class MdiTable(QtGui.QMdiSubWindow):
         # should round to the nearest number of big blinds
         self.edit.setText('%.0f'%(1 + 100*value/100.0))
     def textChanged(self, value):
-        self.slider.setValue(int(value) - 1)
+        self.slider.setValue(round(float(value)) - 1)
     def wheelEvent(self, event):
         #event.accept()
         # hack to workaround Qt bug
