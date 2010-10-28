@@ -1,4 +1,4 @@
-from PySide import QtCore, QtGui, QtWebKit
+from PySide import QtCore, QtGui, QtWebKit, QtSvg
 import autohide_dock
 import common
 
@@ -85,14 +85,18 @@ class MdiTable(QtGui.QMdiSubWindow):
         other.setTransformationMode(QtCore.Qt.SmoothTransformation)
         scene.addItem(other)
 
-        self.card8 = QtGui.QPixmap('./data/gfx/cards/xanax_card_deck_03/6.png')
-        self.cardK = QtGui.QPixmap('./data/gfx/cards/xanax_card_deck_03/50.png')
-        card = scene.addPixmap(self.card8)
-        card.setPos(540,330)
-        card.setTransformationMode(QtCore.Qt.SmoothTransformation)
-        card = scene.addPixmap(self.cardK)
-        card.setPos(600,330)
-        card.setTransformationMode(QtCore.Qt.SmoothTransformation)
+        #self.card8 = QtGui.QPixmap('./data/gfx/cards/xanax_card_deck_03/6.png')
+        #self.cardK = QtGui.QPixmap('./data/gfx/cards/xanax_card_deck_03/50.png')
+        card = QtSvg.QGraphicsSvgItem('./data/gfx/cards/replixanax/6.svg')
+        scene.addItem(card)
+        #card = scene.addPixmap(self.card8)
+        card.setPos(500,270)
+        #card.setTransformationMode(QtCore.Qt.SmoothTransformation)
+        #card = scene.addPixmap(self.cardK)
+        card = QtSvg.QGraphicsSvgItem('./data/gfx/cards/replixanax/48.svg')
+        scene.addItem(card)
+        card.setPos(570,270)
+        #card.setTransformationMode(QtCore.Qt.SmoothTransformation)
 
         self.wgt = QtGui.QWidget()
         hbox = QtGui.QHBoxLayout()
