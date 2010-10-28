@@ -209,6 +209,13 @@ class MainWindow(QtGui.QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
 
+        import irc
+        from twisted.internet import reactor
+        irc.log.startLogging(sys.stdout)
+        self.f = irc.LogBotFactory('#pangaea', '/tmp/foo')
+        reactor.connectTCP("irc.freenode.net", 6667, self.f)
+        reactor.runReturn()
+
         self.mdiArea = QtGui.QMdiArea()
         self.mdiArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.mdiArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
@@ -247,8 +254,9 @@ class MainWindow(QtGui.QMainWindow):
         self.showMaximized()
         self.createMdiChild()
     def closeEvent(self, event):
-        #from twisted.internet import reactor
-        #reactor.stop()
+        from twisted.internet import reactor
+        print('closing reactor...')
+        reactor.stop()
         self.mdiArea.closeAllSubWindows()
         if self.activeMdiChild():
             event.ignore()
@@ -545,23 +553,18 @@ class MainWindow(QtGui.QMainWindow):
         else:
             self.toolBox.hide()
     def login(self):
+        from twisted.internet import reactor
+        reactor.stop()
         print('foo stub!')
 
 if __name__ == '__main__':
-    #import sys, qt4reactor
-    import sys
+    import sys, qt4reactor
 
     translator = QtCore.QTranslator()
     #translator.load('en_GB')
     translator.load('data/translations/eo_EO')
     app = QtGui.QApplication(sys.argv)
-    """qt4reactor.install()
-    import irc
-    from twisted.internet import reactor
-    irc.log.startLogging(sys.stdout)
-    f = irc.LogBotFactory('#pangaea', '/tmp/foo')
-    reactor.connectTCP("irc.freenode.net", 6667, f)
-    reactor.runReturn()"""
+    qt4reactor.install()
     app.installTranslator(translator)
     mainWin = MainWindow()
     sys.exit(app.exec_())

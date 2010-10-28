@@ -234,6 +234,8 @@ class QTReactor(PosixReactorBase):
         self._timer.setInterval(0)
         
     def reactorInvokePrivate(self):
+        if not self._blockApp:
+            return
         if not self.running:
             self._blockApp.quit()
         self._doSomethingCount += 1
