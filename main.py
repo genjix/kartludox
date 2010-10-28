@@ -247,8 +247,8 @@ class MainWindow(QtGui.QMainWindow):
         self.showMaximized()
         self.createMdiChild()
     def closeEvent(self, event):
-        from twisted.internet import reactor
-        reactor.stop()
+        #from twisted.internet import reactor
+        #reactor.stop()
         self.mdiArea.closeAllSubWindows()
         if self.activeMdiChild():
             event.ignore()
@@ -548,19 +548,20 @@ class MainWindow(QtGui.QMainWindow):
         print('foo stub!')
 
 if __name__ == '__main__':
-    import sys, qt4reactor
+    #import sys, qt4reactor
+    import sys
 
     translator = QtCore.QTranslator()
     #translator.load('en_GB')
     translator.load('data/translations/eo_EO')
     app = QtGui.QApplication(sys.argv)
-    qt4reactor.install()
+    """qt4reactor.install()
     import irc
     from twisted.internet import reactor
     irc.log.startLogging(sys.stdout)
     f = irc.LogBotFactory('#pangaea', '/tmp/foo')
     reactor.connectTCP("irc.freenode.net", 6667, f)
-    reactor.runReturn()
+    reactor.runReturn()"""
     app.installTranslator(translator)
     mainWin = MainWindow()
     sys.exit(app.exec_())
