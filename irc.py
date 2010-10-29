@@ -154,7 +154,7 @@ if __name__ == '__main__':
     
     # create factory protocol and application
     print(sys.argv)
-    f = LogBotFactory(sys.argv[1], sys.argv[2])
+    f = LogBotFactory('#pangaea', 'fooo')
 
     # connect factory to this host and port
     #reactor.connectSSL
