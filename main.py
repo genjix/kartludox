@@ -17,10 +17,20 @@ class NonScrollGraphicsView(QtGui.QGraphicsView):
         event.ignore()
 
 class Interactable(QtGui.QGraphicsPixmapItem):
-    def __init__(self, pixmap):
+    def __init__(self, pixmap, table):
         super(Interactable, self).__init__(pixmap)
+        self.table = table
     def mousePressEvent(self, event):
-        print('coooey!')
+        super(Interactable, self).mousePressEvent(event)
+        print('small cards -----')
+        for c in self.table.allCards:
+            p = c.pos()
+            print(p.x(), p.y())
+        print('seats ----------')
+        for s in self.table.allSeats:
+            p = s.pos()
+            print(p.x(), p.y())
+        print('--------------')
 
 class MdiTable(QtGui.QMdiSubWindow):
     sequenceNumber = 1
@@ -34,8 +44,10 @@ class MdiTable(QtGui.QMdiSubWindow):
 
         self.pic = QtGui.QPixmap('./data/gfx/gui/default/table.png')
         scene = QtGui.QGraphicsScene(self)
-        seat = scene.addPixmap(self.pic)
+        #seat = scene.addPixmap(self.pic)
+        seat = Interactable(self.pic, self)
         seat.setTransformationMode(QtCore.Qt.SmoothTransformation)
+        scene.addItem(seat)
         self.disppic = scene.items()[0]
         #self.view = QtGui.QGraphicsView()
         self.view = NonScrollGraphicsView()
@@ -51,11 +63,16 @@ class MdiTable(QtGui.QMdiSubWindow):
         #self.view.setFocusPolicy(QtCore.Qt.NoFocus)
 
         self.seat = QtGui.QPixmap('./data/gfx/gui/default/seat_empty.png')
-        seat = scene.addPixmap(self.seat)
-        seat.setTransformationMode(QtCore.Qt.SmoothTransformation)
-        seat.setPos(400,30)
-        seat = scene.addPixmap(self.seat)
-        seat.setPos(80,220)
+        positions = [(610, 100), (620, 200), (510, 290), (330, 290), (140, 290), (30, 200), (60, 100), (240, 60), (430, 60)]
+        self.allSeats = []
+        for p in positions:
+            seat = scene.addPixmap(self.seat)
+            seat.setTransformationMode(QtCore.Qt.SmoothTransformation)
+            seat.setFlags(seat.ItemIsMovable)
+            seat.setPos(*p)
+            self.allSeats.append(seat)
+            #seat = scene.addPixmap(self.seat)
+        """seat.setPos(80,220)
         seat.setTransformationMode(QtCore.Qt.SmoothTransformation)
         seat = scene.addPixmap(self.seat)
         seat.setPos(60,30)
@@ -65,12 +82,19 @@ class MdiTable(QtGui.QMdiSubWindow):
         seat.setTransformationMode(QtCore.Qt.SmoothTransformation)
         seat = scene.addPixmap(self.seat)
         seat.setPos(460,120)
-        seat.setTransformationMode(QtCore.Qt.SmoothTransformation)
+        seat.setTransformationMode(QtCore.Qt.SmoothTransformation)"""
         self.other = QtGui.QPixmap('./data/gfx/gui/default/other_cards.png')
-        other = scene.addPixmap(self.other)
-        other.setPos(120, 50)
-        other.setTransformationMode(QtCore.Qt.SmoothTransformation)
-        other = scene.addPixmap(self.other)
+        positions = [(610, 120), (620, 200), (510, 290), (330, 290), (140, 290), (100, 210), (120, 120), (280, 110), (480, 110)]
+        self.allCards = []
+        for p in positions:
+            other = scene.addPixmap(self.other)
+            #other = Interactable(self.other, self)
+            other.setTransformationMode(QtCore.Qt.SmoothTransformation)
+            other.setFlags(other.ItemIsMovable)
+            other.setPos(*p)
+            self.allCards.append(other)
+            #scene.addItem(other)
+        """other = scene.addPixmap(self.other)
         other.setPos(80, 130)
         other.setTransformationMode(QtCore.Qt.SmoothTransformation)
         other = scene.addPixmap(self.other)
@@ -83,7 +107,7 @@ class MdiTable(QtGui.QMdiSubWindow):
         other = Interactable(self.other)
         other.setPos(380, 50)
         other.setTransformationMode(QtCore.Qt.SmoothTransformation)
-        scene.addItem(other)
+        scene.addItem(other)"""
 
         #self.card8 = QtGui.QPixmap('./data/gfx/cards/xanax_card_deck_03/6.png')
         #self.cardK = QtGui.QPixmap('./data/gfx/cards/xanax_card_deck_03/50.png')
