@@ -1,10 +1,3 @@
-do state machine examples
-do MVC tut
-test in XP
-download win7 por testing
-install FTP, check it out
-overlay table with PS in inkscape to sort gfx out.
-
 shade other buttons when toggle fold/call/raise
 css everything
 rewrite to MVC
@@ -13,6 +6,7 @@ note editor with bold, italic, colours (colour pick) + font size
 load table layout from config positions incl stylesheets also.
 app remember prev settings
 
+@@@ Moving to Okular sidebar now. Bugs invalidated.
 BUG: show/hide docks doesnt save tab sel pos
 BUG: closing all panels and they reappear on next hover event
 WANT: panels move the main view.
