@@ -78,6 +78,8 @@ class SidebarDelegate(QAbstractItemDelegate):
             fontBoundaries.translate(textPos)
             fontBoundaries.translate(option.rect.topLeft())
             painter.setPen(foreColor)
+            ### hack for text being cut off
+            fontBoundaries.setWidth(fontBoundaries.width()+1)
             painter.drawText(fontBoundaries, Qt.AlignCenter, text)
 
     def sizeHint(self, option, index):
@@ -266,9 +268,9 @@ class Sidebar(QWidget):
                 ########
                 splitterSizes = []
                 if len(splitterSizes) == 0:
-                    # the first time use 1/10 for the panel and 9/10 for the pageView
-                    splitterSizes.append(50)
-                    splitterSizes.append(500)
+                    # the first time use 1/4 for the panel and 9/10 for the pageView
+                    splitterSizes.append(100)
+                    splitterSizes.append(300)
                 self.d.splitter.setSizes(splitterSizes)
                 self.d.splitterSizesSet = True
     def setBottomWidget(self, widget):
@@ -384,24 +386,29 @@ class Sidebar(QWidget):
                 min(bottomElemRect.width() + self.list.frameWidth() * 2, curWidth)
             self.list.setFixedWidth(newWidth)
 
-class MainWindow(QMainWindow):
-    def __init__(self):
-        super(MainWindow, self).__init__()
-        sidebar = Sidebar()
-        icon = QIcon('./data/gfx/gui/default/seat_empty.png')
-        tex = QTextEdit()
-        tex.setText('sdsdssdsddssd')
-        sidebar.addItem(tex, icon, 'Chat')
-        sidebar.addItem(QTextEdit(), icon, 'Hand History')
-        sidebar.addItem(QTextEdit(), icon, 'Chance')
-        sidebar.addItem(QTextEdit(), icon, 'Info')
-        sidebar.setCurrentIndex(1)
-        sidebar.setCurrentIndex(0)
-        sidebar.setMainWidget(QTextEdit())
-        self.setCentralWidget(sidebar)
-        self.showMaximized()
-
 if __name__ == '__main__':
+    class MainWindow(QMainWindow):
+        def __init__(self):
+            super(MainWindow, self).__init__()
+            sidebar = Sidebar()
+            tex = QTextEdit()
+            tex.setText('sdsdssdsddssd')
+            chatIcon = QIcon('./data/gfx/icons/chat.png')
+            sidebar.addItem(tex, chatIcon, 'Chat')
+            chanceIcon = QIcon('./data/gfx/icons/roll.png')
+            sidebar.addItem(QTextEdit(), chanceIcon, 'Chance')
+            hhIcon = QIcon('./data/gfx/icons/replay.png')
+            sidebar.addItem(QTextEdit(), hhIcon, 'Hand History')
+            notesIcon = QIcon('./data/gfx/icons/document-edit.png')
+            sidebar.addItem(QTextEdit(), notesIcon, 'Notes')
+            infoIcon = QIcon('./data/gfx/icons/information.png')
+            sidebar.addItem(QTextEdit(), infoIcon, 'Info')
+            sidebar.setCurrentIndex(1)
+            sidebar.setCurrentIndex(0)
+            sidebar.setMainWidget(QTextEdit())
+            self.setCentralWidget(sidebar)
+            self.showMaximized()
+
     import sys
     translator = QTranslator()
     translator.load('il8n/eo_EO')

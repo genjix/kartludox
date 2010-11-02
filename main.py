@@ -39,7 +39,7 @@ class MdiTable(QtGui.QMdiSubWindow):
         super(MdiTable, self).__init__()
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.setWindowTitle(self.tr('Table titilonius'))
-        self.setWindowFlags(QtCore.Qt.WindowMinimizeButtonHint)
+        #self.setWindowFlags(QtCore.Qt.WindowMinimizeButtonHint)
         self.setMinimumHeight(200)
 
         self.pic = QtGui.QPixmap('./data/gfx/gui/default/table.png')
@@ -122,8 +122,18 @@ class MdiTable(QtGui.QMdiSubWindow):
         card.setPos(570,270)
         #card.setTransformationMode(QtCore.Qt.SmoothTransformation)
 
+        path = QtGui.QPainterPath()
+        font = QtGui.QFont()
+        font.setPointSize(44)
+        path.addText(QtCore.QPointF(300, 300), font, 'dsdssd')
+        brush = QtGui.QLinearGradient()
+        pen = QtGui.QPen()
+        pen.setWidth(3)
+        scene.addPath(path, pen, brush)
+
         self.wgt = QtGui.QWidget()
         hbox = QtGui.QHBoxLayout()
+        hbox.addStretch()
         fold = QtGui.QPushButton('Fold')
         fold.setObjectName('FoldBtn')
         #fold.setStyleSheet('background-color: #1169a4; width: 80px; font-size: 10pt; font-weight: bold; color: white;')
@@ -158,9 +168,6 @@ class MdiTable(QtGui.QMdiSubWindow):
         #self.btn = QtGui.QPushButton('play')
         #self.btn.setAttribute(QtCore.Qt.WA_NoSystemBackground)
         self.wgt.setAttribute(QtCore.Qt.WA_NoSystemBackground)
-        hbox2 = QtGui.QHBoxLayout()
-        hbox2.addStretch()
-        hbox2.addLayout(hbox)
         vboxnum = QtGui.QVBoxLayout()
         vboxnum.addStretch()
         vboxnum.addWidget(self.edit)
@@ -171,13 +178,15 @@ class MdiTable(QtGui.QMdiSubWindow):
         vbox = QtGui.QVBoxLayout(self.wgt)
         #vbox.addStretch()
         vbox.addLayout(hboxslider)
-        vbox.addLayout(hbox2)
+        vbox.addLayout(hbox)
         size = self.pic.size()
         self.wgt.resize(size.width(), size.height())
         if QtCore.QDir.setCurrent('./data/gfx/table/default/'):
             self.wgt.setStyleSheet(common.loadStyleSheet('style.css'))
+        QtCore.QDir.setCurrent('../../../../')
         scene.addWidget(self.wgt)
         self.view.setRenderHints(QtGui.QPainter.Antialiasing|QtGui.QPainter.SmoothPixmapTransform)
+        #self.chat = QtGui.QTextEdit(self.view)
         #item = scene.addWidget(self.wgt)
         #self.view.setLayout(vbox)
         #item.setZValue(1)
@@ -206,13 +215,16 @@ class MdiTable(QtGui.QMdiSubWindow):
             self.resize(aspect * size.height() + margins.left() + margins.right(),
                 size.height() + margins.top() + margins.bottom())
 
-        winw = self.contentsRect().size().width()
+        winSize = self.contentsRect().size()
+        winw, winh = winSize.width(), winSize.height()
         picw = self.pic.size().width()
         scale = winw / float(picw)
         trans = QtGui.QTransform()
         trans.scale(scale, scale)
         self.view.setTransform(trans)
         self.view.repaint()
+        #self.chat.resize(winw*0.5, winh*0.5)
+        #self.chat.move(10,winh*0.5 - 10)
     def sliderMoved(self, value):
         # should round to the nearest number of big blinds
         self.edit.setText('%.0f'%(1 + 100*value/100.0))
@@ -233,20 +245,41 @@ class MainWindow(QtGui.QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
 
-        import irc
+        """import irc
         from twisted.internet import reactor
         irc.log.startLogging(sys.stdout)
         self.f = irc.LogBotFactory('#pangaea', '/tmp/foo')
         reactor.connectTCP("irc.freenode.net", 6667, self.f)
-        reactor.runReturn()
+        reactor.runReturn()"""
 
         self.mdiArea = QtGui.QMdiArea()
         self.mdiArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.mdiArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        self.setCentralWidget(self.mdiArea)
+
+        import sidebar
+        self.document = sidebar.Sidebar()
+        self.document.setMainWidget(self.mdiArea)
+        ###### lazy
+        sidebar = self.document
+        tex = QtGui.QTextEdit()
+        tex.setText('sdsdssdsddssd')
+        chatIcon = QtGui.QIcon('./data/gfx/icons/chat.png')
+        sidebar.addItem(tex, chatIcon, 'Chat')
+        chanceIcon = QtGui.QIcon('./data/gfx/icons/roll.png')
+        sidebar.addItem(QtGui.QTextEdit(), chanceIcon, 'Chance')
+        hhIcon = QtGui.QIcon('./data/gfx/icons/replay.png')
+        sidebar.addItem(QtGui.QTextEdit(), hhIcon, 'Hand History')
+        notesIcon = QtGui.QIcon('./data/gfx/icons/document-edit.png')
+        sidebar.addItem(QtGui.QTextEdit(), notesIcon, 'Notes')
+        infoIcon = QtGui.QIcon('./data/gfx/icons/information.png')
+        sidebar.addItem(QtGui.QTextEdit(), infoIcon, 'Info')
+        sidebar.setCurrentIndex(1)
+        sidebar.setCurrentIndex(0)
+        ######
+        self.setCentralWidget(self.document)
 
         self.createActions()
-        self.createDockWidgets()
+        #self.createDockWidgets()
         self.createMenus()
         self.createToolBars()
         #self.createStatusBar()
@@ -271,7 +304,7 @@ class MainWindow(QtGui.QMainWindow):
         #self.setCentralWidget(self.splitter)
 
 
-        v = autohide_dock.QAutoHideDockWidgets(QtCore.Qt.LeftDockWidgetArea, self)
+        #v = autohide_dock.QAutoHideDockWidgets(QtCore.Qt.LeftDockWidgetArea, self)
 
         self.setWindowTitle('Kartludox')
         self.setUnifiedTitleAndToolBarOnMac(True)
