@@ -9,11 +9,16 @@ class GameBase:
         pass
 
 class Player:
+    Nothing = 0
+    SB = 1
+    BB = 2
+    SBBB = 3
     def __init__(self, nickname, parent):
         self.nickname = nickname
         self.parent = parent
         self.stack = 0
         self.cards = None
+        self.paidState = self.Nothing
     def __repr__(self):
         return '%s (%.2f btc or %i tb) %s'%(self.nickname,
             (self.stack/float(self.parent.tinyBB)) * self.parent.bb, self.stack,
@@ -85,6 +90,19 @@ class NLCashScript:
         for player in self.seats:
             if player != None:
                 player.cards = (self.deck.pop(), self.deck.pop())
+    def newHand(self):
+        self.dealer = self.nextPlayer(self.dealer, self.seats)
+    def nextPlayer(self, seat, activePlayers):
+        startPos = seat
+        while seat != startPos - 1:
+            seat += 1
+            if seat >= len(activePlayers):
+                seat = 0
+            player = activePlayers[seat]
+            if not player or player.paidState != player.SBBB:
+                continue
+            return seat
+        raise RuntimeError('no next player found')
     def __repr__(self):
         s = ''
         s += 'Seat %i is the button\n'%self.dealer
@@ -115,7 +133,15 @@ if __name__ == '__main__':
     cash.addPlayer('honn', 3)
     cash.buyin('honn', 100)
     print cash
-    cash.postSB('lorea')
-    cash.postBB('mison')
+    for player in cash.seats:
+        if player:
+            player.paidState = player.SBBB
+    cash.newHand()
+    cash.dealCards()
+    print cash
+    cash.newHand()
+    cash.dealCards()
+    print cash
+    cash.newHand()
     cash.dealCards()
     print cash
