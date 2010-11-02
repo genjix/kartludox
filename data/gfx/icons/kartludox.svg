@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   id="svg2876"
+   version="1.1"
+   inkscape:version="0.47 r22583"
+   width="256"
+   height="256"
+   sodipodi:docname="kartludox.svg"
+   inkscape:export-filename="/home/genjix/Public/mdi/data/gfx/icons/kartludox.png"
+   inkscape:export-xdpi="11.25"
+   inkscape:export-ydpi="11.25">
+  <metadata
+     id="metadata2882">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs2880">
+    <linearGradient
+       id="linearGradient6082">
+      <stop
+         style="stop-color:#000000;stop-opacity:1;"
+         offset="0"
+         id="stop6084" />
+      <stop
+         id="stop6090"
+         offset="0.5"
+         style="stop-color:#323232;stop-opacity:1;" />
+      <stop
+         style="stop-color:#bcbcbc;stop-opacity:1;"
+         offset="0.75"
+         id="stop6092" />
+      <stop
+         style="stop-color:#b9b9b9;stop-opacity:1;"
+         offset="1"
+         id="stop6086" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient4528">
+      <stop
+         style="stop-color:#ffffff;stop-opacity:0;"
+         offset="0"
+         id="stop4530" />
+      <stop
+         id="stop6070"
+         offset="0.5"
+         style="stop-color:#ffffff;stop-opacity:1;" />
+      <stop
+         style="stop-color:#ffffff;stop-opacity:0.55688626;"
+         offset="1"
+         id="stop4532" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient4467">
+      <stop
+         style="stop-color:#f40000;stop-opacity:1;"
+         offset="0"
+         id="stop4469" />
+      <stop
+         id="stop4475"
+         offset="0.75"
+         style="stop-color:#ae0f0f;stop-opacity:1;" />
+      <stop
+         style="stop-color:#6b1e1e;stop-opacity:1;"
+         offset="1"
+         id="stop4471" />
+    </linearGradient>
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="0 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       id="perspective2884" />
+    <inkscape:perspective
+       id="perspective3639"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective4440"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective4485"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective4485-7"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient4528"
+       id="linearGradient6068"
+       x1="217.88182"
+       y1="221.70798"
+       x2="279.0582"
+       y2="85.640099"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient4528"
+       id="linearGradient6078"
+       gradientUnits="userSpaceOnUse"
+       x1="217.88182"
+       y1="221.70798"
+       x2="279.0582"
+       y2="85.640099" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient4528"
+       id="linearGradient6080"
+       gradientUnits="userSpaceOnUse"
+       x1="217.88182"
+       y1="221.70798"
+       x2="279.0582"
+       y2="85.640099" />
+  </defs>
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1280"
+     inkscape:window-height="781"
+     id="namedview2878"
+     showgrid="false"
+     inkscape:zoom="1.3037282"
+     inkscape:cx="305.86062"
+     inkscape:cy="73.302619"
+     inkscape:window-x="0"
+     inkscape:window-y="19"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg2876" />
+  <g
+     id="g1753"
+     style="fill:#002960;fill-opacity:1;stroke:#000000;stroke-width:4.40680552;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+     transform="matrix(-4.5831212,4.5831212,1.7444675,1.7444675,806.28603,-1326.2498)"
+     inkscape:export-filename="/home/genjix/Public/mdi/data/gfx/icons/kartludox.png"
+     inkscape:export-xdpi="9.8800001"
+     inkscape:export-ydpi="9.8800001">
+    <path
+       style="fill:#002960;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:13.38330364;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="m 203.01102,181.73253 -33.78649,-26.81058 c 12.365,4.35801 35.61781,2.7563 38.05672,-25.6407 6.10176,-71.044528 -96.9442,-33.372859 -132.75,-54.6875 22.119208,35.4771 -13.807039,145.74667 59.9375,128.28125 18.88448,-8.11123 24.71994,-21.51016 21.12115,-31.57627 4.5229,6.4321 18.60735,29.76819 22.15346,37.7704 -0.67139,17.72845 -5.05018,30.92858 -60.91656,42.9591 6.42477,1.7111 122.3807,41.48791 151.28651,20.74916 28.90581,-20.73875 -15.25756,-119.46924 -16.83027,-124.47446 -13.70271,38.84564 -28.8185,39.54864 -48.27202,33.4296 z"
+       transform="matrix(-0.14364692,0.37739381,0.14364692,0.37739381,232.82377,111.108)"
+       id="path1755"
+       sodipodi:nodetypes="ccscccccscc" />
+  </g>
+  <g
+     id="g1753-2"
+     style="fill:url(#linearGradient6080);fill-opacity:1;stroke:#ffffff;stroke-width:1.31710541;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+     transform="matrix(-4.5831212,4.5831212,1.7444675,1.7444675,806.28603,-1326.2498)"
+     inkscape:transform-center-x="-9.5575891"
+     inkscape:transform-center-y="-12.743474"
+     inkscape:export-filename="/home/genjix/Public/mdi/data/gfx/icons/kartludox.png"
+     inkscape:export-xdpi="9.8800001"
+     inkscape:export-ydpi="9.8800001">
+    <path
+       style="fill:url(#linearGradient6078);fill-opacity:1;fill-rule:evenodd;stroke:none"
+       d="m 129.03125,19.03125 c -61.37128,0 -111.125,49.75372 -111.125,111.125 0,61.37128 49.75372,111.15625 111.125,111.15625 9.75832,0 19.23234,-1.26242 28.25,-3.625 -7.01722,-6.36262 -13.01535,-14.05545 -17.71875,-22.875 C 136.22685,215.58232 133.09284,216 130.5,216 79.60347,216 36.875,181.05278 36.875,130.15625 36.875,79.259721 78.134721,38 129.03125,38 149.82185,38 168.88293,44.729966 184,56.15625 189.44727,52.159304 195.18855,48.622929 201.15625,45.625 181.74535,29.050017 156.55521,19.03125 129.03125,19.03125 z M 81.34375,83 c 19.59656,31.43101 -11.601492,128.3325 51.4375,115.53125 -2.67014,-8.53992 -4.31353,-17.7889 -4.75,-27.65625 -1.269,-28.68845 7.79345,-57.28945 23.65625,-80.84375 C 126.39939,88.298513 97.503703,92.619771 81.34375,83 z"
+       transform="matrix(-0.16020586,0.42089799,0.16020586,0.42089799,232.56646,98.206512)"
+       id="path1755-7" />
+  </g>
+</svg>

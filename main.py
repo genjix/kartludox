@@ -627,5 +627,7 @@ if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
     qt4reactor.install()
     app.installTranslator(translator)
+    appIcon = QtGui.QIcon('./data/gfx/icons/kartludox.png')
+    app.setWindowIcon(appIcon)
     mainWin = MainWindow()
     sys.exit(app.exec_())
