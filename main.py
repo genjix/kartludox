@@ -259,27 +259,11 @@ class MainWindow(QtGui.QMainWindow):
         import sidebar
         self.document = sidebar.Sidebar()
         self.document.setMainWidget(self.mdiArea)
-        ###### lazy
-        sidebar = self.document
-        tex = QtGui.QTextEdit()
-        tex.setText('sdsdssdsddssd')
-        chatIcon = QtGui.QIcon('./data/gfx/icons/chat.png')
-        sidebar.addItem(tex, chatIcon, 'Chat')
-        chanceIcon = QtGui.QIcon('./data/gfx/icons/roll.png')
-        sidebar.addItem(QtGui.QTextEdit(), chanceIcon, 'Chance')
-        hhIcon = QtGui.QIcon('./data/gfx/icons/replay.png')
-        sidebar.addItem(QtGui.QTextEdit(), hhIcon, 'Hand')
-        notesIcon = QtGui.QIcon('./data/gfx/icons/document-edit.png')
-        sidebar.addItem(QtGui.QTextEdit(), notesIcon, 'Notes')
-        infoIcon = QtGui.QIcon('./data/gfx/icons/information.png')
-        sidebar.addItem(QtGui.QTextEdit(), infoIcon, 'Info')
-        sidebar.setCurrentIndex(1)
-        sidebar.setCurrentIndex(0)
-        ######
         self.setCentralWidget(self.document)
 
         self.createActions()
         #self.createDockWidgets()
+        self.createSidebarItems()
         self.createMenus()
         self.createToolBars()
         #self.createStatusBar()
@@ -499,14 +483,8 @@ class MainWindow(QtGui.QMainWindow):
         helpMenu.addAction(self.switchLangAct)
         helpMenu.addSeparator()
         helpMenu.addAction('About Kartludox')
-    def createDockWidgets(self):
+    def createSidebarItems(self):
         icon = lambda s: QtGui.QIcon('./data/gfx/icons/' + s)
-
-        self.setTabPosition(QtCore.Qt.AllDockWidgetAreas, QtGui.QTabWidget.North)
-        dock = QtGui.QDockWidget(self.tr("Chat Window"))
-        dock.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea|QtCore.Qt.RightDockWidgetArea)
-        dock.setWidget(QtGui.QTextEdit())
-        self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, dock)
 
         web = QtWebKit.QWebView()
         import hand
@@ -549,6 +527,32 @@ class MainWindow(QtGui.QMainWindow):
         layout.addWidget(stack)
         wgt = QtGui.QWidget()
         wgt.setLayout(layout)
+        ###### lazy
+        sidebar = self.document
+        tex = QtGui.QTextEdit()
+        tex.setText('sdsdssdsddssd')
+        chatIcon = QtGui.QIcon('./data/gfx/icons/chat.png')
+        sidebar.addItem(tex, chatIcon, 'Chat')
+        chanceIcon = QtGui.QIcon('./data/gfx/icons/roll.png')
+        sidebar.addItem(QtGui.QTextEdit(), chanceIcon, 'Chance')
+        hhIcon = QtGui.QIcon('./data/gfx/icons/replay.png')
+        sidebar.addItem(wgt, hhIcon, 'Hand')
+        notesIcon = QtGui.QIcon('./data/gfx/icons/document-edit.png')
+        sidebar.addItem(QtGui.QTextEdit(), notesIcon, 'Notes')
+        infoIcon = QtGui.QIcon('./data/gfx/icons/information.png')
+        sidebar.addItem(QtGui.QTextEdit(), infoIcon, 'Info')
+        sidebar.setCurrentIndex(1)
+        sidebar.setCurrentIndex(0)
+        ######
+    def createDockWidgets(self):
+        icon = lambda s: QtGui.QIcon('./data/gfx/icons/' + s)
+
+        self.setTabPosition(QtCore.Qt.AllDockWidgetAreas, QtGui.QTabWidget.North)
+        dock = QtGui.QDockWidget(self.tr("Chat Window"))
+        dock.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea|QtCore.Qt.RightDockWidgetArea)
+        dock.setWidget(QtGui.QTextEdit())
+        self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, dock)
+
 
         dock2 = QtGui.QDockWidget(self.tr("Hand History"))
         dock2.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea|QtCore.Qt.RightDockWidgetArea)
