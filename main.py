@@ -268,7 +268,7 @@ class MainWindow(QtGui.QMainWindow):
         chanceIcon = QtGui.QIcon('./data/gfx/icons/roll.png')
         sidebar.addItem(QtGui.QTextEdit(), chanceIcon, 'Chance')
         hhIcon = QtGui.QIcon('./data/gfx/icons/replay.png')
-        sidebar.addItem(QtGui.QTextEdit(), hhIcon, 'Hand History')
+        sidebar.addItem(QtGui.QTextEdit(), hhIcon, 'Hand')
         notesIcon = QtGui.QIcon('./data/gfx/icons/document-edit.png')
         sidebar.addItem(QtGui.QTextEdit(), notesIcon, 'Notes')
         infoIcon = QtGui.QIcon('./data/gfx/icons/information.png')
