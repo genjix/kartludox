@@ -65,6 +65,7 @@ class SidebarDelegate(QAbstractItemDelegate):
             iconpos = QPoint(
                 (option.rect.width() - option.decorationSize.width()) / 2,
                 self.ITEM_MARGIN_TOP)
+            iconpos += QPoint(8, 12)
             iconpos += option.rect.topLeft()
             iconmode = disabled and QIcon.Disabled or QIcon.Normal
             painter.drawPixmap(iconpos, icon.pixmap(option.decorationSize, iconmode))
@@ -221,6 +222,7 @@ class Sidebar(QWidget):
         self.d.list.viewport().setAutoFillBackground(False)
         ########
         #self.d.list.setFont(
+        self.d.list.setFont(QFont('sans serif', 8))
 
         self.d.splitter = QSplitter(self)
         mainLay.addWidget(self.d.splitter)
@@ -398,7 +400,7 @@ if __name__ == '__main__':
             chanceIcon = QIcon('./data/gfx/icons/roll.png')
             sidebar.addItem(QTextEdit(), chanceIcon, 'Chance')
             hhIcon = QIcon('./data/gfx/icons/replay.png')
-            sidebar.addItem(QTextEdit(), hhIcon, 'Hand History')
+            sidebar.addItem(QTextEdit(), hhIcon, 'Hand')
             notesIcon = QIcon('./data/gfx/icons/document-edit.png')
             sidebar.addItem(QTextEdit(), notesIcon, 'Notes')
             infoIcon = QIcon('./data/gfx/icons/information.png')
