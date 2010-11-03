@@ -129,7 +129,7 @@ class MdiTable(QtGui.QMdiSubWindow):
         #card = scene.addPixmap(self.cardK)
         card = QtSvg.QGraphicsSvgItem('./data/gfx/cards/replixanax/48.svg')
         scene.addItem(card)
-        card.setPos(510,290)
+        card.setPos(515,290)
         #card.setTransformationMode(QtCore.Qt.SmoothTransformation)
 
         font = QtGui.QFont('Lucida Sans')
@@ -161,7 +161,7 @@ class MdiTable(QtGui.QMdiSubWindow):
             play = scene.addPixmap(playbox)
             p = p[0], p[1] + 80
             play.setPos(p[0] - 20, p[1] - 4)
-            p = p[0], p[1] + 14
+            p = p[0], p[1] + 12
             path.addText(QtCore.QPointF(p[0], p[1]), font, names.pop())
             p = p[0], p[1] + 20
             path.addText(QtCore.QPointF(p[0], p[1]), font, stacks.pop())
@@ -295,13 +295,13 @@ class MainWindow(QtGui.QMainWindow):
         import sidebar
         self.document = sidebar.Sidebar()
         self.document.setMainWidget(self.mdiArea)
-        #self.setCentralWidget(self.document)
-        self.setCentralWidget(self.mdiArea)
+        self.setCentralWidget(self.document)
+        #self.setCentralWidget(self.mdiArea)
 
         self.createActions()
         #self.createDockWidgets()
         self.createSidebarItems()
-        #self.createMenus()
+        self.createMenus()
         self.createToolBars()
         #self.createStatusBar()
         #self.updateMenus()
