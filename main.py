@@ -42,7 +42,7 @@ class MdiTable(QtGui.QMdiSubWindow):
         #self.setWindowFlags(QtCore.Qt.WindowMinimizeButtonHint)
         self.setMinimumHeight(200)
 
-        self.pic = QtGui.QPixmap('./data/gfx/gui/default/table.png')
+        self.pic = QtGui.QPixmap('./data/gfx/table/default/table.png')
         scene = QtGui.QGraphicsScene(self)
         #seat = scene.addPixmap(self.pic)
         seat = Interactable(self.pic, self)
@@ -62,7 +62,7 @@ class MdiTable(QtGui.QMdiSubWindow):
         #self.view.clearFocus()
         #self.view.setFocusPolicy(QtCore.Qt.NoFocus)
 
-        self.seat = QtGui.QPixmap('./data/gfx/gui/default/seat_empty.png')
+        self.seat = QtGui.QPixmap('./data/gfx/table/default/seat_empty.png')
         #positions = [(610, 100), (620, 200), (510, 290), (330, 290), (140, 290), (30, 200), (60, 100), (240, 60), (430, 60)]
         positions = [(40, 170), (470, 280), (200, 280), (630, 170), (200, 40), (470, 40)]
         self.allSeats = []
@@ -84,7 +84,7 @@ class MdiTable(QtGui.QMdiSubWindow):
         seat = scene.addPixmap(self.seat)
         seat.setPos(460,120)
         seat.setTransformationMode(QtCore.Qt.SmoothTransformation)"""
-        self.other = QtGui.QPixmap('./data/gfx/gui/default/other_cards.png')
+        self.other = QtGui.QPixmap('./data/gfx/table/default/other_cards.png')
         #positions = [(610, 120), (620, 200), (510, 290), (330, 290), (140, 290), (100, 210), (120, 120), (280, 110), (480, 110)]
         positions = [(620, 200), (250, 100), (250, 270), (100, 210), (470, 100)]
         self.allCards = []
