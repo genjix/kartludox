@@ -659,13 +659,13 @@ class MainWindow(QtGui.QMainWindow):
         print('foo stub!')
 
 if __name__ == '__main__':
-    import sys, qt4reactor
+    import sys
 
     translator = QtCore.QTranslator()
     #translator.load('en_GB')
     translator.load('data/translations/eo_EO')
     app = QtGui.QApplication(sys.argv)
-    qt4reactor.install()
+    #qt4reactor.install()
     app.installTranslator(translator)
     appIcon = QtGui.QIcon('./data/gfx/icons/kartludox.png')
     app.setWindowIcon(appIcon)
