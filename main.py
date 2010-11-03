@@ -66,7 +66,7 @@ class MdiTable(QtGui.QMdiSubWindow):
         self.seat_girl = QtGui.QPixmap('./data/gfx/table/default/girl.png')
         self.seat_custom = QtGui.QPixmap('./data/gfx/table/default/custom-avatar.png')
         #positions = [(610, 100), (620, 200), (510, 290), (330, 290), (140, 290), (30, 200), (60, 100), (240, 60), (430, 60)]
-        avatarPositions = [(40, 170), (420, 280), (200, 280), (630, 170), (200, 40), (470, 40)]
+        avatarPositions = [(40, 170), (470, 280), (200, 280), (630, 170), (200, 40), (470, 40)]
         self.allSeats = []
         for p in avatarPositions:
             choice = random.randint(0,2)
@@ -94,7 +94,7 @@ class MdiTable(QtGui.QMdiSubWindow):
         seat.setTransformationMode(QtCore.Qt.SmoothTransformation)"""
         self.other = QtGui.QPixmap('./data/gfx/table/default/other_cards.png')
         #positions = [(610, 120), (620, 200), (510, 290), (330, 290), (140, 290), (100, 210), (120, 120), (280, 110), (480, 110)]
-        positions = [(620, 210), (250, 80), (250, 270), (100, 210), (470, 80)]
+        positions = [(625, 210), (250, 80), (250, 320), (100, 210), (470, 80)]
         self.allCards = []
         for p in positions:
             #other = Interactable(self.other, self)
@@ -119,8 +119,21 @@ class MdiTable(QtGui.QMdiSubWindow):
         other.setTransformationMode(QtCore.Qt.SmoothTransformation)
         scene.addItem(other)"""
 
-        font = QtGui.QFont('sans serif')
-        font.setPointSize(12)
+        #self.card8 = QtGui.QPixmap('./data/gfx/cards/xanax_card_deck_03/6.png')
+        #self.cardK = QtGui.QPixmap('./data/gfx/cards/xanax_card_deck_03/50.png')
+        card = QtSvg.QGraphicsSvgItem('./data/gfx/cards/replixanax/6.svg')
+        scene.addItem(card)
+        #card = scene.addPixmap(self.card8)
+        card.setPos(455,290)
+        #card.setTransformationMode(QtCore.Qt.SmoothTransformation)
+        #card = scene.addPixmap(self.cardK)
+        card = QtSvg.QGraphicsSvgItem('./data/gfx/cards/replixanax/48.svg')
+        scene.addItem(card)
+        card.setPos(510,290)
+        #card.setTransformationMode(QtCore.Qt.SmoothTransformation)
+
+        font = QtGui.QFont('Lucida Sans')
+        font.setPointSize(10)
         brush = QtGui.QLinearGradient()
         brush.setColorAt(0, QtCore.Qt.black)
         #brush = QtGui.QBrush()
@@ -146,26 +159,13 @@ class MdiTable(QtGui.QMdiSubWindow):
         for p in avatarPositions:
             path = QtGui.QPainterPath()
             play = scene.addPixmap(playbox)
-            p = p[0], p[1] + 85
+            p = p[0], p[1] + 80
             play.setPos(p[0] - 20, p[1] - 4)
-            p = p[0], p[1] + 15
+            p = p[0], p[1] + 14
             path.addText(QtCore.QPointF(p[0], p[1]), font, names.pop())
             p = p[0], p[1] + 20
             path.addText(QtCore.QPointF(p[0], p[1]), font, stacks.pop())
             scene.addPath(path, pen, brush)
-
-        #self.card8 = QtGui.QPixmap('./data/gfx/cards/xanax_card_deck_03/6.png')
-        #self.cardK = QtGui.QPixmap('./data/gfx/cards/xanax_card_deck_03/50.png')
-        card = QtSvg.QGraphicsSvgItem('./data/gfx/cards/replixanax/6.svg')
-        scene.addItem(card)
-        #card = scene.addPixmap(self.card8)
-        card.setPos(510,330)
-        #card.setTransformationMode(QtCore.Qt.SmoothTransformation)
-        #card = scene.addPixmap(self.cardK)
-        card = QtSvg.QGraphicsSvgItem('./data/gfx/cards/replixanax/48.svg')
-        scene.addItem(card)
-        card.setPos(580,330)
-        #card.setTransformationMode(QtCore.Qt.SmoothTransformation)
 
         self.wgt = QtGui.QWidget()
         hbox = QtGui.QHBoxLayout()
@@ -295,13 +295,13 @@ class MainWindow(QtGui.QMainWindow):
         import sidebar
         self.document = sidebar.Sidebar()
         self.document.setMainWidget(self.mdiArea)
-        self.setCentralWidget(self.document)
-        #self.setCentralWidget(self.mdiArea)
+        #self.setCentralWidget(self.document)
+        self.setCentralWidget(self.mdiArea)
 
         self.createActions()
         #self.createDockWidgets()
         self.createSidebarItems()
-        self.createMenus()
+        #self.createMenus()
         self.createToolBars()
         #self.createStatusBar()
         #self.updateMenus()
