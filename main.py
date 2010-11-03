@@ -134,8 +134,11 @@ class MdiTable(QtGui.QMdiSubWindow):
 
         font = QtGui.QFont('Lucida Sans')
         font.setPointSize(10)
+        font1 = QtGui.QFont('Lucida Sans')
+        font1.setPointSize(10)
+        font1.setWeight(QtGui.QFont.Black)
         brush = QtGui.QLinearGradient()
-        brush.setColorAt(0, QtCore.Qt.black)
+        brush.setColorAt(0, QtCore.Qt.white)
         #brush = QtGui.QBrush()
         #brush.setColor(QtCore.Qt.white)
         pen = QtGui.QPen()
@@ -164,7 +167,7 @@ class MdiTable(QtGui.QMdiSubWindow):
             p = p[0], p[1] + 12
             path.addText(QtCore.QPointF(p[0], p[1]), font, names.pop())
             p = p[0], p[1] + 20
-            path.addText(QtCore.QPointF(p[0], p[1]), font, stacks.pop())
+            path.addText(QtCore.QPointF(p[0], p[1]), font1, stacks.pop())
             scene.addPath(path, pen, brush)
 
         self.wgt = QtGui.QWidget()
