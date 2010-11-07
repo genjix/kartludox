@@ -6,7 +6,6 @@ note editor with bold, italic, colours (colour pick) + font size
 load table layout from config positions incl stylesheets also.
 app remember prev settings
 
-BUG: max window resize funny on linux
 WANT: panels move the main view.
 
 grid password entry. select colours and paint a small pic

@@ -34,8 +34,8 @@ class Interactable(QtGui.QGraphicsPixmapItem):
 class MdiTable(QtGui.QMdiSubWindow):
     sequenceNumber = 1
 
-    def __init__(self):
-        super(MdiTable, self).__init__()
+    def __init__(self, parent):
+        super(MdiTable, self).__init__(parent)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.setWindowTitle(self.tr('Table titilonius'))
         #self.setWindowFlags(QtCore.Qt.WindowMinimizeButtonHint)
@@ -43,6 +43,7 @@ class MdiTable(QtGui.QMdiSubWindow):
 
         self.pic = QtGui.QPixmap('./data/gfx/table/default/table.png')
         scene = QtGui.QGraphicsScene(self)
+        scene.setBackgroundBrush(parent.mdiArea.background())
         #seat = scene.addPixmap(self.pic)
         seat = Interactable(self.pic, self)
         seat.setTransformationMode(QtCore.Qt.SmoothTransformation)
@@ -239,7 +240,6 @@ class MdiTable(QtGui.QMdiSubWindow):
         #self.view.scale(0.5, 0.5)
     def resizeEvent(self, event):
         super(MdiTable, self).resizeEvent(event)
-        #return
         size = self.contentsRect().size()
 
         #newpic = self.pic.scaled(size, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
@@ -249,15 +249,18 @@ class MdiTable(QtGui.QMdiSubWindow):
         curr_aspect = float(size.width()) / size.height()
         w = self.pic.size()
         aspect = float(w.width()) / w.height()
-        if abs(curr_aspect - aspect) > 0.00000001:
+        if abs(curr_aspect - aspect) > 0.00000001 and not self.isMaximized():
             margins = self.contentsMargins()
             self.resize(aspect * size.height() + margins.left() + margins.right(),
                 size.height() + margins.top() + margins.bottom())
 
         winSize = self.contentsRect().size()
         winw, winh = winSize.width(), winSize.height()
-        picw = self.pic.size().width()
+        picSize = self.pic.size()
+        picw, pich = picSize.width(), picSize.height()
         scale = winw / float(picw)
+        scale2 = winh / float(pich)
+        scale = scale < scale2 and scale or scale2
         trans = QtGui.QTransform()
         trans.scale(scale, scale)
         self.view.setTransform(trans)
@@ -349,7 +352,7 @@ class MainWindow(QtGui.QMainWindow):
             return activeSubWindow.widget()
         return None
     def createMdiChild(self):
-        child = MdiTable()
+        child = MdiTable(self)
         self.mdiArea.addSubWindow(child)
         child.show()
         child.shownInit()
