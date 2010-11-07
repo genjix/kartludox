@@ -6,9 +6,7 @@ note editor with bold, italic, colours (colour pick) + font size
 load table layout from config positions incl stylesheets also.
 app remember prev settings
 
-@@@ Moving to Okular sidebar now. Bugs invalidated.
-BUG: show/hide docks doesnt save tab sel pos
-BUG: closing all panels and they reappear on next hover event
+BUG: max window resize funny on linux
 WANT: panels move the main view.
 
 grid password entry. select colours and paint a small pic
