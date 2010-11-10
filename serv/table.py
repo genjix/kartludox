@@ -12,16 +12,38 @@ def realToTiny(real, bigBlind):
     return int(real * convFact / float(bigBlind))
 
 class Player:
+    class PaidState:
+        Nothing = 0
+        WaitingBB = 1
+        PaidBB = 2
+        PaidSBBB = 3
+
+        @classmethod
+        def strRepr(cls, state):
+            if state == cls.Nothing:
+                return '-'
+            elif state == cls.WaitingBB:
+                return '*'
+            elif state == cls.PaidBB:
+                return 'bb'
+            elif state == cls.PaidSBBB:
+                return 'sb/bb'
+            raise Exception
+
     def __init__(self, nickname):
         self.nickname = nickname
         self.stack = 0
-        self.paidSB = False
-        self.paidBB = False
+        self.paidState = Player.PaidState.Nothing
         self.sitOut = True
         self.cards = None
     def __repr__(self):
-        return '%s (%i bb) %s Sitting %s'%(self.nickname, self.stack/100.0, \
-            self.cards, self.sitOut and 'Out' or 'In')
+        if self.cards:
+            cardsRepr = '[%s %s]'%self.cards
+        else:
+            cardsRepr = '[--]'
+        return '%s (%g bb) %s Sitting %s %s'%(self.nickname, self.stack/100.0, \
+            cardsRepr, self.sitOut and 'Out' or 'In',
+            Player.PaidState.strRepr(self.paidState))
 
 class Schedule:
     def __init__(self):
@@ -93,9 +115,12 @@ class Table:
 
     def __init__(self, numPlayers, sb, bb, ante, minBuyin, maxBuyin):
         self.numPlayers = numPlayers
-        self.sb = sb
+        # Only the BB is in real money terms.
         self.bb = bb
-        self.ante = ante
+        # There's no use keeping the SB value in real money terms,
+        # so we convert it to tiny bb internally.
+        self.sb = realToTiny(sb, bb)
+        self.ante = realToTiny(ante, bb)
         self.minBuyin = minBuyin
         self.maxBuyin = maxBuyin
         self.seats = [None for x in range(numPlayers)]
@@ -202,7 +227,9 @@ class Table:
         self.gameState = GameState.Running
         print('Game started.')
         # select a random dealer
-        self.dealer = 0
+        occupiedSeats = \
+            [i for i, p in enumerate(self.seats) if p and not p.sitOut]
+        self.dealer = random.choice(occupiedSeats)
 
     def halt(self):
         """Halt the current running game."""
