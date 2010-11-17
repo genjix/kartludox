@@ -21,7 +21,7 @@
    version="1.0"
    sodipodi:version="0.32"
    inkscape:version="0.47 r22583"
-   sodipodi:docname="svn_switch.svgz"
+   sodipodi:docname="playerbox.svg"
    inkscape:export-filename="/home/uga/WWW/svn_merge.png"
    inkscape:export-xdpi="11.250000"
    inkscape:export-ydpi="11.250000"><metadata
@@ -50,7 +50,7 @@
    inkscape:window-width="1280"
    inkscape:window-height="781"
    inkscape:cy="32.105522"
-   inkscape:cx="44.816202"
+   inkscape:cx="10.536217"
    inkscape:zoom="1.7366335"
    inkscape:window-x="0"
    inkscape:window-y="19"
@@ -146,21 +146,21 @@
 					<stop
    id="stop61263"
    offset="0"
-   style="stop-color:#093a5b;stop-opacity:1;" />
+   style="stop-color:#323232;stop-opacity:1;" />
 
 
 
 					<stop
    id="stop61265"
    offset="0.25799999"
-   style="stop-color:#1370ae;stop-opacity:1;" />
+   style="stop-color:#616161;stop-opacity:1;" />
 
 
 
 					<stop
    id="stop61267"
    offset="0.7396"
-   style="stop-color:#309fe9;stop-opacity:1;" />
+   style="stop-color:#5f96ba;stop-opacity:1;" />
 
 
 
@@ -1551,7 +1551,7 @@
    xlink:href="#linearGradient61261"
    id="linearGradient4392"
    gradientUnits="userSpaceOnUse"
-   gradientTransform="matrix(-1.7672116,0,0,0.51344847,261.46354,43.571954)"
+   gradientTransform="matrix(-1.7664841,0,0,0.60917354,261.43145,43.286977)"
    x1="44.111801"
    y1="105.93750"
    x2="44.111801"
@@ -1761,8 +1761,8 @@
 
 
 <image
-   y="-22.758863"
-   x="109.79031"
+   y="-15.848943"
+   x="60.845039"
    id="image3583"
    height="45"
    width="120"
@@ -1842,12 +1842,12 @@
    d="m 155.8882,76.253206 c 0.46702,0 0.84606,0.110707 0.84606,0.247103 l 0,11.335104 c 0,0.100324 -0.20644,0.190264 -0.52287,0.228812 -0.31643,0.03757 -0.68023,0.0173 -0.92221,-0.05386 l -38.81062,-11.3351 c -0.24197,-0.07067 -0.31473,-0.176925 -0.18444,-0.269342 0.13198,-0.09242 0.43995,-0.152714 0.78345,-0.152714 l 38.81063,0 z m -36.76823,0.494205 c 2.57373,0.751692 33.34844,9.739315 35.92216,10.491496 0,-1.046233 0,-10.043246 0,-10.491496 -1.53137,0 -32.33993,0 -35.92216,0 z"
    style="fill:url(#linearGradient4395)"
    id="path4965" /><path
-   d="m 118.64458,45.243737 129.53661,0 0.19262,42.954057 -129.54459,-0.03923 -0.18464,-42.914831 z"
-   style="fill:url(#linearGradient4392);fill-opacity:1;stroke:#9a9a9a;stroke-width:0.60000002;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+   d="m 118.67128,45.270441 129.48329,0 0.19254,50.962224 -129.49126,-0.04654 -0.18457,-50.915684 z"
+   style="fill:url(#linearGradient4392);fill-opacity:1;stroke:#9a9a9a;stroke-width:0.65340722;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
    id="path4967"
    sodipodi:nodetypes="ccccc"
-   inkscape:export-xdpi="88.400002"
-   inkscape:export-ydpi="88.400002"
+   inkscape:export-xdpi="69.059998"
+   inkscape:export-ydpi="69.059998"
    inkscape:export-filename="/home/genjix/Public/mdi/data/gfx/table/default/playerbox.png" /><path
    d="m 121.08582,49.54728 0,-3.928273 125.80049,0 0.11292,22.751313 c -11.64063,1.583563 -24.68244,2.470806 -38.45478,2.470806 -43.57877,-4.94e-4 -79.81286,-9.575392 -87.45863,-21.293846 z"
    style="fill:url(#linearGradient4389)"

@@ -29,6 +29,10 @@ class Interactable(QtGui.QGraphicsPixmapItem):
         for s in self.table.allSeats:
             p = s.pos()
             print(p.x(), p.y())
+        print('boxes------------')
+        for s in self.table.allPlayboxes:
+            p = s.pos()
+            print(p.x(), p.y())
         print('--------------')
 
 class MdiTable(QtGui.QMdiSubWindow):
@@ -66,10 +70,22 @@ class MdiTable(QtGui.QMdiSubWindow):
         self.seat_boy = QtGui.QPixmap('./data/gfx/table/default/boy.png')
         self.seat_girl = QtGui.QPixmap('./data/gfx/table/default/girl.png')
         self.seat_custom = QtGui.QPixmap('./data/gfx/table/default/custom-avatar.png')
-        #positions = [(610, 100), (620, 200), (510, 290), (330, 290), (140, 290), (30, 200), (60, 100), (240, 60), (430, 60)]
-        avatarPositions = [(40, 170), (470, 280), (200, 280), (630, 170), (200, 40), (470, 40)]
+        #avatarPositions = [(610, 100), (620, 200), (510, 290), (330, 290), (140, 290), (30, 200), (60, 100), (240, 60), (430, 60), (80, 80)]
+        avatarPositions = [
+            (600, 38),
+            (660, 170),
+            (485, 360),
+            (270, 360),
+            (100, 327),
+            (42, 168),
+            (81, 77),
+            (290, 20),
+            (400, 20),
+            (628, 319)]
+        #avatarPositions = [(40, 170), (470, 280), (200, 280), (630, 170), (200, 40), (470, 40)]
         self.allSeats = []
         for p in avatarPositions:
+        #for p in []:
             choice = random.randint(0,2)
             if choice == 0:
                 seat = scene.addPixmap(self.seat_boy)
@@ -97,7 +113,8 @@ class MdiTable(QtGui.QMdiSubWindow):
         #positions = [(610, 120), (620, 200), (510, 290), (330, 290), (140, 290), (100, 210), (120, 120), (280, 110), (480, 110)]
         positions = [(625, 210), (250, 80), (250, 320), (100, 210), (470, 80)]
         self.allCards = []
-        for p in positions:
+        #for p in positions:
+        for p in []:
             #other = Interactable(self.other, self)
             other = scene.addPixmap(self.other)
             other.setTransformationMode(QtCore.Qt.SmoothTransformation)
@@ -120,19 +137,6 @@ class MdiTable(QtGui.QMdiSubWindow):
         other.setTransformationMode(QtCore.Qt.SmoothTransformation)
         scene.addItem(other)"""
 
-        #self.card8 = QtGui.QPixmap('./data/gfx/cards/xanax_card_deck_03/6.png')
-        #self.cardK = QtGui.QPixmap('./data/gfx/cards/xanax_card_deck_03/50.png')
-        card = QtSvg.QGraphicsSvgItem('./data/gfx/cards/replixanax/6.svg')
-        scene.addItem(card)
-        #card = scene.addPixmap(self.card8)
-        card.setPos(455,290)
-        #card.setTransformationMode(QtCore.Qt.SmoothTransformation)
-        #card = scene.addPixmap(self.cardK)
-        card = QtSvg.QGraphicsSvgItem('./data/gfx/cards/replixanax/48.svg')
-        scene.addItem(card)
-        card.setPos(515,290)
-        #card.setTransformationMode(QtCore.Qt.SmoothTransformation)
-
         font = QtGui.QFont('Lucida Sans')
         font.setPointSize(10)
         font1 = QtGui.QFont('Lucida Sans')
@@ -150,6 +154,10 @@ class MdiTable(QtGui.QMdiSubWindow):
             "Genjix",
             "derp-derp",
             "KibKibKib",
+            "Tracy",
+            "Genjix",
+            "derp-derp",
+            "KibKibKib",
             "drawingfishe",
             "scribl"]
         stacks = [
@@ -157,19 +165,60 @@ class MdiTable(QtGui.QMdiSubWindow):
             '8000 btc',
             '100 btc',
             '9112 btc',
+            '1200 btc',
+            '8000 btc',
+            '100 btc',
+            '9112 btc',
             '7654 btc',
             '400 btc']
         playbox = QtGui.QPixmap('./data/gfx/table/default/playerbox.png')
-        for p in avatarPositions:
+        self.allPlayboxes = []
+        playboxPositions = [
+            (377, 380),
+            (652, 257),
+            (638, 123),
+            (260, 443),
+            (580, 407),
+            (85, 412),
+            (31, 261),
+            (180, 13),
+            (493, 46),
+            (21, 30)]
+        for p in playboxPositions:
             path = QtGui.QPainterPath()
             play = scene.addPixmap(playbox)
-            p = p[0], p[1] + 80
-            play.setPos(p[0] - 20, p[1] - 4)
+            play.setFlags(play.ItemIsMovable)
+            self.allPlayboxes.append(play)
+            p = [p[0], p[1]]
+            play.setPos(p[0], p[1])
+            p[0] += 10
+            p[1] += 4
             p = p[0], p[1] + 12
             path.addText(QtCore.QPointF(p[0], p[1]), font, names.pop())
-            p = p[0], p[1] + 20
+            p = p[0], p[1] + 15
             path.addText(QtCore.QPointF(p[0], p[1]), font1, stacks.pop())
             scene.addPath(path, pen, brush)
+
+        #self.card8 = QtGui.QPixmap('./data/gfx/cards/xanax_card_deck_03/6.png')
+        #self.cardK = QtGui.QPixmap('./data/gfx/cards/xanax_card_deck_03/50.png')
+        card = QtSvg.QGraphicsSvgItem('./data/gfx/cards/replixanax/6.svg')
+        #scene.addItem(card)
+        #card = scene.addPixmap(self.card8)
+        """card.setPos(455,290)
+        #card.setTransformationMode(QtCore.Qt.SmoothTransformation)
+        #card = scene.addPixmap(self.cardK)
+        card = QtSvg.QGraphicsSvgItem('./data/gfx/cards/replixanax/48.svg')
+        scene.addItem(card)
+        card.setPos(515,290)
+        #card.setTransformationMode(QtCore.Qt.SmoothTransformation)"""
+        card.setPos(505,275)
+        #card.setScale(0.9)
+        #card.setTransformationMode(QtCore.Qt.SmoothTransformation)
+        #card = scene.addPixmap(self.cardK)
+        card = QtSvg.QGraphicsSvgItem('./data/gfx/cards/replixanax/48.svg')
+        #scene.addItem(card)
+        card.setPos(530,289)
+        #card.setScale(0.9)
 
         self.wgt = QtGui.QWidget()
         hbox = QtGui.QHBoxLayout()
