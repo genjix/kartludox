@@ -199,27 +199,30 @@ class MdiTable(QtGui.QMdiSubWindow):
             path.addText(QtCore.QPointF(p[0], p[1]), font1, stacks.pop())
             scene.addPath(path, pen, brush)
 
-        #self.card8 = QtGui.QPixmap('./data/gfx/cards/xanax_card_deck_03/6.png')
-        #self.cardK = QtGui.QPixmap('./data/gfx/cards/xanax_card_deck_03/50.png')
-        card = QtSvg.QGraphicsSvgItem('./data/gfx/cards/replixanax/8d.svg')
-        scene.addItem(card)
-        #card = scene.addPixmap(self.card8)
-        """card.setPos(455,290)
-        #card.setTransformationMode(QtCore.Qt.SmoothTransformation)
-        #card = scene.addPixmap(self.cardK)
-        card = QtSvg.QGraphicsSvgItem('./data/gfx/cards/replixanax/48.svg')
-        scene.addItem(card)
-        card.setPos(515,290)
-        #card.setTransformationMode(QtCore.Qt.SmoothTransformation)"""
-        card.setPos(432,175)
-        card.setScale(0.8)
-        #card.setTransformationMode(QtCore.Qt.SmoothTransformation)
-        #card = scene.addPixmap(self.cardK)
-        card = QtSvg.QGraphicsSvgItem('./data/gfx/cards/replixanax/jc.svg')
-        scene.addItem(card)
-        #card.setPos(530,289)
-        card.setPos(490, 175)
-        card.setScale(0.8)
+        ranks = "23456789tjqka"
+        suits = "hdcs"
+        deck = [rank + suit for rank in ranks for suit in suits]
+        deckGraphics = [QtSvg.QGraphicsSvgItem('./data/gfx/cards/replixanax/%s.svg'%card) for card in deck]
+        random.shuffle(deckGraphics)
+
+        for i in range(5):
+            card = deckGraphics.pop()
+            scene.addItem(card)
+            card.setScale(0.8)
+            card.setPos(280 + 50*i, 175)
+
+        for p in avatarPositions:
+            card = deckGraphics.pop()
+            scene.addItem(card)
+            card.setScale(0.8)
+            p = p[0] - 10, p[1] - 5
+            card.setPos(p[0], p[1])
+
+            card = deckGraphics.pop()
+            scene.addItem(card)
+            card.setScale(0.8)
+            p = p[0] + 22, p[1] + 10
+            card.setPos(p[0], p[1])
 
         self.wgt = QtGui.QWidget()
         hbox = QtGui.QHBoxLayout()
