@@ -224,6 +224,25 @@ class MdiTable(QtGui.QMdiSubWindow):
             p = p[0] + 22, p[1] + 10
             card.setPos(p[0], p[1])
 
+        chips = [
+            QtGui.QPixmap('./data/gfx/chips/default/chip0001.png'),
+            QtGui.QPixmap('./data/gfx/chips/default/chip000025.png'),
+            QtGui.QPixmap('./data/gfx/chips/default/chip000005.png')]
+        def addchip(chip, scene, pos):
+            other = scene.addPixmap(chip)
+            other.setTransformationMode(QtCore.Qt.SmoothTransformation)
+            other.setFlags(other.ItemIsMovable)
+            other.setPos(*pos)
+        addchip(chips[0], scene, (300, 260))
+        addchip(chips[0], scene, (300, 255))
+        addchip(chips[0], scene, (300, 250))
+        addchip(chips[0], scene, (300, 245))
+        addchip(chips[0], scene, (300, 240))
+        addchip(chips[1], scene, (330, 260))
+        addchip(chips[1], scene, (330, 255))
+        addchip(chips[1], scene, (330, 250))
+        addchip(chips[2], scene, (360, 260))
+
         self.wgt = QtGui.QWidget()
         hbox = QtGui.QHBoxLayout()
         hbox.addStretch()
