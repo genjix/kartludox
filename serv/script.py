@@ -263,6 +263,7 @@ class Script:
         currentBet = table.convFact
         # For calculating min/max possible raise
         lastRaise = table.convFact
+        playersInPot = []
         # Start from UTG and move to dealer
         for player in activePlayers[2:]:
             assert(player and not player.sitOut and \
@@ -282,9 +283,24 @@ class Script:
             choiceActions = Action(player)
             choiceActions.add(Action.Fold)
             choiceActions.add(Action.Call, callPayment)
-            choiceActions.add(Action.Raise, minRaise, raiseMax)
-            choiceActions.add(Action.AllIn)
+            # Only possible to raise if your stack is above current betsize
+            if player.stack > currentBet:
+                choiceActions.add(Action.Raise, minRaise, raiseMax)
             response = yield choiceActions
+
+            if response[0] == Action.Fold:
+                continue
+            elif response[0] == Action.Call:
+                playersInPot.append(player)
+                self.deductPayment(player, callPayment, pots, sidepotCreators)
+                print 'call'
+            elif response[0] == Action.Raise:
+                playersInPot.append(player)
+                self.deductPayment(player, response[1], pots, sidepotCreators)
+                lastRaise = response[1] - currentBet
+                currentBet = response[1]
+                print 'raise', response[1]
+                print 'last raise=', lastRaise
 
         ### Do this at the end of the hand
         #-------------------
@@ -310,14 +326,15 @@ if __name__ == '__main__':
     cash.sitIn('honn')
     cash.sitIn('lorea')
     print cash
-    cash.sitOut('honn')
+    #cash.sitOut('honn')
     cash.sitIn('honn')
     cash.sitIn('mison')
     cash.sitIn('john')
     cash.sitIn('mizir')
     cash.start()
+    cash.dealer = 3
 
-    cash.seats[0].stack = 200
+    cash.seats[3].stack = 400
 
     print '-------------'
 
@@ -327,19 +344,25 @@ if __name__ == '__main__':
     print act
     try:
         act = run.send((Action.PostSB,))
-        act.player.sitOut = True
+        #act.player.sitOut = True
         # check game shouldn't halt here
         print act
-        print run.send((Action.SitOut,))
+        #print run.send((Action.SitOut,))
         print run.send((Action.PostBB,))
+        print run.send((Action.PostSBBB,))
         print run.send((Action.PostSBBB,))
         act = run.send((Action.PostSBBB,))
 
         print act
 
         print run.send((Action.Call,))
-        print run.send((Action.Call,))
+        act = run.send((Action.Call,))
+        print act
 
+        if len(act.actions) == 3:
+            print run.send((Action.Raise, act.actions[2][1]))
+        else:
+            print run.send((Action.Call,))
         print run.send((Action.Call,))
     except StopIteration:
         print 'END'
