@@ -296,10 +296,16 @@ class Script:
                 print 'call'
             elif response[0] == Action.Raise:
                 playersInPot.append(player)
-                self.deductPayment(player, response[1], pots, sidepotCreators)
-                lastRaise = response[1] - currentBet
-                currentBet = response[1]
-                print 'raise', response[1]
+                raiseSize = response[1]
+                # confine raise size to correct bounds
+                if raiseSize < minRaise:
+                    raiseSize = minRaise
+                elif raiseSize > raiseMax:
+                    raiseSize = raiseMax
+                self.deductPayment(player, raiseSize, pots, sidepotCreators)
+                lastRaise = raiseSize - currentBet
+                currentBet = raiseSize
+                print 'raise', raiseSize
                 print 'last raise=', lastRaise
 
         ### Do this at the end of the hand

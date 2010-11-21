@@ -92,6 +92,9 @@ class Adapter:
             self.handler.update(message[1], (script.Action.Call,))
         elif message[0] == 'fold':
             self.handler.update(message[1], (script.Action.Fold,))
+        elif message[0] == 'raise':
+            self.handler.update(message[1], (script.Action.Raise, \
+                int(message[2])))
         print self.cash
     def reply(self, message):
         self.prot.msg(self.chan, message)
