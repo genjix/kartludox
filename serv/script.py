@@ -74,6 +74,10 @@ class Script:
     def __init__(self, table):
         self.table = table
 
+        self.pots = None
+        self.sidepotCreators = None
+        self.board = None
+
     def regenerateList(self):
         # Prune players that sit-out
         self.players = [p for p in self.players if not p.sitOut]
@@ -104,10 +108,13 @@ class Script:
 
         # If a side pot is created then the last value becomes the main
         # pot.
-        pots = [0]
+        self.pots = [0]
         # Everytime a new side pot is made then whoever capped the
         # action creating a new sidepot by going all-in is added to this.
-        sidepotCreators = []
+        self.sidepotCreators = []
+
+        # flop/turn/river cards.
+        self.board = []
 
         #------------------
         # SMALL BLIND
@@ -144,7 +151,8 @@ class Script:
             if response[0] == Action.PostSB:
                 # Player has payed up! Mark them as such.
                 player.paidState = table.Player.PaidState.PaidSBBB
-                self.deductPayment(player, payment, pots, sidepotCreators)
+                self.deductPayment(player, payment, self.pots,
+                    self.sidepotCreators)
                 activePlayers.append(player)
                 break
         del smallBlindList
@@ -175,7 +183,8 @@ class Script:
 
             if response[0] == Action.PostBB:
                 player.paidState = table.Player.PaidState.PaidBB
-                self.deductPayment(player, payment, pots, sidepotCreators)
+                self.deductPayment(player, payment, self.pots,
+                    self.sidepotCreators)
                 activePlayers.append(player)
                 break
         del bigBlindList
@@ -227,7 +236,8 @@ class Script:
             if response[0] == Action.PostSBBB:
                 # Player has payed up! Mark them as such.
                 player.paidState = table.Player.PaidState.PaidSBBB
-                self.deductPayment(player, payment, pots, sidepotCreators)
+                self.deductPayment(player, payment, self.pots,
+                    self.sidepotCreators)
                 # Unlike for SB/BB we don't append to activePlayers here...
                 # We will do that after this for loop so we get the players
                 # in order.
@@ -292,7 +302,8 @@ class Script:
                 continue
             elif response[0] == Action.Call:
                 playersInPot.append(player)
-                self.deductPayment(player, callPayment, pots, sidepotCreators)
+                self.deductPayment(player, callPayment, self.pots,
+                    self.sidepotCreators)
                 print 'call'
             elif response[0] == Action.Raise:
                 playersInPot.append(player)
@@ -302,7 +313,8 @@ class Script:
                     raiseSize = minRaise
                 elif raiseSize > raiseMax:
                     raiseSize = raiseMax
-                self.deductPayment(player, raiseSize, pots, sidepotCreators)
+                self.deductPayment(player, raiseSize, self.pots,
+                    self.sidepotCreators)
                 lastRaise = raiseSize - currentBet
                 currentBet = raiseSize
                 print 'raise', raiseSize

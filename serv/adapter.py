@@ -47,6 +47,7 @@ class Handler:
             self.adapter.reply('END!!')
     def stop(self):
         self.running = False
+        # award pot to remaining player sitting in.
         print 'stopped'
 
 class Adapter:
@@ -65,12 +66,15 @@ class Adapter:
         self.cash.addPlayer('a', 0)
         self.cash.addPlayer('b', 1)
         self.cash.addPlayer('c', 2)
+        self.cash.addPlayer('d', 3)
         self.cash.addMoney('a', 5000)
-        self.cash.addMoney('b', 5000)
-        self.cash.addMoney('c', 5000)
+        self.cash.addMoney('b', 7000)
+        self.cash.addMoney('c', 6000)
+        self.cash.addMoney('d', 8000)
         self.cash.sitIn('a')
         self.cash.sitIn('b')
         self.cash.sitIn('c')
+        self.cash.sitIn('d')
     def msg(self, user, message):
         print('%s: %s'%(user, message))
         message = message.split(' ')
@@ -82,6 +86,7 @@ class Adapter:
             self.cash.sitIn(message[1])
         elif message[0] == 'sitout':
             self.cash.sitOut(message[1])
+            self.handler.update(message[1], (script.Action.SitOut,))
         elif message[0] == 'postsb':
             self.handler.update(message[1], (script.Action.PostSB,))
         elif message[0] == 'postbb':
@@ -95,6 +100,10 @@ class Adapter:
         elif message[0] == 'raise':
             self.handler.update(message[1], (script.Action.Raise, \
                 int(message[2])))
+        elif message[0] == 'show':
+            for line in self.cash.__repr__().split('\n'):
+                self.reply(line)
+            self.reply('Pots: %s'%self.handler.script.pots)
         print self.cash
     def reply(self, message):
         self.prot.msg(self.chan, message)
