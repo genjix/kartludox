@@ -1,5 +1,6 @@
 import random, time
 random.seed(time.time())
+import script
 
 convFact = 100
 def tinyToReal(tinybb, bigBlind):
@@ -48,14 +49,21 @@ class Player:
 class Schedule:
     def __init__(self):
         self.started = False
-    def callback(self, functor, ms):
+    def callback(self, functor, secs):
         # If already scheduled then make sure not to schedule event twice.
         if not self.started:
-            print('A new game will begin in %d seconds.'%(ms/1000))
+            print('A new game will begin in %d seconds.'%secs)
         started = True
         #functor()
     def clear(self):
         print('Cancelled callback.')
+
+class Handler:
+    """When the game starts then the table notifies this handler."""
+    def start(self, script):
+        print 'hello'
+    def stop(self):
+        print 'stop'
 
 class GameState:
     Stopped = 0
@@ -127,10 +135,21 @@ class Table:
         self.dealer = None
         self.gameState = GameState.Stopped
         self.scheduler = None
+        self.handler = None
+        # Delay until new game is started to allow
+        # players to join a game when a bunch of people sit in
+        self.gameStartupDelayTime = 8
     def registerScheduler(self, scheduler):
         """The scheduler provides the mechanism to have a function
         called at some later time."""
         self.scheduler = scheduler
+    def registerHandler(self, handler):
+        """The handler is notified when the game starts. It passes
+        responses from wherever back to the script."""
+        self.handler = handler
+
+    def setStartupDelayTime(self, delay):
+        self.gameStartupDelayTime = delay
 
     def addPlayer(self, nickname, seat):
         """New players are automatically sat out when joining a table,
@@ -208,7 +227,8 @@ class Table:
                 self.gameState = GameState.Starting
                 # schedule new game to start in a few seconds...
                 if self.scheduler:
-                    self.scheduler.callback(self.start, 10000)
+                    self.scheduler.callback(self.start,
+                        self.gameStartupDelayTime)
         else:
             if self.gameState == GameState.Starting or \
               self.gameState == GameState.Running:
@@ -222,7 +242,10 @@ class Table:
     def start(self):
         """Start the game."""
         if self.gameState != GameState.Starting:
-            print('Start game cancelled.')
+            if self.gameState == GameState.Running:
+                print('Game already running.')
+            else:
+                print('Start game cancelled.')
             return
         self.gameState = GameState.Running
         print('Game started.')
@@ -231,6 +254,16 @@ class Table:
             [i for i, p in enumerate(self.seats) if p and not p.sitOut]
         self.dealer = random.choice(occupiedSeats)
 
+        # Start the actual game
+        scr = script.Script(self)
+        if self.handler:
+            self.handler.start(scr)
+        # Let everyone off paying for the first hand!
+        # (Except the blinds)
+        for player in self.seats:
+            if player:
+                player.paidState = player.PaidState.PaidSBBB
+
     def halt(self):
         """Halt the current running game."""
         if self.gameState != GameState.Halting:
@@ -238,10 +271,12 @@ class Table:
             return
         self.gameState = GameState.Stopped
         print('Game halted.')
+        if self.handler:
+            self.handler.stop()
 
     def __repr__(self):
         s = ''
-        if self.dealer:
+        if self.dealer != None:
             s += 'Seat %i is the button\n'%self.dealer
         for seat, player in enumerate(self.seats):
             s += 'Seat %i: %s\n'%(seat, player)
@@ -250,6 +285,7 @@ class Table:
 if __name__ == '__main__':
     cash = Table(9, 0.25, 0.5, 0, 5000, 25000)
     cash.registerScheduler(Schedule())
+    cash.registerHandler(Handler())
     cash.addPlayer('john', 0)
     cash.addMoney('john', 5000)
     cash.addPlayer('mison', 1)

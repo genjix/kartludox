@@ -313,6 +313,7 @@ class Script:
 if __name__ == '__main__':
     cash = table.Table(9, 0.25, 0.5, 0, 5000, 25000)
     cash.registerScheduler(table.Schedule())
+    cash.start()
     cash.addPlayer('john', 0)
     cash.addMoney('john', 5000)
     cash.addPlayer('mison', 1)
@@ -331,7 +332,6 @@ if __name__ == '__main__':
     cash.sitIn('mison')
     cash.sitIn('john')
     cash.sitIn('mizir')
-    cash.start()
     cash.dealer = 3
 
     cash.seats[3].stack = 400
