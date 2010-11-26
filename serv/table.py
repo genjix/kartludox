@@ -264,6 +264,18 @@ class Table:
             if player:
                 player.paidState = player.PaidState.PaidSBBB
 
+    def nextDealer(self):
+        # Get list of indices of the seats
+        rotatedSeats = [i for i, p in enumerate(self.seats)]
+        # Rotate it around the current dealer position + 1
+        rotatedSeats = \
+            rotatedSeats[self.dealer+1:] + rotatedSeats[:self.dealer+1]
+        # Filter empty seats and sitting out players
+        filterSeats = [i for i in rotatedSeats \
+            if self.seats[i] and not self.seats[i].sitOut]
+        # Return next suitable candidate
+        self.dealer = filterSeats[0]
+
     def halt(self):
         """Halt the current running game."""
         if self.gameState != GameState.Halting:

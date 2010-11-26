@@ -47,6 +47,8 @@ class Action:
             self.actions.append((action, arg0))
         else:
             self.actions.append((action, arg0, arg1))
+    def actionNames(self):
+        return [a[0] for a in self.actions]
     def __repr__(self):
         s = ''
         if self.player:
@@ -327,6 +329,7 @@ class Script:
         # Find next dealer
         # Add rebuys from table
         # Set everyone with zero stack size to sit out
+        self.table.nextDealer()
 
 if __name__ == '__main__':
     cash = table.Table(9, 0.25, 0.5, 0, 5000, 25000)

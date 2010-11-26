@@ -36,6 +36,10 @@ class Handler:
             return
         if player != self.currentAct.player.nickname:
             self.adapter.reply('Don\'t act out of turn!')
+            return
+        if response[0] not in self.currentAct.actionNames():
+            self.displayAct()
+            return
         try:
             self.currentAct = self.actIter.send(response)
             # handle cards dealt .etc here
@@ -45,6 +49,7 @@ class Handler:
             self.displayAct()
         except StopIteration:
             self.adapter.reply('END!!')
+            self.start(self.script)
     def stop(self):
         self.running = False
         # award pot to remaining player sitting in.
@@ -78,29 +83,32 @@ class Adapter:
     def msg(self, user, message):
         print('%s: %s'%(user, message))
         message = message.split(' ')
-        if message[0] == 'reg':
-            self.cash.addPlayer(message[1], int(message[2]))
-        elif message[0] == 'buyin':
-            self.cash.addMoney(message[1], int(message[2]))
-        elif message[0] == 'sitin':
-            self.cash.sitIn(message[1])
-        elif message[0] == 'sitout':
-            self.cash.sitOut(message[1])
-            self.handler.update(message[1], (script.Action.SitOut,))
-        elif message[0] == 'postsb':
-            self.handler.update(message[1], (script.Action.PostSB,))
-        elif message[0] == 'postbb':
-            self.handler.update(message[1], (script.Action.PostBB,))
-        elif message[0] == 'postsbbb':
-            self.handler.update(message[1], (script.Action.PostSBBB,))
-        elif message[0] == 'call':
-            self.handler.update(message[1], (script.Action.Call,))
-        elif message[0] == 'fold':
-            self.handler.update(message[1], (script.Action.Fold,))
-        elif message[0] == 'raise':
-            self.handler.update(message[1], (script.Action.Raise, \
-                int(message[2])))
-        elif message[0] == 'show':
+        command = message[0]
+        player = message[1]
+        params = message[2:]
+        if command == 'reg':
+            self.cash.addPlayer(player, int(params))
+        elif command == 'buyin':
+            self.cash.addMoney(player, int(params))
+        elif command == 'sitin':
+            self.cash.sitIn(player)
+        elif command == 'sitout':
+            self.cash.sitOut(player)
+            self.handler.update(player, (script.Action.SitOut,))
+        elif command == 'postsb':
+            self.handler.update(player, (script.Action.PostSB,))
+        elif command == 'postbb':
+            self.handler.update(player, (script.Action.PostBB,))
+        elif command == 'postsbbb':
+            self.handler.update(player, (script.Action.PostSBBB,))
+        elif command == 'call':
+            self.handler.update(player, (script.Action.Call,))
+        elif command == 'fold':
+            self.handler.update(player, (script.Action.Fold,))
+        elif command == 'raise':
+            self.handler.update(player, (script.Action.Raise, \
+                int(params)))
+        elif command == 'show':
             for line in self.cash.__repr__().split('\n'):
                 self.reply(line)
             self.reply('Pots: %s'%self.handler.script.pots)
