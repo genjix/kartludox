@@ -35,7 +35,9 @@ class Handler:
         if not self.running:
             return
         if player != self.currentAct.player.nickname:
-            self.adapter.reply('Don\'t act out of turn!')
+            # People are allowed to sit out, out of turn
+            if response[0] != script.Action.SitOut:
+                self.adapter.reply('Don\'t act out of turn!')
             return
         if response[0] not in self.currentAct.actionNames():
             self.displayAct()
@@ -82,14 +84,24 @@ class Adapter:
         self.cash.sitIn('d')
     def msg(self, user, message):
         print('%s: %s'%(user, message))
+
         message = message.split(' ')
         command = message[0]
-        player = message[1]
-        params = message[2:]
+        if len(message) > 1:
+            player = message[1]
+            if len(message) > 2:
+                param = message[2]
+            else:
+                param = None
+        else:
+            player = None
+            param = None
+
         if command == 'reg':
-            self.cash.addPlayer(player, int(params))
+            self.cash.addPlayer(player, int(param))
         elif command == 'buyin':
-            self.cash.addMoney(player, int(params))
+            if not self.cash.addMoney(player, int(param)):
+                self.reply('Rebuy will be added after current hand.')
         elif command == 'sitin':
             self.cash.sitIn(player)
         elif command == 'sitout':
@@ -103,15 +115,17 @@ class Adapter:
             self.handler.update(player, (script.Action.PostSBBB,))
         elif command == 'call':
             self.handler.update(player, (script.Action.Call,))
+        elif command == 'check':
+            self.handler.update(player, (script.Action.Check,))
         elif command == 'fold':
             self.handler.update(player, (script.Action.Fold,))
         elif command == 'raise':
-            self.handler.update(player, (script.Action.Raise, \
-                int(params)))
+            self.handler.update(player, (script.Action.Raise, int(param)))
         elif command == 'show':
             for line in self.cash.__repr__().split('\n'):
                 self.reply(line)
             self.reply('Pots: %s'%self.handler.script.pots)
         print self.cash
+        print 'Pots: %s'%self.handler.script.pots
     def reply(self, message):
         self.prot.msg(self.chan, message)

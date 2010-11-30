@@ -49,6 +49,11 @@ class Action:
             self.actions.append((action, arg0, arg1))
     def actionNames(self):
         return [a[0] for a in self.actions]
+    def findAction(self, actName):
+        for a in self.actions:
+            if a[0] == actName:
+                return a
+        raise KeyError(Action.actionRepr[actName])
     def __repr__(self):
         s = ''
         if self.player:
@@ -217,6 +222,9 @@ class Script:
         # POST SB/BB
         #------------------
         # If you need to post your SB/BB
+        # We need this list for later so that people who already
+        # have posted can choose to check
+        postedPlayers = []
         for player in remainingPlayers:
             if not player or player.sitOut:
                 continue
@@ -240,6 +248,7 @@ class Script:
                 player.paidState = table.Player.PaidState.PaidSBBB
                 self.deductPayment(player, payment, self.pots,
                     self.sidepotCreators)
+                postedPlayers.append(player)
                 # Unlike for SB/BB we don't append to activePlayers here...
                 # We will do that after this for loop so we get the players
                 # in order.
@@ -272,64 +281,132 @@ class Script:
         # PREFLOP MINUS BLINDS
         #------------------
         # Current bet to call is big blind
-        currentBet = table.convFact
+        self.currentBet = table.convFact
         # For calculating min/max possible raise
-        lastRaise = table.convFact
-        playersInPot = []
+        self.lastRaise = table.convFact
+        self.playersInPot = []
         # Start from UTG and move to dealer
         for player in activePlayers[2:]:
-            assert(player and not player.sitOut and \
-                player.paidState == player.PaidState.PaidSBBB)
+            if player in postedPlayers:
+                # Has the option to check since they posted blinds OOP
+                blinds = bb
+            else:
+                blinds = 0
+            choiceActions = self.preflopPossibleActions(player, blinds)
+            if choiceActions:
+                response = yield choiceActions
+                if self.preflopRespondAction(player, response, choiceActions):
+                    self.playersInPot.append(player)
 
-            # Pay as much as the player can afford
-            callPayment = player.stack > currentBet and currentBet \
-                or player.stack
-            minRaise = currentBet + lastRaise
-            # If players stack < min raise then thats only pos raise size
-            minRaise = player.stack > minRaise and minRaise \
-                or player.stack
-            raiseMax = player.stack > minRaise and player.stack \
-                or minRaise
+        #-------------------
+        # BLINDS PREFLOP
+        #-------------------
+        # Whether SB/BB is in the pot
+        blindsInvolvedInPot = [False, False]
+        smallBlindPlayer = activePlayers[0]
 
-            # Build up possible responses
-            choiceActions = Action(player)
-            choiceActions.add(Action.Fold)
-            choiceActions.add(Action.Call, callPayment)
-            # Only possible to raise if your stack is above current betsize
-            if player.stack > currentBet:
-                choiceActions.add(Action.Raise, minRaise, raiseMax)
+        player = smallBlindPlayer
+        choiceActions = self.preflopPossibleActions(player, sb)
+        if choiceActions:
             response = yield choiceActions
+            if self.preflopRespondAction(player, response, choiceActions):
+                blindsInvolvedInPot[0] = True
 
-            if response[0] == Action.Fold:
-                continue
-            elif response[0] == Action.Call:
-                playersInPot.append(player)
-                self.deductPayment(player, callPayment, self.pots,
-                    self.sidepotCreators)
-                print 'call'
-            elif response[0] == Action.Raise:
-                playersInPot.append(player)
-                raiseSize = response[1]
-                # confine raise size to correct bounds
-                if raiseSize < minRaise:
-                    raiseSize = minRaise
-                elif raiseSize > raiseMax:
-                    raiseSize = raiseMax
-                self.deductPayment(player, raiseSize, self.pots,
-                    self.sidepotCreators)
-                lastRaise = raiseSize - currentBet
-                currentBet = raiseSize
-                print 'raise', raiseSize
-                print 'last raise=', lastRaise
+        bigBlindPlayer = activePlayers[1]
+
+        player = bigBlindPlayer
+        choiceActions = self.preflopPossibleActions(player, bb)
+        if choiceActions:
+            response = yield choiceActions
+            if self.preflopRespondAction(player, response, choiceActions):
+                blindsInvolvedInPot[1] = True
+
+        for p in self.playersInPot:
+            print p.nickname
+        if blindsInvolvedInPot[0]:
+            print smallBlindPlayer.nickname
+        if blindsInvolvedInPot[1]:
+            print bigBlindPlayer.nickname
 
         ### Do this at the end of the hand
         #-------------------
         # DEALER
         #-------------------
-        # Find next dealer
         # Add rebuys from table
+        self.table.executePendingRebuys()
+
         # Set everyone with zero stack size to sit out
+        for player in activePlayers:
+            if player.stack == 0:
+                self.table.sitOutPlayer(player)
+
+        # Find next dealer
         self.table.nextDealer()
+
+    def preflopPossibleActions(self, player, blinds):
+        # Players can sit out mid hand
+        if player.sitOut:
+            return False
+        assert(player.paidState == player.PaidState.PaidSBBB or \
+            player.paidState == player.PaidState.PaidBB)
+
+        # No need to repay blinds.
+        betDeficit = self.currentBet - blinds
+        # Pay as  the player can afford
+        if player.stack > betDeficit:
+            callPayment = betDeficit
+        else:
+            callPayment = player.stack
+
+        minRaise = self.currentBet + self.lastRaise
+        # If players stack < min raise then thats only pos raise size
+        minRaise = player.stack > minRaise and minRaise \
+            or player.stack
+        raiseMax = player.stack > minRaise and player.stack \
+            or minRaise
+
+        # Build up possible responses
+        choiceActions = Action(player)
+        choiceActions.add(Action.SitOut)
+        choiceActions.add(Action.Fold)
+        if callPayment > 0:
+            choiceActions.add(Action.Call, callPayment)
+        else:
+            choiceActions.add(Action.Check)
+        # Only possible to raise if your stack is above current betsize
+        if player.stack > self.currentBet:
+            choiceActions.add(Action.Raise, minRaise, raiseMax)
+        return choiceActions
+
+    def preflopRespondAction(self, player, response, choiceActions):
+        if response[0] == Action.Fold or response[0] == Action.SitOut:
+            return False
+
+        action = choiceActions.findAction(response[0])
+        payment = 0
+
+        if response[0] == Action.Call:
+            payment = action[1]
+            print 'call', payment
+        elif response[0] == Action.Check:
+            pass
+        elif response[0] == Action.Raise:
+            raiseSize = response[1]
+            minRaise = action[1]
+            raiseMax = action[2]
+            # confine raise size to correct bounds
+            if raiseSize < minRaise:
+                raiseSize = minRaise
+            elif raiseSize > raiseMax:
+                raiseSize = raiseMax
+            self.lastRaise = raiseSize - self.currentBet
+            self.currentBet = raiseSize
+            print 'raise', raiseSize
+            print 'last raise=', self.lastRaise
+            payment = raiseSize
+
+        self.deductPayment(player, payment, self.pots, self.sidepotCreators)
+        return True
 
 if __name__ == '__main__':
     cash = table.Table(9, 0.25, 0.5, 0, 5000, 25000)

@@ -29,7 +29,7 @@ class Player:
                 return 'bb'
             elif state == cls.PaidSBBB:
                 return 'sb/bb'
-            raise Exception
+            raise Exception('Internal Error: No such paid state %i')
 
     def __init__(self, nickname):
         self.nickname = nickname
@@ -97,22 +97,6 @@ class Table:
         def __str__(self):
             return 'Negative %d to stack size %d is illegal'%\
                 (self.amount, self.stackSize)
-    class BuyinTooSmall(Exception):
-        def __init__(self, amount, stackSize, minBuyin):
-            self.amount = amount
-            self.stackSize = stackSize
-            self.minBuyin = minBuyin
-        def __str__(self):
-            return 'Adding %d to stack size %d less than min buyin of %d'%\
-                (self.amount, self.stackSize, self.minBuyin)
-    class BuyinTooBig(Exception):
-        def __init__(self, amount, stackSize, maxBuyin):
-            self.amount = amount
-            self.stackSize = stackSize
-            self.maxBuyin = maxBuyin
-        def __str__(self):
-            return 'Adding %d to stack size %d exceeds max buyin of %d'%\
-                (self.amount, self.stackSize, self.maxBuyin)
 
     class NotBoughtIn(Exception):
         def __init__(self, nickname):
@@ -139,6 +123,9 @@ class Table:
         # Delay until new game is started to allow
         # players to join a game when a bunch of people sit in
         self.gameStartupDelayTime = 8
+        # rebuy list of (player, amount) tuples
+        # at end of hand these are added to players stacks
+        self.rebuys = []
     def registerScheduler(self, scheduler):
         """The scheduler provides the mechanism to have a function
         called at some later time."""
@@ -161,33 +148,48 @@ class Table:
         self.seats[seat] = Player(nickname)
 
     def addMoney(self, nickname, amount):
-        """Remember that amount is in terms of tiny bb, not real money."""
+        """Remember that amount is in terms of tiny bb, not real money.
+        If player is sitting in and playing, it is added to a list
+        for until after the current hand is finished.
+        returns True when money has been added.
+        returns False when money will be added after current hand."""
         seat, player = self.lookupPlayer(nickname)
-        # Protect against naughter crackers!
+        # Protect against silliness
         if amount < 0:
             raise Table.BuyinNegative(amount, player.stack)
-        # If the player has already won some cash
-        # then they cannot add anything as they already exceed maxBuyin
-        if player.stack >= self.maxBuyin:
-            raise Table.BuyinTooBig(amount, player.stack, self.maxBuyin)
-        # A player with stackSize of 0 cannot be sat in
-        # ... Normal rules apply
-        elif player.stack == 0:
-            if amount < self.minBuyin:
-                raise Table.BuyinTooSmall(amount, player.stack, self.minBuyin)
-            elif amount > self.maxBuyin:
-                raise Table.BuyinTooBig(amount, player.stack, self.maxBuyin)
-            player.stack = amount
-        # Player stack is less than maxBuyin.
-        # Can buy in for any amount, even if it still leaves them
-        # below the minBuyin but not excees maxBuyin
-        else:
-            totalStack = player.stack + amount
-            # Perfectly fine to buy up to and INCLUDING maxBuyin, but
-            # not over it.
-            if totalStack > self.maxBuyin:
-                raise Table.BuyinTooBig(amount, player.stack, self.maxBuyin)
-            player.stack = totalStack
+
+        # if sitting out or no game running, then buyin
+        if player.sitOut or self.gameState != GameState.Running:
+            self.addMoneyPlayer(player, amount)
+            return True
+
+        self.rebuys.append((player, amount))
+        return False
+
+    def addMoneyPlayer(self, player, amount):
+        """Actually do the rebuy and add the money."""
+
+        # When you first sit in you must rebuy to above a minimum
+        if player.stack == 0 and amount < self.minBuyin:
+            amount = self.minBuyin
+
+        totalStack = player.stack + amount
+        if totalStack > self.maxBuyin:
+            totalStack = self.maxBuyin
+
+        self.debitPlayer(player, totalStack - player.stack)
+
+    def debitPlayer(self, player, amount):
+        """Moves fund from player account and adds to stack."""
+        # If player has relevant funds
+        if True:
+            player.stack += amount
+
+    def executePendingRebuys(self):
+        """Called at the end of every hand. Does any pending rebuys."""
+        for player, amount in self.rebuys:
+            self.addMoneyPlayer(player, amount)
+        self.rebuys = []
 
     def sitIn(self, nickname):
         seat, player = self.lookupPlayer(nickname)
@@ -201,6 +203,10 @@ class Table:
         """Sit player out.
         If seated players drops below 2 then game stops running."""
         seat, player = self.lookupPlayer(nickname)
+        self.sitOutPlayer(player)
+    def sitOutPlayer(self, player):
+        """Sit player out.
+        Uses player object rather than nickname string."""
         player.sitOut = True
         self.checkState()
 
