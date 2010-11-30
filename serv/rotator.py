@@ -26,20 +26,33 @@ class Rotator:
         self.lastBet = bet
         self.lastRaise = bet
 
+    def finishBetting(self, player):
+        if self.lastBettor == player:
+            # No one decided to raise the raiser
+            self.bettingClosed = True
+            if self.capBettor and not self.reOpenBetting:
+                # But a shorty did go all-in, so we re-open
+                # betting temporarily.
+                self.reOpenBetting = True
+            else:
+                self.bettingFinished = True
+                return True
+        return False
+
     def run(self):
-        bettingFinished = False
+        self.bettingFinished = False
         # Whether to re-open betting when a shorty goes all-in
         # and caps the betting
-        reOpenBetting = False
+        self.reOpenBetting = False
         # Betting Round is closed.
-        bettingClosed = False
+        self.bettingClosed = False
 
         # Ignore empty seats
         players = [p for p in self.seats if p != None]
         # We always need at least 2 players at the table
         assert(len(players) > 1)
 
-        while not bettingFinished:
+        while not self.bettingFinished:
             for player in players:
                 # Skip over players that have folded.
                 if not player.stillActive:
@@ -49,12 +62,11 @@ class Rotator:
                     # If betting was re-opened by a shorty going
                     # all-in, then everyone had a chance to call
                     # so finished up.
-                    if bettingClosed and reOpenBetting:
-                        bettingFinished = True
+                    if self.bettingClosed and self.reOpenBetting:
+                        self.bettingFinished = True
                         break
                     # Or player went all-in and no-one else re-raised
-                    elif self.lastBettor == player:
-                        bettingFinished = True
+                    elif self.finishBetting(player):
                         break
                     # Skip all-in players since they can't act
                     continue
@@ -63,21 +75,13 @@ class Rotator:
                 # This indicates when the table has done a full circle
                 if not self.lastBettor:
                     self.lastBettor = player
-                elif self.lastBettor == player:
-                    # No one decided to raise the raiser
-                    bettingClosed = True
-                    if self.capBettor and not reOpenBetting:
-                        # But a shorty did go all-in, so we re-open
-                        # betting temporarily.
-                        reOpenBetting = True
-                    else:
-                        bettingFinished = True
-                        break
+                elif self.finishBetting(player):
+                    break
 
                 # Special action for when the round was completed
                 # And no-one raised the raiser but shorty went all-in
                 # for less then the last raise.
-                if bettingClosed and reOpenBetting:
+                if self.bettingClosed and self.reOpenBetting:
                     # Players can only call or fold.
                     self.currentBet = self.capBettor.betPlaced
                     yield player, True
@@ -96,17 +100,20 @@ class Rotator:
 
                 # False = betting is not capped, player can raise
                 cap = False
-                # filter all non active players, filter all-in players 
-                activePlayers = [p for p in players if p.stillActive]
-                activeNonAllInPlayers = \
-                    [p for p in activePlayers if not p.isAllIn]
+                # filter all non active, all-in players 
+                lamActPlayers = lambda p: \
+                    p.stillActive and not p.isAllIn
+                activeNonAllInPlayers = filter(lamActPlayers, players)
                 # Check still some playing players left
                 if len(activeNonAllInPlayers) < 2:
                     cap = True
 
                 yield player, cap
 
-                if player.betPlaced > self.lastBet:
+                if player.betPlaced == self.currentBet:
+                    # Call
+                    pass
+                elif player.betPlaced > self.lastBet:
                     # Anything but a normal minraise is considered
                     # an allin by the player.
                     if player.betPlaced < self.minRaise():
@@ -124,23 +131,22 @@ class Rotator:
                         self.lastRaise = player.betPlaced - self.lastBet
                         self.lastBet = player.betPlaced
                         self.lastBettor = player
-                elif player.betPlaced == self.currentBet:
-                    # Call
-                    pass
                 elif player.betPlaced < self.lastBet:
                     # Fold
                     player.stillActive = False
                     if self.lastBettor == player:
                         self.lastBettor = None
+
+                    # If only 1 player remains cos everyone folded
+                    # then finish up.
+                    numActivePlayers = \
+                        len([p for p in players if p.stillActive])
+                    if numActivePlayers < 2:
+                        self.bettingFinished = True
+                        break
                 else:
                     # Something's wrong!
                     assert(False)
-
-                # If only 1 player remains cos everyone folded
-                # then finish up.
-                if len(activePlayers) < 2:
-                    bettingFinished = True
-                    break
 
     def minRaise(self):
         if self.capBettor:
@@ -154,11 +160,12 @@ if __name__ == '__main__':
         def __init__(self, s):
             self.nickname = s
     #seats = [P('a'), P('b'), P('c'), P('d'), P('e'), P('SB'), P('BB')]
-    seats = [P('a'), P('b')]
+    seats = [P('a'), P('b'), P('c')]
     r = Rotator(seats)
-    r.setSeatBetPlaced(-2, 10)
-    r.setSeatBetPlaced(-1, 20)
-    r.setBetSize(20)
+    bb = 2
+    r.setSeatBetPlaced(-2, 1)
+    r.setSeatBetPlaced(-1, bb)
+    r.setBetSize(bb)
     for player, capped in r.run():
         print '---------'
         print '%s bet %d to %d'%(r.lastBettor, r.lastRaise, r.lastBet)
@@ -169,8 +176,11 @@ if __name__ == '__main__':
             print 'call=%d'%r.currentBet
         print
         print '%s (%d)'%(player, player.betPlaced)
-        s = int(raw_input())
-        if s == 1910:
+        cc = raw_input()
+        if cc[0] == 'a':
+            s = int(cc[1:])
             player.isAllIn = True
+        else:
+            s = int(cc)
         player.betPlaced = s
 
