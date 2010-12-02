@@ -86,7 +86,8 @@ class Rotator:
                     self.currentBet = self.capBettor.betPlaced
                     yield player, True
                     # Must match current bet.
-                    if player.betPlaced != self.currentBet:
+                    if not player.isAllIn and \
+                      player.betPlaced != self.currentBet:
                         # Fold
                         player.stillActive = False
                     continue
@@ -132,10 +133,12 @@ class Rotator:
                         self.lastBet = player.betPlaced
                         self.lastBettor = player
                 elif player.betPlaced < self.lastBet:
-                    # Fold
-                    player.stillActive = False
-                    if self.lastBettor == player:
-                        self.lastBettor = None
+                    # exception case
+                    if not player.isAllIn:
+                        # Fold
+                        player.stillActive = False
+                        if self.lastBettor == player:
+                            self.lastBettor = None
 
                     # If only 1 player remains cos everyone folded
                     # then finish up.
@@ -155,16 +158,50 @@ class Rotator:
     def call(self):
         return self.currentBet
 
+    class SidePot:
+        def __init__(self, size):
+            self.betSize = size
+            self.potSize = 0
+            self.contestors = []
+
+    def createPots(self):
+        players = [p for p in self.seats if p != None]
+        players.sort(key = lambda p: p.betPlaced)
+        sidePots = []
+        excessCash = 0
+        for player in players:
+            for sidePot in sidePots:
+                player.betPlaced -= sidePot.betSize
+                sidePot.potSize += sidePot.betSize
+                if player.stillActive:
+                    sidePot.contestors.append(player)
+
+            if not player.stillActive:
+                excessCash += player.betPlaced
+                continue
+            else:
+                # new side pot!
+                if player.betPlaced > 0:
+                    sidePot = self.SidePot(player.betPlaced)
+                    player.betPlaced -= sidePot.betSize
+                    sidePot.potSize = sidePot.betSize + excessCash
+                    excessCash = 0
+                    sidePot.contestors.append(player)
+                    sidePots.append(sidePot)
+
+        for s in sidePots:
+            print s.betSize, s.potSize, s.contestors
+
 if __name__ == '__main__':
     class P:
         def __init__(self, s):
             self.nickname = s
-    #seats = [P('a'), P('b'), P('c'), P('d'), P('e'), P('SB'), P('BB')]
-    seats = [P('a'), P('b'), P('c')]
+    seats = [P('a'), P('b'), P('c'), P('d'), P('e'), P('f')]
+    #seats = [P('a'), P('b'), P('c')]
     r = Rotator(seats)
-    bb = 2
-    r.setSeatBetPlaced(-2, 1)
-    r.setSeatBetPlaced(-1, bb)
+    bb = 50
+    #r.setSeatBetPlaced(-2, bb/2)
+    #r.setSeatBetPlaced(-1, bb)
     r.setBetSize(bb)
     for player, capped in r.run():
         print '---------'
@@ -183,4 +220,5 @@ if __name__ == '__main__':
         else:
             s = int(cc)
         player.betPlaced = s
+    r.createPots()
 
