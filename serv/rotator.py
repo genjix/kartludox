@@ -19,6 +19,7 @@ class Rotator:
         self.capBettor = None
         # This is both regular bets and all-in capped bets
         self.currentBet = 0
+
     def setSeatBetPlaced(self, pos, betSize):
         """Used for the blinds & posters which have to place forced bets."""
         self.seats[pos].betPlaced = betSize
@@ -30,7 +31,8 @@ class Rotator:
         if self.lastBettor == player:
             # No one decided to raise the raiser
             self.bettingClosed = True
-            if self.capBettor and not self.reOpenBetting:
+            if (self.capBettor is not None and
+                not self.reOpenBetting):
                 # But a shorty did go all-in, so we re-open
                 # betting temporarily.
                 self.reOpenBetting = True
@@ -73,7 +75,7 @@ class Rotator:
 
                 # Set to first available player UTG
                 # This indicates when the table has done a full circle
-                if not self.lastBettor:
+                if self.lastBettor is None:
                     self.lastBettor = player
                 elif self.finishBetting(player):
                     break
@@ -86,8 +88,8 @@ class Rotator:
                     self.currentBet = self.capBettor.betPlaced
                     yield player, True
                     # Must match current bet.
-                    if not player.isAllIn and \
-                      player.betPlaced != self.currentBet:
+                    if (not player.isAllIn and
+                        player.betPlaced != self.currentBet):
                         # Fold
                         player.stillActive = False
                     continue
@@ -95,7 +97,7 @@ class Rotator:
                 # Current price to call
                 self.currentBet = self.lastBet
                 # Unless someone went all-in for less than a raise
-                if self.capBettor:
+                if self.capBettor is not None:
                     assert(self.capBettor.betPlaced > self.lastBet)
                     self.currentBet = self.capBettor.betPlaced
 
@@ -120,8 +122,8 @@ class Rotator:
                     if player.betPlaced < self.minRaise():
                         # Player went all-in for less than a raise
                         # Caps betting
-                        if not self.capBettor or \
-                          self.currentBet < player.betPlaced:
+                        if (self.capBettor is None or
+                            self.currentBet < player.betPlaced):
                             self.capBettor = player
                             player.isAllIn = True
                     else:
@@ -152,7 +154,7 @@ class Rotator:
                     assert(False)
 
     def minRaise(self):
-        if self.capBettor:
+        if self.capBettor is not None:
             return self.lastBet + 2*self.lastRaise
         return self.lastBet + self.lastRaise
     def call(self):
@@ -166,7 +168,7 @@ class Rotator:
 
     def createPots(self):
         players = [p for p in self.seats if p != None]
-        players.sort(key = lambda p: p.betPlaced)
+        players.sort(key=lambda p: p.betPlaced)
         sidePots = []
         excessCash = 0
         for player in players:

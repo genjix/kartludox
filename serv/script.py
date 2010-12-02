@@ -40,6 +40,7 @@ class Action:
     def __init__(self, player):
         self.player = player
         self.actions = []
+
     def add(self, action, arg0=None, arg1=None):
         if not arg0:
             self.actions.append((action,))
@@ -47,13 +48,16 @@ class Action:
             self.actions.append((action, arg0))
         else:
             self.actions.append((action, arg0, arg1))
+
     def actionNames(self):
         return [a[0] for a in self.actions]
+
     def findAction(self, actName):
         for a in self.actions:
             if a[0] == actName:
                 return a
         raise KeyError(Action.actionRepr[actName])
+
     def __repr__(self):
         s = ''
         if self.player:
@@ -101,6 +105,7 @@ class Script:
             # new sidepot created, player allin
             pots.append(0)
             sidepotCreators.append(player)
+
     def run(self):
         seats = self.table.seats
         dealer = self.table.dealer

@@ -1,4 +1,5 @@
-import random, time
+import random
+import time
 random.seed(time.time())
 import script
 
