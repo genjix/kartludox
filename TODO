@@ -8,15 +8,6 @@ app remember prev settings
 
 WANT: panels move the main view.
 
-== magnetron ==
-[ betPlaced   ]         <======
-[ stillActive ]  or None
-[ isAllIn     ]
-  V
-[(sidepot, (players, ))] => |
-  
-mainpot = X ======>
-
 grid password entry. select colours and paint a small pic
 notification after played X hands or length time. Start/stop it.
 star hands vs players in their notes
