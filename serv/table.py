@@ -32,12 +32,37 @@ class Player:
                 return 'sb/bb'
             raise Exception('Internal Error: No such paid state %i')
 
+    class Bets:
+        def __init__(self, parent):
+            self.parent = parent
+            self.betPlaced = 0
+            self.stillActive = True
+            self.isAllIn = False
+            # Bets not counted in the playing like antes
+            self.darkBet = 0
+
+        def pay(self, charge):
+            self.parent.stack -= charge
+            self.betPlaced += charge
+        def payDark(self, charge):
+            self.parent.stack -= charge
+            self.darkBet += charge
+
+        def __repr__(self):
+            return self.parent.nickname
+
     def __init__(self, nickname):
         self.nickname = nickname
         self.stack = 0
         self.paidState = Player.PaidState.Nothing
         self.sitOut = True
         self.cards = None
+        # Stores bets and actions by player
+        self.betPart = None
+
+    def newBetPart(self):
+        self.betPart = self.Bets(self)
+
     def __repr__(self):
         if self.cards:
             cardsRepr = '[%s %s]'%self.cards

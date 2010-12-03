@@ -71,7 +71,7 @@ class Adapter:
         self.cash.registerScheduler(Schedule(self.reply))
         self.handler = Handler(self)
         self.cash.registerHandler(self.handler)
-        self.cash.setStartupDelayTime(8)
+        self.cash.setStartupDelayTime(0)
 
         ###
         self.cash.addPlayer('a', 0)

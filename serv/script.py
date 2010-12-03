@@ -85,9 +85,6 @@ class CardsDealt:
 class Script:
     def __init__(self, table):
         self.table = table
-
-        self.pots = None
-        self.sidepotCreators = None
         self.board = None
 
     def regenerateList(self):
@@ -97,15 +94,6 @@ class Script:
             # award pot to only remaining player
             # if applicable
             raise StopIteration
-
-    def deductPayment(self, player, payment, pots, sidepotCreators):
-        # deduct the payment
-        player.stack -= payment
-        pots[-1] += payment
-        if player.stack == 0:
-            # new sidepot created, player allin
-            pots.append(0)
-            sidepotCreators.append(player)
 
     def run(self):
         seats = self.table.seats
@@ -119,157 +107,90 @@ class Script:
         # Added to the list preflop as the hand progresses.
         activePlayers = []
 
-        # If a side pot is created then the last value becomes the main
-        # pot.
-        self.pots = [0]
-        # Everytime a new side pot is made then whoever capped the
-        # action creating a new sidepot by going all-in is added to this.
-        self.sidepotCreators = []
-
         # flop/turn/river cards.
         self.board = []
 
         #------------------
-        # SMALL BLIND
+        # BLINDS
         #------------------
         # We don't worry if the small blind
         # has paid the Big Blind or not.
         #
         # Rotate clockwise until we find a non-sitting out player
-        # that pays the SB. Likewise for BB too.
+        # Make them pay the relevant blind.
+        # Move to next blind: PostSB -> PostBB -> PostSB/BB
 
         activeSeats = [p for p in seats if p and not p.sitOut]
+        # Set up bet holding objects
+        for player in activeSeats:
+            player.newBetPart()
+
         if len(activeSeats) == 2:
             # heads up is a special case
             # dealer *is* the small blind
             # Copy list cos we're going to move elements around
-            smallBlindList = seats[:]
+            blindList = seats[:]
         else:
-            # SB is next seat after the dealer. Tag him on the end
-            smallBlindList = seats[1:] + seats[:1]
+            # SB is next seat after the dealer. Tag dealer on the end
+            blindList = seats[1:] + seats[:1]
+
+        blindToDo = [Action.PostSBBB, Action.PostBB, Action.PostSB]
+        blindState = blindToDo.pop()
 
         # Try to get payment
-        for player in smallBlindList:
-            if player is None or player.sitOut:
+        for player in blindList:
+            if player is None:
                 continue
-            sb = self.table.sb
+            if blindState == Action.PostBB:
+                player.paidState = table.Player.PaidState.Nothing
+            # Non-blinds player has already paid blinds
+            elif (blindState == Action.PostSBBB and
+                  player.paidState == player.PaidState.PaidSBBB):
+                activePlayers.append(player)
+                continue
+            if player.sitOut:
+                if blindState == Action.PostSB:
+                    player.paidState = table.Player.PaidState.PaidBB
+                continue
+
+            if blindState == Action.PostSB:
+                blindSize = self.table.sb
+            elif blindState == Action.PostBB:
+                blindSize = table.convFact
+            elif blindState == Action.PostSBBB:
+                blindSize = self.table.sb + table.convFact
             # If they have a puny stack < SB, then pay as much as pos
-            sbPayment = player.stack > sb and sb or player.stack
+            blindPayment = \
+                player.stack > blindSize and blindSize or player.stack
             # Build up response set
             choiceActions = Action(player)
-            choiceActions.add(Action.PostSB, sbPayment)
+            choiceActions.add(blindState, blindPayment)
+            if blindState == Action.PostSBBB:
+                choiceActions.add(Action.WaitBB)
             choiceActions.add(Action.SitOut)
             response = yield choiceActions
 
-            if response[0] == Action.PostSB:
+            if (response[0] == Action.PostSB or
+                response[0] == Action.PostBB or
+                response[0] == Action.PostSBBB):
                 # Player has payed up! Mark them as such.
-                player.paidState = table.Player.PaidState.PaidSBBB
-                self.deductPayment(player, sbPayment, self.pots,
-                    self.sidepotCreators)
+                if (blindState == Action.PostSB or
+                    blindState == Action.PostSBBB):
+                    player.paidState = table.Player.PaidState.PaidSBBB
+                elif blindState == Action.PostSBBB:
+                    player.paidState = table.Player.PaidState.PaidBB
+                player.betPart.payDark(blindPayment)
                 activePlayers.append(player)
-                break
-        del smallBlindList
-
-        assert(len(activePlayers) == 1)
-
-        #------------------
-        # BIG BLIND
-        #------------------
-        # First we find cycle, stopping once we find SB
-        # Then mark next player paid state as Not Paid, ask for BB
-        # ... and if not paid continue to next player.
-        idxSB = seats.index(activePlayers[0])
-        bigBlindList = seats[idxSB+1:] + seats[:idxSB+1]
-
-        for player in bigBlindList:
-            if player is None or player.sitOut:
-                continue
-            bb = table.convFact
-            bbPayment = player.stack > bb and bb or player.stack
-
-            player.paidState = table.Player.PaidState.Nothing
-
-            choiceActions = Action(player)
-            choiceActions.add(Action.PostBB, bbPayment)
-            choiceActions.add(Action.SitOut)
-            response = yield choiceActions
-
-            if response[0] == Action.PostBB:
-                player.paidState = table.Player.PaidState.PaidBB
-                self.deductPayment(player, bbPayment, self.pots,
-                    self.sidepotCreators)
-                activePlayers.append(player)
-                break
-        del bigBlindList
-
-        assert(len(activePlayers) == 2)
-
-        idxSB = seats.index(activePlayers[0])
-        # Make sure SB player is first in list
-        if idxSB != 0:
-            # Rotate list around SB if not
-            remainingPlayers = seats[idxSB:] + seats[:idxSB]
-        else:
-            remainingPlayers = seats[:]
-        assert(remainingPlayers.index(activePlayers[0]) == 0)
-
-        # Delete from SB up to and including the BB
-        idxBB = remainingPlayers.index(activePlayers[1])
-        del remainingPlayers[:idxBB+1]
-
-        # remainingPlayers now contains the remaining players
-        # from UTG to the dealer
-
-        # We loop through this twice:
-        # - First to request SB/BB from anyone who didn't pay yet
-        # - To add to the activePlayers list.
-
-        #------------------
-        # POST SB/BB
-        #------------------
-        # If you need to post your SB/BB
-        # We need this list for later so that people who already
-        # have posted can choose to check
-        postedPlayers = []
-        for player in remainingPlayers:
-            if player is None or player.sitOut:
-                continue
-            if player.paidState == player.PaidState.WaitingBB or \
-              player.paidState == player.PaidState.PaidSBBB:
-                continue
-            sbbb = self.table.sb + table.convFact
-            # They shouldn't be allowed to sit-in if their stack
-            # is too small!
-            if player.stack < sbbb:
-                continue
-            assert(player.paidState == player.PaidState.Nothing)
-
-            # Build up response set
-            choiceActions = Action(player)
-            choiceActions.add(Action.PostSBBB, sbbb)
-            choiceActions.add(Action.WaitBB)
-            choiceActions.add(Action.SitOut)
-            response = yield choiceActions
-
-            if response[0] == Action.PostSBBB:
-                # Player has payed up! Mark them as such.
-                player.paidState = table.Player.PaidState.PaidSBBB
-                self.deductPayment(player, sbbb, self.pots,
-                    self.sidepotCreators)
-                postedPlayers.append(player)
-                # Unlike for SB/BB we don't append to activePlayers here...
-                # We will do that after this for loop so we get the players
-                # in order.
-            elif response[0] == Action.WaitBB:
-                player.paidState = table.Player.PaidState.WaitingBB
-
-        # Now add the players in the game to activePlayers list
-        # Remember: activePlayers already has SB [0] and BB [1]
-        for player in remainingPlayers:
-            if not player or player.sitOut:
-                continue
-            if player.paidState == player.PaidState.PaidSBBB:
-                activePlayers.append(player)
+                # Move to the next state. Stop at the last state.
+                if blindToDo:
+                    blindState = blindToDo.pop()
+            elif response[0] == Action.SitOut:
+                if blindState == Action.PostSB:
+                    player.paidState = table.Player.PaidState.PaidBB
+                elif (blindState == Action.PostBB or
+                      blindState == Action.PostSBBB):
+                    player.paidState = table.Player.PaidState.Nothing
+        del blindList
 
         #------------------
         # DEAL HAND!
@@ -289,19 +210,15 @@ class Script:
         # PREFLOP MINUS BLINDS
         #------------------
         preflopPlayers = activePlayers[2:] + activePlayers[:2]
+        preflopPlayers = [p.betPart for p in preflopPlayers]
         preflopRotator = rotator.Rotator(preflopPlayers)
-        preflopRotator.setSeatBetPlaced(-2, sbPayment)
-        preflopRotator.setSeatBetPlaced(-1, bbPayment)
-        for pp in postedPlayers:
-            preflopRotator.setSeatBetPlaced(preflopPlayers.index(pp), bb, sb)
         preflopRotator.setBetSize(bb)
-        r = preflopRotator
         for player, capped in preflopRotator.run():
             # Players can sit-out beforehand
-            if player.playerObj.sitOut:
+            if player.parent.sitOut:
                 continue
 
-            stackSize = player.playerObj.stack
+            stackSize = player.parent.stack
             canRaise = not capped
             callAllIn = False
             raiseAllIn = False
@@ -321,7 +238,7 @@ class Script:
                 maxRaiseSize = minRaiseSize
                 raiseAllIn = True
 
-            choiceActions = Action(player.playerObj)
+            choiceActions = Action(player.parent)
             choiceActions.add(Action.SitOut)
             choiceActions.add(Action.Fold)
             if toCall == 0:
@@ -352,15 +269,12 @@ class Script:
                     player.isAllIn = True
                 elif raiseSize >= minRaiseSize:
                     player.betPlaced = raiseSize
-                else:
-                    # Error! User input invalid raise size.
-                    # Auto-fold them as punishment :)
-                    continue
             elif response[0] == Action.Fold or response[0] == Action.SitOut:
+                player.stillActive = False
                 continue
 
             addedBet = player.betPlaced - prevBet
-            player.playerObj.stack -= addedBet
+            player.parent.stack -= addedBet
 
         pots = preflopRotator.createPots()
         for p in pots:

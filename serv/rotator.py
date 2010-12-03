@@ -1,20 +1,9 @@
 import itertools
 
-class Player:
-    def __init__(self, playerObj):
-        self.betPlaced = 0
-        self.stillActive = True
-        self.isAllIn = False
-        self.playerObj = playerObj
-        # Bets not counted in the playing like antes
-        self.darkBet = 0
-    def __repr__(self):
-        return self.playerObj.nickname
-
 class Rotator:
     def __init__(self, seats):
         # First player to act should always be first in this list
-        self.seats = [(s and Player(s) or None) for s in seats]
+        self.seats = seats
         self.lastBettor = None
         self.lastBet = 0
         self.lastRaise = 0
@@ -22,11 +11,6 @@ class Rotator:
         # This is both regular bets and all-in capped bets
         self.currentBet = 0
 
-    def setSeatBetPlaced(self, pos, betSize, darkBet=0):
-        """Used for the blinds & posters which have to place forced bets."""
-        p = self.seats[pos]
-        p.betPlaced = betSize
-        p.darkBet = darkBet
     def setBetSize(self, bet):
         self.lastBet = bet
         self.lastRaise = bet
@@ -117,7 +101,15 @@ class Rotator:
 
                 yield player, cap
 
-                if player.betPlaced == self.currentBet:
+                if (player.betPlaced < self.lastBet or
+                    not player.stillActive):
+                    self.deactivatePlayer(player)
+                    # If only 1 player remains cos everyone folded
+                    # then finish up.
+                    if self.noOneLeft(players):
+                        self.bettingFinished = True
+                        break
+                elif player.betPlaced == self.currentBet:
                     # Call
                     pass
                 elif player.betPlaced > self.lastBet:
@@ -138,24 +130,22 @@ class Rotator:
                         self.lastRaise = player.betPlaced - self.lastBet
                         self.lastBet = player.betPlaced
                         self.lastBettor = player
-                elif player.betPlaced < self.lastBet:
-                    # exception case
-                    if not player.isAllIn:
-                        # Fold
-                        player.stillActive = False
-                        if self.lastBettor == player:
-                            self.lastBettor = None
-
-                    # If only 1 player remains cos everyone folded
-                    # then finish up.
-                    numActivePlayers = \
-                        len([p for p in players if p.stillActive])
-                    if numActivePlayers < 2:
-                        self.bettingFinished = True
-                        break
                 else:
                     # Something's wrong!
                     assert(False)
+    
+    def deactivatePlayer(self, player):
+        # exception case
+        if not player.isAllIn:
+            # Fold
+            player.stillActive = False
+            if self.lastBettor == player:
+                self.lastBettor = None
+
+    def noOneLeft(self, players):
+        numActivePlayers = \
+            len([p for p in players if p.stillActive])
+        return numActivePlayers < 2
 
     def minRaise(self):
         if self.capBettor is not None:
