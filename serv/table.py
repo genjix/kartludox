@@ -268,7 +268,7 @@ class Table:
         # Let everyone off paying for the first hand!
         # (Except the blinds)
         for player in self.seats:
-            if player:
+            if player is not None and not player.sitOut:
                 player.paidState = player.PaidState.PaidSBBB
 
     def nextDealer(self):
@@ -292,6 +292,9 @@ class Table:
         print('Game halted.')
         if self.handler:
             self.handler.stop()
+        for player in self.seats:
+            if player is not None:
+                player.paidState = player.PaidState.Nothing
 
     def __repr__(self):
         s = ''

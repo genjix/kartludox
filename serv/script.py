@@ -1,4 +1,5 @@
 import table
+import rotator
 
 class Action:
     """This class represents a set of possible choices for a player
@@ -149,21 +150,21 @@ class Script:
 
         # Try to get payment
         for player in smallBlindList:
-            if not player or player.sitOut:
+            if player is None or player.sitOut:
                 continue
             sb = self.table.sb
             # If they have a puny stack < SB, then pay as much as pos
-            payment = player.stack > sb and sb or player.stack
+            sbPayment = player.stack > sb and sb or player.stack
             # Build up response set
             choiceActions = Action(player)
-            choiceActions.add(Action.PostSB, payment)
+            choiceActions.add(Action.PostSB, sbPayment)
             choiceActions.add(Action.SitOut)
             response = yield choiceActions
 
             if response[0] == Action.PostSB:
                 # Player has payed up! Mark them as such.
                 player.paidState = table.Player.PaidState.PaidSBBB
-                self.deductPayment(player, payment, self.pots,
+                self.deductPayment(player, sbPayment, self.pots,
                     self.sidepotCreators)
                 activePlayers.append(player)
                 break
@@ -181,21 +182,21 @@ class Script:
         bigBlindList = seats[idxSB+1:] + seats[:idxSB+1]
 
         for player in bigBlindList:
-            if not player or player.sitOut:
+            if player is None or player.sitOut:
                 continue
             bb = table.convFact
-            payment = player.stack > bb and bb or player.stack
+            bbPayment = player.stack > bb and bb or player.stack
 
             player.paidState = table.Player.PaidState.Nothing
 
             choiceActions = Action(player)
-            choiceActions.add(Action.PostBB, payment)
+            choiceActions.add(Action.PostBB, bbPayment)
             choiceActions.add(Action.SitOut)
             response = yield choiceActions
 
             if response[0] == Action.PostBB:
                 player.paidState = table.Player.PaidState.PaidBB
-                self.deductPayment(player, payment, self.pots,
+                self.deductPayment(player, bbPayment, self.pots,
                     self.sidepotCreators)
                 activePlayers.append(player)
                 break
@@ -231,19 +232,21 @@ class Script:
         # have posted can choose to check
         postedPlayers = []
         for player in remainingPlayers:
-            if not player or player.sitOut:
+            if player is None or player.sitOut:
                 continue
             if player.paidState == player.PaidState.WaitingBB or \
               player.paidState == player.PaidState.PaidSBBB:
                 continue
+            sbbb = self.table.sb + table.convFact
+            # They shouldn't be allowed to sit-in if their stack
+            # is too small!
+            if player.stack < sbbb:
+                continue
             assert(player.paidState == player.PaidState.Nothing)
 
-            sbbb = self.table.sb + table.convFact
-            # If they have a puny stack < SB, then pay as much as pos
-            payment = player.stack > sbbb and sbbb or player.stack
             # Build up response set
             choiceActions = Action(player)
-            choiceActions.add(Action.PostSBBB, payment)
+            choiceActions.add(Action.PostSBBB, sbbb)
             choiceActions.add(Action.WaitBB)
             choiceActions.add(Action.SitOut)
             response = yield choiceActions
@@ -251,7 +254,7 @@ class Script:
             if response[0] == Action.PostSBBB:
                 # Player has payed up! Mark them as such.
                 player.paidState = table.Player.PaidState.PaidSBBB
-                self.deductPayment(player, payment, self.pots,
+                self.deductPayment(player, sbbb, self.pots,
                     self.sidepotCreators)
                 postedPlayers.append(player)
                 # Unlike for SB/BB we don't append to activePlayers here...
@@ -285,53 +288,83 @@ class Script:
         #------------------
         # PREFLOP MINUS BLINDS
         #------------------
-        # Current bet to call is big blind
-        self.currentBet = table.convFact
-        # For calculating min/max possible raise
-        self.lastRaise = table.convFact
-        self.playersInPot = []
-        # Start from UTG and move to dealer
-        for player in activePlayers[2:]:
-            if player in postedPlayers:
-                # Has the option to check since they posted blinds OOP
-                blinds = bb
+        preflopPlayers = activePlayers[2:] + activePlayers[:2]
+        preflopRotator = rotator.Rotator(preflopPlayers)
+        preflopRotator.setSeatBetPlaced(-2, sbPayment)
+        preflopRotator.setSeatBetPlaced(-1, bbPayment)
+        for pp in postedPlayers:
+            preflopRotator.setSeatBetPlaced(preflopPlayers.index(pp), bb, sb)
+        preflopRotator.setBetSize(bb)
+        r = preflopRotator
+        for player, capped in preflopRotator.run():
+            # Players can sit-out beforehand
+            if player.playerObj.sitOut:
+                continue
+
+            stackSize = player.playerObj.stack
+            canRaise = not capped
+            callAllIn = False
+            raiseAllIn = False
+            callSizeTotal = preflopRotator.call()
+            minRaiseSize = preflopRotator.minRaise()
+            maxRaiseSize = player.betPlaced + stackSize
+            prevBet = player.betPlaced
+
+            toCall = callSizeTotal - prevBet
+            if stackSize <= toCall:
+                canRaise = False
+                callAllIn = True
+                callSizeTotal = stackSize + prevBet
+            toMinRaise = minRaiseSize - prevBet
+            if stackSize <= toMinRaise:
+                minRaiseSize = stackSize + prevBet
+                maxRaiseSize = minRaiseSize
+                raiseAllIn = True
+
+            choiceActions = Action(player.playerObj)
+            choiceActions.add(Action.SitOut)
+            choiceActions.add(Action.Fold)
+            if toCall == 0:
+                choiceActions.add(Action.Check)
             else:
-                blinds = 0
-            choiceActions = self.preflopPossibleActions(player, blinds)
-            if choiceActions:
-                response = yield choiceActions
-                if self.preflopRespondAction(player, response, choiceActions):
-                    self.playersInPot.append(player)
-
-        #-------------------
-        # BLINDS PREFLOP
-        #-------------------
-        # Whether SB/BB is in the pot
-        blindsInvolvedInPot = [False, False]
-        smallBlindPlayer = activePlayers[0]
-
-        player = smallBlindPlayer
-        choiceActions = self.preflopPossibleActions(player, sb)
-        if choiceActions:
+                choiceActions.add(Action.Call, toCall)
+            if canRaise:
+                choiceActions.add(Action.Raise, minRaiseSize, maxRaiseSize)
             response = yield choiceActions
-            if self.preflopRespondAction(player, response, choiceActions):
-                blindsInvolvedInPot[0] = True
 
-        bigBlindPlayer = activePlayers[1]
+            if response[0] == Action.Call:
+                player.betPlaced = callSizeTotal
+                if callAllIn:
+                    player.isAllIn = True
+            elif response[0] == Action.Raise:
+                raiseSize = response[1]
 
-        player = bigBlindPlayer
-        choiceActions = self.preflopPossibleActions(player, bb)
-        if choiceActions:
-            response = yield choiceActions
-            if self.preflopRespondAction(player, response, choiceActions):
-                blindsInvolvedInPot[1] = True
+                if raiseSize < minRaiseSize:
+                    raiseSize = minRaiseSize
+                elif raiseSize > maxRaiseSize:
+                    raiseSize = maxRaiseSize
 
-        for p in self.playersInPot:
-            print p.nickname
-        if blindsInvolvedInPot[0]:
-            print smallBlindPlayer.nickname
-        if blindsInvolvedInPot[1]:
-            print bigBlindPlayer.nickname
+                if raiseAllIn:
+                    player.betPlaced = minRaiseSize
+                    player.isAllIn = True
+                elif raiseSize == maxRaiseSize:
+                    player.betPlaced = maxRaiseSize
+                    player.isAllIn = True
+                elif raiseSize >= minRaiseSize:
+                    player.betPlaced = raiseSize
+                else:
+                    # Error! User input invalid raise size.
+                    # Auto-fold them as punishment :)
+                    continue
+            elif response[0] == Action.Fold or response[0] == Action.SitOut:
+                continue
+
+            addedBet = player.betPlaced - prevBet
+            player.playerObj.stack -= addedBet
+
+        pots = preflopRotator.createPots()
+        for p in pots:
+            print p.betSize, p.potSize, p.contestors
 
         ### Do this at the end of the hand
         #-------------------
@@ -348,70 +381,6 @@ class Script:
         # Find next dealer
         self.table.nextDealer()
 
-    def preflopPossibleActions(self, player, blinds):
-        # Players can sit out mid hand
-        if player.sitOut:
-            return False
-        assert(player.paidState == player.PaidState.PaidSBBB or \
-            player.paidState == player.PaidState.PaidBB)
-
-        # No need to repay blinds.
-        betDeficit = self.currentBet - blinds
-        # Pay as  the player can afford
-        if player.stack > betDeficit:
-            callPayment = betDeficit
-        else:
-            callPayment = player.stack
-
-        minRaise = self.currentBet + self.lastRaise
-        # If players stack < min raise then thats only pos raise size
-        minRaise = player.stack > minRaise and minRaise \
-            or player.stack
-        raiseMax = player.stack > minRaise and player.stack \
-            or minRaise
-
-        # Build up possible responses
-        choiceActions = Action(player)
-        choiceActions.add(Action.SitOut)
-        choiceActions.add(Action.Fold)
-        if callPayment > 0:
-            choiceActions.add(Action.Call, callPayment)
-        else:
-            choiceActions.add(Action.Check)
-        # Only possible to raise if your stack is above current betsize
-        if player.stack > self.currentBet:
-            choiceActions.add(Action.Raise, minRaise, raiseMax)
-        return choiceActions
-
-    def preflopRespondAction(self, player, response, choiceActions):
-        if response[0] == Action.Fold or response[0] == Action.SitOut:
-            return False
-
-        action = choiceActions.findAction(response[0])
-        payment = 0
-
-        if response[0] == Action.Call:
-            payment = action[1]
-            print 'call', payment
-        elif response[0] == Action.Check:
-            pass
-        elif response[0] == Action.Raise:
-            raiseSize = response[1]
-            minRaise = action[1]
-            raiseMax = action[2]
-            # confine raise size to correct bounds
-            if raiseSize < minRaise:
-                raiseSize = minRaise
-            elif raiseSize > raiseMax:
-                raiseSize = raiseMax
-            self.lastRaise = raiseSize - self.currentBet
-            self.currentBet = raiseSize
-            print 'raise', raiseSize
-            print 'last raise=', self.lastRaise
-            payment = raiseSize
-
-        self.deductPayment(player, payment, self.pots, self.sidepotCreators)
-        return True
 
 if __name__ == '__main__':
     cash = table.Table(9, 0.25, 0.5, 0, 5000, 25000)

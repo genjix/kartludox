@@ -6,6 +6,8 @@ class Player:
         self.stillActive = True
         self.isAllIn = False
         self.playerObj = playerObj
+        # Bets not counted in the playing like antes
+        self.darkBet = 0
     def __repr__(self):
         return self.playerObj.nickname
 
@@ -20,9 +22,11 @@ class Rotator:
         # This is both regular bets and all-in capped bets
         self.currentBet = 0
 
-    def setSeatBetPlaced(self, pos, betSize):
+    def setSeatBetPlaced(self, pos, betSize, darkBet=0):
         """Used for the blinds & posters which have to place forced bets."""
-        self.seats[pos].betPlaced = betSize
+        p = self.seats[pos]
+        p.betPlaced = betSize
+        p.darkBet = darkBet
     def setBetSize(self, bet):
         self.lastBet = bet
         self.lastRaise = bet
@@ -172,6 +176,7 @@ class Rotator:
         sidePots = []
         excessCash = 0
         for player in players:
+            player.betPlaced += player.darkBet
             for sidePot in sidePots:
                 player.betPlaced -= sidePot.betSize
                 sidePot.potSize += sidePot.betSize
@@ -190,20 +195,19 @@ class Rotator:
                     excessCash = 0
                     sidePot.contestors.append(player)
                     sidePots.append(sidePot)
-
-        for s in sidePots:
-            print s.betSize, s.potSize, s.contestors
+        return sidePots
 
 if __name__ == '__main__':
     class P:
         def __init__(self, s):
             self.nickname = s
-    seats = [P('a'), P('b'), P('c'), P('d'), P('e'), P('f')]
+    seats = [P('UTG'), P('UTG+1'), P('UTG+2'), P('MP'), P('HJ'), P('CO'),
+             P('BTN'), P('SB'), P('BB')]
     #seats = [P('a'), P('b'), P('c')]
     r = Rotator(seats)
-    bb = 50
-    #r.setSeatBetPlaced(-2, bb/2)
-    #r.setSeatBetPlaced(-1, bb)
+    bb = 2
+    r.setSeatBetPlaced(-2, bb/2)
+    r.setSeatBetPlaced(-1, 1)
     r.setBetSize(bb)
     for player, capped in r.run():
         print '---------'
@@ -222,5 +226,7 @@ if __name__ == '__main__':
         else:
             s = int(cc)
         player.betPlaced = s
-    r.createPots()
+    pots = r.createPots()
+    for p in pots:
+        print p.betSize, p.potSize, p.contestors
 

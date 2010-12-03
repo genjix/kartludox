@@ -2,12 +2,13 @@ import script, table
 from twisted.internet import reactor
 
 class Schedule:
-    def __init__(self):
+    def __init__(self, message):
         self.started = False
+        self.message = message
     def callback(self, functor, secs):
         # If already scheduled then make sure not to schedule event twice.
         if not self.started:
-            print('A new game will begin in %d seconds.'%secs)
+            self.message('A new game will begin in %d seconds.'%secs)
         started = True
         reactor.callLater(secs, functor)
     def clear(self):
@@ -34,7 +35,10 @@ class Handler:
     def update(self, player, response):
         if not self.running:
             return
-        if player != self.currentAct.player.nickname:
+        if player is None:
+            self.adapter.reply('You didn\'t specify a player.')
+            return
+        elif player != self.currentAct.player.nickname:
             # People are allowed to sit out, out of turn
             if response[0] != script.Action.SitOut:
                 self.adapter.reply('Don\'t act out of turn!')
@@ -64,10 +68,10 @@ class Adapter:
         self.prot = prot
         self.chan = chan
         self.cash = table.Table(9, 0.25, 0.5, 0, 5000, 25000)
-        self.cash.registerScheduler(Schedule())
+        self.cash.registerScheduler(Schedule(self.reply))
         self.handler = Handler(self)
         self.cash.registerHandler(self.handler)
-        self.cash.setStartupDelayTime(1)
+        self.cash.setStartupDelayTime(8)
 
         ###
         self.cash.addPlayer('a', 0)
@@ -97,6 +101,23 @@ class Adapter:
             player = None
             param = None
 
+        try:
+            self.runCommand(player, command, param)
+        except table.Table.NoSuchPlayer as e:
+            self.reply(e)
+        except table.Table.NotBoughtIn as e:
+            self.reply(e)
+        except table.Table.BuyinNegative as e:
+            self.reply(e)
+        except table.Table.SeatTaken as e:
+            self.reply(e)
+        except table.Table.InvalidSeat as e:
+            self.reply(e)
+
+        if self.cash is not None:
+            print self.cash
+
+    def runCommand(self, player, command, param):
         if command == 'reg':
             self.cash.addPlayer(player, int(param))
         elif command == 'buyin':
@@ -125,7 +146,6 @@ class Adapter:
             for line in self.cash.__repr__().split('\n'):
                 self.reply(line)
             self.reply('Pots: %s'%self.handler.script.pots)
-        print self.cash
-        print 'Pots: %s'%self.handler.script.pots
+
     def reply(self, message):
         self.prot.msg(self.chan, message)
