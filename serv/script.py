@@ -149,8 +149,6 @@ class Script:
                 activePlayers.append(player)
                 continue
             if player.sitOut:
-                if blindState == Action.PostSB:
-                    player.paidState = table.Player.PaidState.PaidBB
                 continue
 
             if blindState == Action.PostSB:
@@ -177,7 +175,7 @@ class Script:
                 if (blindState == Action.PostSB or
                     blindState == Action.PostSBBB):
                     player.paidState = table.Player.PaidState.PaidSBBB
-                elif blindState == Action.PostSBBB:
+                elif blindState == Action.PostBB:
                     player.paidState = table.Player.PaidState.PaidBB
                 player.betPart.payDark(blindPayment)
                 activePlayers.append(player)
@@ -212,7 +210,7 @@ class Script:
         preflopPlayers = activePlayers[2:] + activePlayers[:2]
         preflopPlayers = [p.betPart for p in preflopPlayers]
         preflopRotator = rotator.Rotator(preflopPlayers)
-        preflopRotator.setBetSize(bb)
+        preflopRotator.setBetSize(table.convFact)
         for player, capped in preflopRotator.run():
             # Players can sit-out beforehand
             if player.parent.sitOut:
