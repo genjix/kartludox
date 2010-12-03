@@ -304,7 +304,7 @@ class Table:
             rotatedSeats[self.dealer+1:] + rotatedSeats[:self.dealer+1]
         # Filter empty seats and sitting out players
         filterSeats = [i for i in rotatedSeats \
-            if self.seats[i] and not self.seats[i].sitOut]
+            if self.seats[i] is not None and not self.seats[i].sitOut]
         # Return next suitable candidate
         self.dealer = filterSeats[0]
 
