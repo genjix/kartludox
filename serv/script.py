@@ -82,6 +82,15 @@ class CardsDealt:
             s += '  %s: [%s %s]\n'%(p.nickname, c[0], c[1])
         return s
 
+class ShowDown:
+    def __init__(self, pots):
+        self.pots = pots
+    def __repr__(self):
+        s = ''
+        for p in self.pots:
+            s += '%d %d %s\n'%(p.betSize, p.potSize, p.contestors)
+        return s
+
 class Script:
     def __init__(self, table):
         self.table = table
@@ -172,12 +181,16 @@ class Script:
                 response[0] == Action.PostBB or
                 response[0] == Action.PostSBBB):
                 # Player has payed up! Mark them as such.
-                if (blindState == Action.PostSB or
-                    blindState == Action.PostSBBB):
+                if blindState == Action.PostSB:
                     player.paidState = table.Player.PaidState.PaidSBBB
+                    player.betPart.pay(blindPayment)
+                elif blindState == Action.PostSBBB:
+                    player.paidState = table.Player.PaidState.PaidSBBB
+                    player.betPart.pay(table.convFact)
+                    player.betPart.payDark(self.table.sb)
                 elif blindState == Action.PostBB:
                     player.paidState = table.Player.PaidState.PaidBB
-                player.betPart.payDark(blindPayment)
+                    player.betPart.pay(blindPayment)
                 activePlayers.append(player)
                 # Move to the next state. Stop at the last state.
                 if blindToDo:
@@ -275,8 +288,7 @@ class Script:
             player.parent.stack -= addedBet
 
         pots = preflopRotator.createPots()
-        for p in pots:
-            print p.betSize, p.potSize, p.contestors
+        response = yield ShowDown(pots)
 
         ### Do this at the end of the hand
         #-------------------
@@ -290,8 +302,9 @@ class Script:
             if player.stack == 0:
                 self.table.sitOutPlayer(player)
 
-        # Find next dealer
-        self.table.nextDealer()
+        if self.table.gameState == table.GameState.Running:
+            # Find next dealer
+            self.table.nextDealer()
 
 
 if __name__ == '__main__':

@@ -52,6 +52,9 @@ class Handler:
             if isinstance(self.currentAct, script.CardsDealt):
                 self.displayAct()
                 self.currentAct = self.actIter.next()
+            elif isinstance(self.currentAct, script.ShowDown):
+                self.displayAct()
+                self.currentAct = self.actIter.next()
             self.displayAct()
         except StopIteration:
             self.adapter.reply('END!!')
@@ -79,8 +82,8 @@ class Adapter:
         self.cash.addPlayer('c', 2)
         self.cash.addPlayer('d', 3)
         self.cash.addMoney('a', 5000)
-        self.cash.addMoney('b', 7000)
-        self.cash.addMoney('c', 6000)
+        self.cash.addMoney('b', 4000)
+        self.cash.addMoney('c', 5000)
         self.cash.addMoney('d', 8000)
         self.cash.sitIn('a')
         self.cash.sitIn('b')
@@ -100,6 +103,13 @@ class Adapter:
         else:
             player = None
             param = None
+
+        """player = user
+        try:
+            command, param = message.split(' ')
+        except ValueError:
+            command = message
+            param = None"""
 
         try:
             self.runCommand(player, command, param)
@@ -145,7 +155,13 @@ class Adapter:
         elif command == 'show':
             for line in self.cash.__repr__().split('\n'):
                 self.reply(line)
-            self.reply('Pots: %s'%self.handler.script.pots)
+
+        # debug command only
+        elif command == 'ereg':
+            self.cash.addPlayer(player, int(player))
+            if not self.cash.addMoney(player, int(player)):
+                self.reply('Rebuy will be added after current hand.')
+            self.cash.sitIn(player)
 
     def reply(self, message):
         self.prot.msg(self.chan, message)
