@@ -6,7 +6,7 @@ import time, sys
 import adapter
 
 class GamerBot(irc.IRCClient):
-    nickname = "donis"
+    nickname = "donisto"
 
     def connectionMade(self):
         irc.IRCClient.connectionMade(self)
