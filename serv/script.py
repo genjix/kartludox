@@ -91,6 +91,72 @@ class ShowDown:
             s += '%d %d %s\n'%(p.betSize, p.potSize, p.contestors)
         return s
 
+
+class Street:
+    Nothing = 0
+    Preflop = 1
+    Flop = 2
+    Turn = 3
+    River = 4
+    Finished = 5
+
+class StreetStateMachine:
+    def __init__(self, activePlayers, board, deck):
+        self.activePlayers = [p.betPart for p in activePlayers]
+        self.currentStreet = Street.Preflop
+        self.rotator = None
+        self.pots = []
+
+        self.deck = deck
+        self.board = board
+
+    def finished(self):
+        return self.currentStreet == Street.Finished
+
+    def createRotator(self):
+        if self.currentStreet == Street.Preflop:
+            preflopPlayers = self.activePlayers[2:] + self.activePlayers[:2]
+            self.rotator = rotator.Rotator(preflopPlayers)
+            self.rotator.setBetSize(table.convFact)
+        else:
+            self.rotator = rotator.Rotator(self.activePlayers)
+            self.rotator.setRaise(table.convFact)
+        return self.rotator
+
+    def dealCard(self):
+        self.board.append(self.deck.pop())
+
+    def prepareNext(self):
+        self.pots.extend(self.rotator.createPots())
+        # award pots with single contestor back to them
+        for pot in self.pots[:]:
+            if len(pot.contestors) < 2:
+                assert(len(pot.contestors) == 1)
+                playerObj = pot.contestors[0].parent
+                playerObj.stack += pot.potSize
+                self.pots.remove(pot)
+
+        # If no pots left then finished
+        if not self.pots:
+            self.currentStreet = Street.Finished
+        # Advance through the streets.
+        elif self.currentStreet  == Street.Preflop:
+            self.currentStreet = Street.Flop
+            # deal flop
+            self.dealCard()
+            self.dealCard()
+            self.dealCard()
+        elif self.currentStreet  == Street.Flop:
+            self.currentStreet = Street.Turn
+            # deal turn
+            self.dealCard()
+        elif self.currentStreet  == Street.Turn:
+            self.currentStreet = Street.River
+            # deal river
+            self.dealCard()
+        elif self.currentStreet  == Street.River:
+            self.currentStreet = Street.Finished
+
 class Script:
     def __init__(self, table):
         self.table = table
@@ -204,7 +270,7 @@ class Script:
         del blindList
 
         #------------------
-        # DEAL HAND!
+        # DEAL HANDS!
         #------------------
         # Generate a new deck and shuffle the hands
         ranks = "23456789TJQKA"
@@ -220,10 +286,49 @@ class Script:
         #------------------
         # PREFLOP MINUS BLINDS
         #------------------
-        preflopPlayers = activePlayers[2:] + activePlayers[:2]
-        preflopPlayers = [p.betPart for p in preflopPlayers]
-        rotatorControl = rotator.Rotator(preflopPlayers)
-        rotatorControl.setBetSize(table.convFact)
+        streetState = StreetStateMachine(activePlayers, self.board, deck)
+
+        while not streetState.finished():
+            rotatorControl = streetState.createRotator()
+
+            i = self.rotateTheAction(rotatorControl)
+            # re-yield rotateTheAction
+            choiceActions = i.next()
+            try:
+                while True:
+                    response = yield choiceActions
+                    choiceActions = i.send(response)
+            except StopIteration:
+                pass
+
+            streetState.prepareNext()
+            if streetState.currentStreet == Street.Flop:
+                print self.board
+            elif streetState.currentStreet == Street.Turn:
+                print self.board[-1]
+            elif streetState.currentStreet == Street.River:
+                print self.board[-1]
+
+        pots = streetState.pots
+        response = yield ShowDown(pots)
+
+        ### Do this at the end of the hand
+        #-------------------
+        # DEALER
+        #-------------------
+        # Add rebuys from table
+        self.table.executePendingRebuys()
+
+        # Set everyone with zero stack size to sit out
+        for player in activePlayers:
+            if player.stack == 0:
+                self.table.sitOutPlayer(player)
+
+        if self.table.gameState == table.GameState.Running:
+            # Find next dealer
+            self.table.nextDealer()
+
+    def rotateTheAction(self, rotatorControl):
         for player, capped in rotatorControl.run():
             # Players can sit-out beforehand
             if player.parent.sitOut:
@@ -286,26 +391,6 @@ class Script:
 
             addedBet = player.betPlaced - prevBet
             player.parent.stack -= addedBet
-
-        pots = rotatorControl.createPots()
-        response = yield ShowDown(pots)
-
-        ### Do this at the end of the hand
-        #-------------------
-        # DEALER
-        #-------------------
-        # Add rebuys from table
-        self.table.executePendingRebuys()
-
-        # Set everyone with zero stack size to sit out
-        for player in activePlayers:
-            if player.stack == 0:
-                self.table.sitOutPlayer(player)
-
-        if self.table.gameState == table.GameState.Running:
-            # Find next dealer
-            self.table.nextDealer()
-
 
 if __name__ == '__main__':
     cash = table.Table(9, 0.25, 0.5, 0, 5000, 25000)

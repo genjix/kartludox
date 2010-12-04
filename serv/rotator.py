@@ -14,6 +14,8 @@ class Rotator:
     def setBetSize(self, bet):
         self.lastBet = bet
         self.lastRaise = bet
+    def setRaise(self, rai):
+        self.lastRaise = rai
 
     def finishBetting(self, player):
         if self.lastBettor == player:
