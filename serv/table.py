@@ -139,7 +139,7 @@ class Table:
             self.minimum = minimum
         def __str__(self):
             tc = convFact
-            return "Buyin from '%s' of %d bb doesn't meet minimum of %d bb"%\
+            return "Buyin from '%s' of %d bb doesn't meet table minimum of %d bb"%\
                 (self.nickname, self.amount / tc, self.minimum / tc)
 
     def __init__(self, numPlayers, sb, bb, ante, minBuyin, maxBuyin):
