@@ -82,7 +82,7 @@ class Adapter:
         self.cash.addPlayer('c', 2)
         self.cash.addPlayer('d', 3)
         self.cash.addMoney('a', 5000)
-        self.cash.addMoney('b', 4000)
+        self.cash.addMoney('b', 5000)
         self.cash.addMoney('c', 5000)
         self.cash.addMoney('d', 8000)
         self.cash.sitIn('a')
@@ -113,19 +113,12 @@ class Adapter:
 
         try:
             self.runCommand(player, command, param)
-        except table.Table.NoSuchPlayer as e:
-            self.reply(e)
-        except table.Table.NotBoughtIn as e:
-            self.reply(e)
-        except table.Table.BuyinNegative as e:
-            self.reply(e)
-        except table.Table.SeatTaken as e:
-            self.reply(e)
-        except table.Table.InvalidSeat as e:
-            self.reply(e)
-
-        if self.cash is not None:
-            print self.cash
+        except Exception as e:
+            self.reply('%s: %s'%(e.__class__.__name__, str(e)))
+            raise
+        else:
+            if self.cash is not None:
+                print self.cash
 
     def runCommand(self, player, command, param):
         if command == 'reg':

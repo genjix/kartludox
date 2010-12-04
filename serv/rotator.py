@@ -92,7 +92,7 @@ class Rotator:
                 # filter all non active, all-in players 
                 lamActPlayers = lambda p: \
                     p.stillActive and not p.isAllIn
-                activeNonAllInPlayers = filter(lamActPlayers, players)
+                activeNonAllInPlayers = filter(lamActPlayers, self.players)
                 # Check still some playing players left
                 if len(activeNonAllInPlayers) < 2:
                     cap = True
@@ -104,7 +104,7 @@ class Rotator:
                     self.deactivatePlayer(player)
                     # If only 1 player remains cos everyone folded
                     # then finish up.
-                    if self.noOneLeft(players):
+                    if self.noOneLeft(self.players):
                         self.bettingFinished = True
                         break
                 elif player.betPlaced == self.currentBet:
@@ -159,11 +159,10 @@ class Rotator:
             self.contestors = []
 
     def createPots(self):
-        players = [p for p in self.seats if p != None]
-        players.sort(key=lambda p: p.betPlaced)
+        self.players.sort(key=lambda p: p.betPlaced)
         sidePots = []
         excessCash = 0
-        for player in players:
+        for player in self.players:
             player.betPlaced += player.darkBet
             for sidePot in sidePots:
                 player.betPlaced -= sidePot.betSize

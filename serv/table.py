@@ -103,6 +103,7 @@ class Table:
             self.seatid = seatid
         def __str__(self):
             return 'Invalid seat ID %d'%self.seatid
+
     class SeatTaken(Exception):
         def __init__(self, seatid, otherNickname):
             self.seatid = seatid
@@ -130,6 +131,16 @@ class Table:
         def __str__(self):
             return "Cannot seat player '%s' with zero stack size"%\
                 self.nickname
+
+    class BuyinTooSmall(Exception):
+        def __init__(self, player, amount, minimum):
+            self.nickname = player.nickname
+            self.amount = amount
+            self.minimum = minimum
+        def __str__(self):
+            tc = convFact
+            return "Buyin from '%s' of %d bb doesn't meet minimum of %d bb"%\
+                (self.nickname, self.amount / tc, self.minimum / tc)
 
     def __init__(self, numPlayers, sb, bb, ante, minBuyin, maxBuyin):
         self.numPlayers = numPlayers
@@ -197,7 +208,7 @@ class Table:
 
         # When you first sit in you must rebuy to above a minimum
         if player.stack == 0 and amount < self.minBuyin:
-            amount = self.minBuyin
+            raise Table.BuyinTooSmall(player, amount, self.minBuyin)
 
         totalStack = player.stack + amount
         if totalStack > self.maxBuyin:

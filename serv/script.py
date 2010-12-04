@@ -222,9 +222,9 @@ class Script:
         #------------------
         preflopPlayers = activePlayers[2:] + activePlayers[:2]
         preflopPlayers = [p.betPart for p in preflopPlayers]
-        preflopRotator = rotator.Rotator(preflopPlayers)
-        preflopRotator.setBetSize(table.convFact)
-        for player, capped in preflopRotator.run():
+        rotatorControl = rotator.Rotator(preflopPlayers)
+        rotatorControl.setBetSize(table.convFact)
+        for player, capped in rotatorControl.run():
             # Players can sit-out beforehand
             if player.parent.sitOut:
                 continue
@@ -233,8 +233,8 @@ class Script:
             canRaise = not capped
             callAllIn = False
             raiseAllIn = False
-            callSizeTotal = preflopRotator.call()
-            minRaiseSize = preflopRotator.minRaise()
+            callSizeTotal = rotatorControl.call()
+            minRaiseSize = rotatorControl.minRaise()
             maxRaiseSize = player.betPlaced + stackSize
             prevBet = player.betPlaced
 
@@ -287,7 +287,7 @@ class Script:
             addedBet = player.betPlaced - prevBet
             player.parent.stack -= addedBet
 
-        pots = preflopRotator.createPots()
+        pots = rotatorControl.createPots()
         response = yield ShowDown(pots)
 
         ### Do this at the end of the hand
