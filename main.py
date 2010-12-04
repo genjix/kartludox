@@ -651,7 +651,11 @@ class MainWindow(QtGui.QMainWindow):
         chatIcon = QtGui.QIcon('./data/gfx/icons/chat.png')
         sidebar.addItem(tex, chatIcon, 'Chat')
         chanceIcon = QtGui.QIcon('./data/gfx/icons/roll.png')
-        sidebar.addItem(QtGui.QTextEdit(), chanceIcon, 'Chance')
+        chanceWidget = QtGui.QTextEdit()
+        chanceWidget.setText(\
+"""PokerStove odds calculator here.
+Shows odds on flop of various hands like flush, straight .etc""")
+        sidebar.addItem(chanceWidget, chanceIcon, 'Chance')
         hhIcon = QtGui.QIcon('./data/gfx/icons/replay.png')
         sidebar.addItem(wgt, hhIcon, 'Hand')
         notesIcon = QtGui.QIcon('./data/gfx/icons/document-edit.png')
