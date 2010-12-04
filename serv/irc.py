@@ -6,7 +6,7 @@ import time, sys
 import adapter
 
 class GamerBot(irc.IRCClient):
-    nickname = "colorbot"
+    nickname = "dealer"
 
     def connectionMade(self):
         irc.IRCClient.connectionMade(self)
@@ -24,12 +24,12 @@ class GamerBot(irc.IRCClient):
         """This will get called when the bot joins the channel."""
         if channel == '#pangaea':
             self.adapter[channel] = adapter.Adapter(self, channel)
-        self.msg(channel, "\x0304red friend =)\x03")
+        #self.msg(channel, "\x0304red friend =)\x03")
         """self.msg(channel, "\x0303green friend =)\x03")
         self.msg(channel, "\x0302blue friend =)\x03")
         self.msg(channel, "\x0314grey friend =)\x03")
         self.msg(channel, "\x0300,01 black friend =)\x03")"""
-        self.msg(channel, "\x0314[ \x03\x0304Ah\x03\x0314 ] [ \x03\x0303Jc\x03\x0314 ] [ \x03\x03027d\x03\x0314 ] [ \x03\x028s\x0314 ]\x03")
+        #self.msg(channel, "\x0314[ \x03\x0304Ah\x03\x0314 ] [ \x03\x0303Jc\x03\x0314 ] [ \x03\x03027d\x03\x0314 ] [ \x03\x028s\x0314 ]\x03")
 
     def privmsg(self, user, channel, msg):
         """This will get called when the bot receives a message."""
