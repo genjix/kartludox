@@ -296,7 +296,7 @@ class MdiTable(QtGui.QMdiSubWindow):
         size = self.pic.size()
         self.wgt.resize(size.width(), size.height())
         if QtCore.QDir.setCurrent('./data/gfx/table/default/'):
-            self.wgt.setStyleSheet(common.loadStyleSheet('style.css'))
+            self.wgt.setStyleSheet(str(common.loadStyleSheet('style.css')))
         QtCore.QDir.setCurrent('../../../../')
         scene.addWidget(self.wgt)
         self.view.setRenderHints(QtGui.QPainter.Antialiasing|QtGui.QPainter.SmoothPixmapTransform)
