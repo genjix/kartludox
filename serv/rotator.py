@@ -1,9 +1,9 @@
 import itertools
 
 class Rotator:
-    def __init__(self, seats):
+    def __init__(self, players):
         # First player to act should always be first in this list
-        self.seats = seats
+        self.players = players
         self.lastBettor = None
         self.lastBet = 0
         self.lastRaise = 0
@@ -37,13 +37,11 @@ class Rotator:
         # Betting Round is closed.
         self.bettingClosed = False
 
-        # Ignore empty seats
-        players = [p for p in self.seats if p != None]
         # We always need at least 2 players at the table
-        assert(len(players) > 1)
+        assert(len(self.players) > 1)
 
         while not self.bettingFinished:
-            for player in players:
+            for player in self.players:
                 # Skip over players that have folded.
                 if not player.stillActive:
                     continue
