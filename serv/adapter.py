@@ -29,6 +29,12 @@ class Handler:
 
         self.currentAct = self.actIter.next()
         self.displayAct()
+    def pmHands(self, cardsDealt):
+        players = cardsDealt.players
+        for player in players:
+            c = player.cards
+            hand = '[ %s %s ]'%(c[0], c[1])
+            self.adapter.privmsg('genjix', hand)
     def displayAct(self):
         for line in self.currentAct.__repr__().split('\n'):
             self.adapter.reply(line)
@@ -65,7 +71,10 @@ class Handler:
                 self.displayAct()
                 self.currentAct = self.actIter.next()"""
             while not isinstance(self.currentAct, script.Action):
-                self.displayAct()
+                if isinstance(self.currentAct, script.CardsDealt):
+                    self.pmHands(self.currentAct)
+                else:
+                    self.displayAct()
                 self.currentAct = self.actIter.next()
             self.displayAct()
         except StopIteration:
@@ -172,3 +181,6 @@ class Adapter:
 
     def reply(self, message):
         self.prot.msg(self.chan, message)
+    def privmsg(self, user, message):
+        self.prot.msg(user, message)
+
