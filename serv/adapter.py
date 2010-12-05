@@ -49,10 +49,22 @@ class Handler:
         try:
             self.currentAct = self.actIter.send(response)
             # handle cards dealt .etc here
-            if isinstance(self.currentAct, script.CardsDealt):
+            """if isinstance(self.currentAct, script.CardsDealt):
+                self.displayAct()
+                self.currentAct = self.actIter.next()
+            elif isinstance(self.currentAct, script.FlopDealt):
+                self.displayAct()
+                self.currentAct = self.actIter.next()
+            elif isinstance(self.currentAct, script.TurnDealt):
+                self.displayAct()
+                self.currentAct = self.actIter.next()
+            elif isinstance(self.currentAct, script.RiverDealt):
                 self.displayAct()
                 self.currentAct = self.actIter.next()
             elif isinstance(self.currentAct, script.ShowDown):
+                self.displayAct()
+                self.currentAct = self.actIter.next()"""
+            while not isinstance(self.currentAct, script.Action):
                 self.displayAct()
                 self.currentAct = self.actIter.next()
             self.displayAct()
@@ -83,7 +95,7 @@ class Adapter:
         self.cash.addPlayer('d', 3)
         self.cash.addMoney('a', 5000)
         self.cash.addMoney('b', 5000)
-        self.cash.addMoney('c', 5000)
+        self.cash.addMoney('c', 6000)
         self.cash.addMoney('d', 8000)
         self.cash.sitIn('a')
         self.cash.sitIn('b')
@@ -143,6 +155,8 @@ class Adapter:
             self.handler.update(player, (script.Action.Check,))
         elif command == 'fold':
             self.handler.update(player, (script.Action.Fold,))
+        elif command == 'bet':
+            self.handler.update(player, (script.Action.Bet, int(param)))
         elif command == 'raise':
             self.handler.update(player, (script.Action.Raise, int(param)))
         elif command == 'show':

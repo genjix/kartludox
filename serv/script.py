@@ -17,10 +17,11 @@ class Action:
     Fold =      6
     Call =      7
     Check =     8  # **
-    Raise =     9  # 2 parameters- min and max possible raises 
-    AllIn =     10
-    LeaveSeat = 11 # **
-    WaitBB =    12
+    Bet =       9  # 2 parameters- min and max possible raises 
+    Raise =     10 # 2 parameters- min and max possible raises 
+    AllIn =     11
+    LeaveSeat = 12 # **
+    WaitBB =    13
 
     actionRepr = {
         SitIn:      'Sit In',
@@ -32,6 +33,7 @@ class Action:
         Fold:       'Fold',
         Call:       'Call',
         Check:      'Check',
+        Bet:        'Bet',
         Raise:      'Raise',
         AllIn:      'Go All In',
         LeaveSeat:  'Leave Seat',
@@ -79,7 +81,41 @@ class CardsDealt:
         s = 'Dealt to:\n'
         for p in self.players:
             c = p.cards
-            s += '  %s: [%s %s]\n'%(p.nickname, c[0], c[1])
+            s += '  %s: [ %s %s ]\n'%(p.nickname, c[0], c[1])
+        return s
+
+class FlopDealt:
+    def __init__(self, board, pots):
+        self.board = board
+        self.pots = pots
+    def __repr__(self):
+        b = self.board
+        s = 'Flop: [ %s %s %s ]\n'%(b[0], b[1], b[2])
+        for p in self.pots:
+            s += '  %s\n'%p
+        return s
+
+class TurnDealt:
+    def __init__(self, board, pots):
+        self.board = board
+        self.pots = pots
+    def __repr__(self):
+        b = self.board
+        s = 'Turn: [ %s %s %s ] [ %s ]\n'%(b[0], b[1], b[2], b[3])
+        for p in self.pots:
+            s += '  %s\n'%p
+        return s
+
+class RiverDealt:
+    def __init__(self, board, pots):
+        self.board = board
+        self.pots = pots
+    def __repr__(self):
+        b = self.board
+        s = 'River: [ %s %s %s ] [ %s ] [ %s ]\n'% \
+            (b[0], b[1], b[2], b[3], b[4])
+        for p in self.pots:
+            s += '  %s\n'%p
         return s
 
 class ShowDown:
@@ -90,7 +126,6 @@ class ShowDown:
         for p in self.pots:
             s += '%d %d %s\n'%(p.betSize, p.potSize, p.contestors)
         return s
-
 
 class Street:
     Nothing = 0
@@ -129,7 +164,7 @@ class StreetStateMachine:
     def prepareNext(self):
         self.pots.extend(self.rotator.createPots())
         # award pots with single contestor back to them
-        for pot in self.pots[:]:
+        for pot in []:
             if len(pot.contestors) < 2:
                 assert(len(pot.contestors) == 1)
                 playerObj = pot.contestors[0].parent
@@ -137,7 +172,7 @@ class StreetStateMachine:
                 self.pots.remove(pot)
 
         # If no pots left then finished
-        if not self.pots:
+        if self.rotator.oneBettingPlayer():
             self.currentStreet = Street.Finished
         # Advance through the streets.
         elif self.currentStreet  == Street.Preflop:
@@ -161,14 +196,6 @@ class Script:
     def __init__(self, table):
         self.table = table
         self.board = None
-
-    def regenerateList(self):
-        # Prune players that sit-out
-        self.players = [p for p in self.players if not p.sitOut]
-        if len(players) < 2:
-            # award pot to only remaining player
-            # if applicable
-            raise StopIteration
 
     def run(self):
         seats = self.table.seats
@@ -284,7 +311,7 @@ class Script:
         yield CardsDealt(activePlayers)
 
         #------------------
-        # PREFLOP MINUS BLINDS
+        # ALL FOUR STREETS
         #------------------
         streetState = StreetStateMachine(activePlayers, self.board, deck)
 
@@ -292,22 +319,21 @@ class Script:
             rotatorControl = streetState.createRotator()
 
             i = self.rotateTheAction(rotatorControl)
-            # re-yield rotateTheAction
-            choiceActions = i.next()
             try:
+                # re-yield rotateTheAction
+                choiceActions = i.next()
                 while True:
                     response = yield choiceActions
                     choiceActions = i.send(response)
             except StopIteration:
-                pass
-
-            streetState.prepareNext()
-            if streetState.currentStreet == Street.Flop:
-                print self.board
-            elif streetState.currentStreet == Street.Turn:
-                print self.board[-1]
-            elif streetState.currentStreet == Street.River:
-                print self.board[-1]
+                streetState.prepareNext()
+                pots = streetState.pots
+                if streetState.currentStreet == Street.Flop:
+                    response = yield FlopDealt(self.board, pots)
+                elif streetState.currentStreet == Street.Turn:
+                    response = yield TurnDealt(self.board, pots)
+                elif streetState.currentStreet == Street.River:
+                    response = yield RiverDealt(self.board, pots)
 
         pots = streetState.pots
         response = yield ShowDown(pots)
@@ -329,6 +355,11 @@ class Script:
             self.table.nextDealer()
 
     def rotateTheAction(self, rotatorControl):
+        # Auto-check it all down since there's 1+ players all-in
+        # vs 1 active player.
+        if rotatorControl.oneBettingPlayer():
+            raise StopIteration
+
         for player, capped in rotatorControl.run():
             # Players can sit-out beforehand
             if player.parent.sitOut:
@@ -362,14 +393,19 @@ class Script:
             else:
                 choiceActions.add(Action.Call, toCall)
             if canRaise:
-                choiceActions.add(Action.Raise, minRaiseSize, maxRaiseSize)
+                if rotatorControl.lastBet > 0:
+                    betraiseAct = Action.Raise
+                else:
+                    betraiseAct = Action.Bet
+                choiceActions.add(betraiseAct, minRaiseSize, maxRaiseSize)
             response = yield choiceActions
 
             if response[0] == Action.Call:
                 player.betPlaced = callSizeTotal
                 if callAllIn:
                     player.isAllIn = True
-            elif response[0] == Action.Raise:
+            elif (response[0] == Action.Raise or
+                  response[0] == Action.Bet):
                 raiseSize = response[1]
 
                 if raiseSize < minRaiseSize:

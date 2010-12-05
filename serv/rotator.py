@@ -91,12 +91,8 @@ class Rotator:
 
                 # False = betting is not capped, player can raise
                 cap = False
-                # filter all non active, all-in players 
-                lamActPlayers = lambda p: \
-                    p.stillActive and not p.isAllIn
-                activeNonAllInPlayers = filter(lamActPlayers, self.players)
                 # Check still some playing players left
-                if len(activeNonAllInPlayers) < 2:
+                if self.oneBettingPlayer():
                     cap = True
 
                 yield player, cap
@@ -106,7 +102,7 @@ class Rotator:
                     self.deactivatePlayer(player)
                     # If only 1 player remains cos everyone folded
                     # then finish up.
-                    if self.noOneLeft(self.players):
+                    if self.onePlayer():
                         self.bettingFinished = True
                         break
                 elif player.betPlaced == self.currentBet:
@@ -142,10 +138,15 @@ class Rotator:
             if self.lastBettor == player:
                 self.lastBettor = None
 
-    def noOneLeft(self, players):
+    def onePlayer(self):
         numActivePlayers = \
-            len([p for p in players if p.stillActive])
+            len([p for p in self.players if p.stillActive])
+        assert(numActivePlayers > 0)
         return numActivePlayers < 2
+    def oneBettingPlayer(self):
+        numActiveNonAllInPlayers = \
+            len([p for p in self.players if p.stillActive and not p.isAllIn])
+        return numActiveNonAllInPlayers < 2
 
     def minRaise(self):
         if self.capBettor is not None:
@@ -159,6 +160,8 @@ class Rotator:
             self.betSize = size
             self.potSize = 0
             self.contestors = []
+        def __repr__(self):
+            return '%d %d %s'%(self.betSize, self.potSize, self.contestors)
 
     def createPots(self):
         self.players.sort(key=lambda p: p.betPlaced)
