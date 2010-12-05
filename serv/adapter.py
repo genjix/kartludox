@@ -182,5 +182,5 @@ class Adapter:
     def reply(self, message):
         self.prot.msg(self.chan, message)
     def privmsg(self, user, message):
-        self.prot.msg(user, message)
+        self.prot.msg(user, '%s %s'%(self.chan, message))
 
