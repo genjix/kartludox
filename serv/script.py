@@ -84,6 +84,14 @@ class CardsDealt:
             s += '  %s: [ %s %s ]\n'%(p.nickname, c[0], c[1])
         return s
 
+class UncalledBet:
+    def __init__(self, player, bet):
+        self.player = player
+        self.bet = bet
+    def __repr__(self):
+        pname = self.player.nickname
+        return 'Uncalled bet of %d returned to %s\n'%(self.bet, pname)
+
 class FlopDealt:
     def __init__(self, board, pots):
         self.board = board
@@ -327,7 +335,15 @@ class Script:
                     choiceActions = i.send(response)
             except StopIteration:
                 streetState.prepareNext()
+
                 pots = streetState.pots
+                if len(pots[-1].contestors) == 1:
+                    returnedBet = pots.pop()
+                    player = returnedBet.contestors[0].parent
+                    potSize = returnedBet.potSize
+                    player.stack += potSize
+                    response = yield UncalledBet(player, potSize)
+
                 if streetState.currentStreet == Street.Flop:
                     response = yield FlopDealt(self.board, pots)
                 elif streetState.currentStreet == Street.Turn:
