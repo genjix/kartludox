@@ -1,5 +1,6 @@
 import table
 import rotator
+import awardhands
 
 class Action:
     """This class represents a set of possible choices for a player
@@ -152,6 +153,15 @@ class ShowDown:
         s = ''
         for p in self.pots:
             s += '%d %d %s\n'%(p.betSize, p.potSize, p.contestors)
+        return s
+
+class ShowRankings:
+    def __init__(self, rankings):
+        self.rankings = rankings
+    def __repr__(self):
+        s = ''
+        for playerName, handrank in self.rankings:
+            s += '%s shows %s\n'%(playerName, awardhands.handName(handrank))
         return s
 
 class Street:
@@ -388,11 +398,16 @@ class Script:
             # show hands
             endPlayers = streetState.investedPlayers()
             response = yield ShowHands(endPlayers)
-            # show rankings
+            # show hand rankings
+            award = awardhands.AwardHands(endPlayers, pots, self.board)
+            rankings = award.calculateRankings()
+            response = yield ShowRankings(rankings)
             # who wins what.
+            for winner in award.award():
+                response = yield CollectedMoney(*winner)
             #   CollectedMoney
             # go through and award players the pots
-            response = yield ShowDown(pots)
+            #response = yield ShowDown(pots)
 
         ### Do this at the end of the hand
         #-------------------
