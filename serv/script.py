@@ -84,6 +84,14 @@ class CardsDealt:
             s += '  %s: [ %s %s ]\n'%(p.nickname, c[0], c[1])
         return s
 
+class CollectedMoney:
+    def __init__(self, player, amount):
+        self.player = player
+        self.amount = amount
+    def __repr__(self):
+        pname = self.player.nickname
+        return '%s collected %d from the pot\n'%(pname, self.amount)
+
 class UncalledBet:
     def __init__(self, player, bet):
         self.player = player
@@ -344,6 +352,12 @@ class Script:
                     player.stack += potSize
                     betSize = returnedBet.betSize
                     response = yield UncalledBet(player, betSize)
+
+                    remainder = potSize - betSize
+                    assert(remainder >= 0)
+                    if remainder > 0:
+                        assert(rotatorControl.onePlayer())
+                        response = yield CollectedMoney(player, remainder)
 
                 if streetState.currentStreet == Street.Flop:
                     response = yield FlopDealt(self.board, pots)
