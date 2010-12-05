@@ -90,7 +90,7 @@ class UncalledBet:
         self.bet = bet
     def __repr__(self):
         pname = self.player.nickname
-        return 'Uncalled bet of %d returned to %s\n'%(self.bet, pname)
+        return 'Uncalled bet. %s won %d\n'%(self.pname, self.bet)
 
 class FlopDealt:
     def __init__(self, board, pots):
