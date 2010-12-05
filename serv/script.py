@@ -90,7 +90,7 @@ class UncalledBet:
         self.bet = bet
     def __repr__(self):
         pname = self.player.nickname
-        return 'Uncalled bet. %s won %d\n'%(self.pname, self.bet)
+        return 'Uncalled bet of %d returned to %s\n'%(self.bet, pname)
 
 class FlopDealt:
     def __init__(self, board, pots):
@@ -342,7 +342,8 @@ class Script:
                     player = returnedBet.contestors[0].parent
                     potSize = returnedBet.potSize
                     player.stack += potSize
-                    response = yield UncalledBet(player, potSize)
+                    betSize = returnedBet.betSize
+                    response = yield UncalledBet(player, betSize)
 
                 if streetState.currentStreet == Street.Flop:
                     response = yield FlopDealt(self.board, pots)
