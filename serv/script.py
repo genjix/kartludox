@@ -395,6 +395,7 @@ class Script:
                 canRaise = False
                 callAllIn = True
                 callSizeTotal = stackSize + prevBet
+                toCall = stackSize
             toMinRaise = minRaiseSize - prevBet
             if stackSize <= toMinRaise:
                 minRaiseSize = stackSize + prevBet
