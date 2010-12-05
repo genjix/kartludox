@@ -134,6 +134,17 @@ class RiverDealt:
             s += '  %s\n'%p
         return s
 
+class ShowHands:
+    def __init__(self, players):
+        self.players = players
+    def __repr__(self):
+        s = ''
+        for p in self.players:
+            c = p.parent.cards
+            pname = p.parent.nickname
+            s += '%s shows [ %s %s ]\n'%(pname, c[0], c[1])
+        return s
+
 class ShowDown:
     def __init__(self, pots):
         self.pots = pots
@@ -197,6 +208,9 @@ class StreetStateMachine:
             self.dealCard()
             self.dealCard()
             self.dealCard()
+            # if game is HU then reverse order.
+            if len(self.activePlayers) == 2:
+                self.activePlayers.reverse()
         elif self.currentStreet  == Street.Flop:
             self.currentStreet = Street.Turn
             # deal turn
@@ -207,6 +221,9 @@ class StreetStateMachine:
             self.dealCard()
         elif self.currentStreet  == Street.River:
             self.currentStreet = Street.Finished
+
+    def investedPlayers(self):
+        return [p for p in self.activePlayers if p.stillActive]
 
 class Script:
     def __init__(self, table):
@@ -367,7 +384,15 @@ class Script:
                     response = yield RiverDealt(self.board, pots)
 
         pots = streetState.pots
-        response = yield ShowDown(pots)
+        if pots:
+            # show hands
+            endPlayers = streetState.investedPlayers()
+            response = yield ShowHands(endPlayers)
+            # show rankings
+            # who wins what.
+            #   CollectedMoney
+            # go through and award players the pots
+            response = yield ShowDown(pots)
 
         ### Do this at the end of the hand
         #-------------------
