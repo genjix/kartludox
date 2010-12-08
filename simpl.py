@@ -53,14 +53,29 @@ class TableWindow(QMainWindow):
         notesVbox.addWidget(notes)
         playerNotesSplitter.addWidget(notesSection)
 
-        handhist = QtWebKit.QWebView()
-        import hand
-        handhist.setHtml(hand2.handhistory)
+        #handhist = QtWebKit.QWebView()
+        handhist = QTextEdit()
+        #handhist.setHtml(hand2.handhistory)
+        handhist.setText(hand2.handhistory)
+        handhist.setReadOnly(True)
+        #handhist.verticalScrollBar().setSliderPosition(handhist.verticalScrollBar().maximum())
+        #handhist.setStyleSheet('background-color: #ddd;')
 
         #-----------------
         self.wgt = QWidget()
         hbox = QHBoxLayout(self.wgt)
         hbox.addStretch()
+
+        card = QLabel()
+        image = QImage('data/gfx/cards/nobus/51.png')
+        card.setPixmap(QPixmap.fromImage(image))
+        hbox.addWidget(card)
+        card = QLabel()
+        image = QImage('data/gfx/cards/nobus/25.png')
+        card.setPixmap(QPixmap.fromImage(image))
+        hbox.addWidget(card)
+        hbox.addSpacing(20)
+
         fold = QPushButton('Fold')
         fold.setObjectName('FoldBtn')
         fold.setCheckable(True)
@@ -81,21 +96,26 @@ class TableWindow(QMainWindow):
         hbox.addWidget(rai)
         self.edit = QLineEdit()
         self.edit.setValidator(QDoubleValidator(0.0, -1.0, 2, self.edit))
-        self.edit.setMaximumSize(60,28)
+        self.edit.setMaximumSize(40,28)
         self.edit.setText('1')
         if QDir.setCurrent('./data/gfx/table/default/'):
             self.wgt.setStyleSheet(str(common.loadStyleSheet('style.css')))
         QDir.setCurrent('../../../../')
-        self.slider = QSlider(Qt.Horizontal)
+        self.slider = QSlider(Qt.Vertical)
         self.slider.setTickPosition(self.slider.TicksBelow)
-        sliderLayout = QHBoxLayout()
+        sliderLayout = QVBoxLayout()
         sliderLayout.addWidget(self.slider)
         sliderLayout.addWidget(self.edit)
 
+        sliderhhL = QHBoxLayout()
+        sliderhhL.addWidget(handhist)
+        sliderhhL.addLayout(sliderLayout)
+
         mainView = QWidget()
         mainViewLayout = QVBoxLayout(mainView)
-        mainViewLayout.addWidget(handhist)
-        mainViewLayout.addLayout(sliderLayout)
+        #mainViewLayout.addWidget(handhist)
+        mainViewLayout.addLayout(sliderhhL)
+        #mainViewLayout.addLayout(sliderLayout)
         mainViewLayout.addWidget(self.wgt)
 
         mainPanelSplitter = QSplitter(self)
@@ -104,6 +124,9 @@ class TableWindow(QMainWindow):
         mainPanelSplitter.addWidget(mainView)
         self.setCentralWidget(mainPanelSplitter)
         self.show()
+
+        sb = handhist.verticalScrollBar()
+        sb.setSliderPosition(sb.maximum())
 
 if __name__ == '__main__':
     import sys
