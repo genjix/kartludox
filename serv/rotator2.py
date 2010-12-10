@@ -14,19 +14,21 @@ class IllegalRaise:
         return 'Non-allowed raise for:\n%s'%self.bettor
 
 class BettingPlayer:
-    def __init__(self, parent):
-        self.parent = parent
+    def __init__(self):
         self.bet = 0
         self.darkbet = 0
         self.active = True
-        # attach self to parent
-        self.parent.betpart = self
 
         # messages from rotator
         self.can_raise = True
         self.min_raise = 0
-        self.max_raise = self.parent.stack
+        self.max_raise = 0
         self.call_price = 0
+
+    def link(self, parent):
+        self.parent = parent
+        # attach self to parent
+        self.parent.betpart = self
 
     def pay(self, charge):
         self.parent.stack -= charge
@@ -43,6 +45,7 @@ class BettingPlayer:
 
     def call(self, bet):
         price = bet - self.bet
+        print price
         self.pay(price)
 
     def raiseto(self, bet):
@@ -70,14 +73,16 @@ class BettingPlayer:
         return srep
 
 class Rotator:
-    BettingOpen = 0
-    BettingCapped = 1
-    BettingClosed = 2
-    BettingFinished = 3
+    BettingOpen = 0     # Normal betting -> BettingCapped
+    BettingCapped = 1   # Allin < full raise -> (BettingOpen, BettingClosed)
+    BettingClosed = 2   # No more raising allowed.
+    BettingFinished = 3 # Stop.
 
     def __init__(self, active_players, current_bet):
         self.players = active_players
-        [BettingPlayer(p) for p in self.players]
+        for player in self.players:
+            bettor = BettingPlayer()
+            bettor.link(player)
 
         self.last_bettor = None
         self.cap_bettor = None
@@ -85,8 +90,6 @@ class Rotator:
         # For the first round at least, current_bet != last_bettor.bet
         self.current_bet = current_bet
         self.last_raise = self.current_bet
-        # Stop flag
-        self.stop = False
 
     def run(self):
         for player in itertools.cycle(self.players):
@@ -98,39 +101,64 @@ class Rotator:
                 if self.prompt_capped(bettor):
                     yield bettor
 
-            if self.stop:
+            if self.state == Rotator.BettingFinished:
                 break
 
     def prompt_open(self, bettor):
         if not bettor.active or bettor.stack() == 0:
             return False
         elif bettor == self.last_bettor:
-            self.stop = True
+            self.state = Rotator.BettingFinished
             return False
 
         if not self.last_bettor:
             self.last_bettor = bettor
 
-        bettor.can_raise = True
-        bettor.min_raise = self.current_bet + self.last_raise
-        bettor.max_raise = bettor.stack()
-        bettor.call_price = self.current_bet
-        print '--------'
+        self.bettor_free_raise(bettor)
+        return True
+
+    def bettor_free_raise(self, bettor):
+        stack_total = bettor.stack() + bettor.bet
+        if bettor.stack() > self.current_bet:
+            bettor.can_raise = True
+            min_raise = self.current_bet + self.last_raise
+            if min_raise > stack_total:
+                bettor.min_raise = stack_total
+                bettor.max_raise = stack_total
+            else:
+                bettor.min_raise = min_raise
+                bettor.max_raise = stack_total
+            bettor.call_price = self.current_bet
+        else:
+            bettor.can_raise = False
+            bettor.call_price = stack_total
+
+        print bettor
+
+    def prompt_capped(self, bettor):
+        if not bettor.active:
+            return False
+        elif bettor == self.last_bettor:
+            self.state = Rotator.BettingClosed
+            return True
         print bettor
         return True
 
-    def prompt_capped(self):
-        print 'Unimplemented'
-        return False
+    def bettor_capped_raise(self, bettor):
+        bettor.can_raise = False
+        bettor.call_price = self.cap_bettor.bet
+        stack_total = bettor.stack() + bettor.bet
+        if bettor.call_price > stack_total:
+            bettor.call_price = stack_total
 
     def fold(self, bettor):
         bettor.fold()
         num_bettors = len([p for p in self.players if p.betpart.active])
         if num_bettors < 2:
-            self.stop = True
+            self.state = Rotator.BettingFinished
 
     def call(self, bettor):
-        bettor.call(self.current_bet)
+        bettor.call(bettor.call_price)
 
     def raiseto(self, bettor, amount):
         if (not bettor.min_raise <= amount <= bettor.max_raise or
@@ -139,6 +167,10 @@ class Rotator:
         try:
             bettor.raiseto(amount)
         except AllIn as allin:
+            raise_size = bettor.bet - self.current_bet
+            if raise_size < self.last_raise:
+                self.state = Rotator.BettingCapped
+                self.cap_bettor = bettor
             print allin
         finally:
             self.last_bettor = bettor
@@ -166,6 +198,18 @@ if __name__ == '__main__':
         elif cc[0] == 'r':
             rotator.raiseto(b, int(cc[1:]))
         print b
+        if rotator.state == Rotator.BettingOpen:
+            print 'Betting Open'
+        elif rotator.state == Rotator.BettingCapped:
+            print 'Someone went all-in < full raise but can still bet'
+        elif rotator.state == Rotator.BettingClosed:
+            print 'No more raises.'
+        elif rotator.state == Rotator.BettingFinished:
+            print 'Betting finished. Closing up shop.'
+        else:
+            print 'Sever error wtf %d'%rotator.state
+        print '---------'
 
     for b in [p.betpart for p in players]:
         print b
+
