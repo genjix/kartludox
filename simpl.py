@@ -39,19 +39,26 @@ class TableWindow(QMainWindow):
         buttonItem.addChild(buttonSubItem)
         players.append(buttonItem)"""
 
+
         playerList.addTopLevelItems(players)
 
         playerNotesSplitter = QSplitter()
         playerNotesSplitter.setOrientation(Qt.Vertical)
         playerNotesSplitter.addWidget(playerList)
 
+        dock = QDockWidget(self.tr("Players"))
+        dock.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
+        dock.setWidget(playerList)
+        self.addDockWidget(Qt.LeftDockWidgetArea, dock)
+
         notesSection = QWidget()
-        notesVbox = QVBoxLayout(notesSection)
-        notesVbox.addWidget(QLabel('DrawingFishe'))
         notes = QTextEdit()
         notes.setHtml('This player is a <i>real</i> <b>donk</b>!<br /><h1>NEVER BLUFF HIM!!</h1>')
-        notesVbox.addWidget(notes)
-        playerNotesSplitter.addWidget(notesSection)
+
+        dock = QDockWidget(self.tr("Notes"))
+        dock.setAllowedAreas(Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea)
+        dock.setWidget(notes)
+        self.addDockWidget(Qt.LeftDockWidgetArea, dock)
 
         #handhist = QtWebKit.QWebView()
         handhist = QTextEdit()
@@ -67,11 +74,11 @@ class TableWindow(QMainWindow):
         hbox.addStretch()
 
         card = QLabel()
-        image = QImage('data/gfx/cards/nobus/51.png')
+        image = QImage('data/gfx/cards/nobus/Ad.png')
         card.setPixmap(QPixmap.fromImage(image))
         hbox.addWidget(card)
         card = QLabel()
-        image = QImage('data/gfx/cards/nobus/25.png')
+        image = QImage('data/gfx/cards/nobus/Ac.png')
         card.setPixmap(QPixmap.fromImage(image))
         hbox.addWidget(card)
         hbox.addSpacing(20)
@@ -122,7 +129,9 @@ class TableWindow(QMainWindow):
         #mainPanelSplitter.addWidget(QPushButton('Hello'))
         mainPanelSplitter.addWidget(playerNotesSplitter)
         mainPanelSplitter.addWidget(mainView)
-        self.setCentralWidget(mainPanelSplitter)
+
+
+        self.setCentralWidget(mainView)
         self.show()
 
         sb = handhist.verticalScrollBar()

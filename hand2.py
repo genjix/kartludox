@@ -10,7 +10,7 @@ Hero: posts small blind $5<br />
 Jimithing34: posts big blind $10<br />                                <br />
 
 <b>Holecards</b><br />
-Dealt to <font color='green'>Hero</font> <img src='data/gfx/cards/nobus/51.png' /> <img src='data/gfx/cards/nobus/25.png' /><br />
+Dealt to <font color='green'>Hero</font> <img src='data/gfx/cards/nobus/Ad.png' /> <img src='data/gfx/cards/nobus/Ac.png' /><br />
 <font color='red'>andy8004: raises $20 to $30</font><br />
 Chisness: folds                    <br />
 WizardOfAhhs: folds          <br />
@@ -22,7 +22,7 @@ andy8004: calls $70    <br />
 Drawingfishe: calls $70<br />                                               <br />
 
 <b>Flop</b> (Pot : $310.00)<br />
-<img src='data/gfx/cards/nobus/0.png' /> <img src='data/gfx/cards/nobus/21.png' /> <img src='data/gfx/cards/nobus/35.png' /><br />
+<img src='data/gfx/cards/nobus/3c.png' /> <img src='data/gfx/cards/nobus/Qh.png' /> <img src='data/gfx/cards/nobus/Js.png' /><br />
 <font color='green'>Hero</font><font color='red'>: bets $130</font><br />
 andy8004: folds <br />
 <font color='red'>Drawingfishe: raises $326.25 to $456.25 and is all-in</font><br />
