@@ -51,6 +51,11 @@ class Player:
         def __repr__(self):
             return self.parent.nickname
 
+    class Settings:
+        def __init__(self, parent):
+            self.parent = parent
+            self.autopost = False
+
     def __init__(self, nickname):
         self.nickname = nickname
         self.stack = 0
@@ -59,6 +64,7 @@ class Player:
         self.cards = None
         # Stores bets and actions by player
         self.betPart = None
+        self.settings = self.Settings(self)
 
     def newBetPart(self):
         self.betPart = self.Bets(self)
@@ -246,6 +252,11 @@ class Table:
         Uses player object rather than nickname string."""
         player.sitOut = True
         self.checkState()
+
+    def setAutopost(self, nickname, autopost):
+        """Set autopost blinds on a player."""
+        seat, player = self.lookupPlayer(nickname)
+        player.settings.autopost = autopost
 
     def removePlayer(self, nickname):
         seat, player = self.lookupPlayer(nickname)

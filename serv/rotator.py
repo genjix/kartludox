@@ -160,6 +160,10 @@ class Rotator:
             self.betSize = size
             self.potSize = 0
             self.contestors = []
+        def notation(self):
+            players = [p.parent.nickname for p in self.contestors]
+            return {'betsize': self.betSize, 'potsize': self.potSize,
+                    'players': players}
         def __repr__(self):
             return '%d %d %s'%(self.betSize, self.potSize, self.contestors)
 

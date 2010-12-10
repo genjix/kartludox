@@ -23,8 +23,27 @@ class Action:
     AllIn =     11
     LeaveSeat = 12 # **
     WaitBB =    13
+    AutopostBlinds = 14
 
     actionRepr = {
+        SitIn:      'sitin',
+        SitOut:     'sitout',
+        PostSB:     'postsb',
+        PostBB:     'postbb',
+        PostSBBB:   'postsbbb',
+        PostAnte:   'postante',
+        Fold:       'fold',
+        Call:       'call',
+        Check:      'check',
+        Bet:        'bet',
+        Raise:      'raise',
+        AllIn:      'allin',
+        LeaveSeat:  'leave',
+        WaitBB:     'waitbb',
+        AutopostBlinds: 'autopost'
+    }
+
+    """actionRepr = {
         SitIn:      'Sit In',
         SitOut:     'Sit Out',
         PostSB:     'Post Small-Blind',
@@ -39,7 +58,7 @@ class Action:
         AllIn:      'Go All In',
         LeaveSeat:  'Leave Seat',
         WaitBB:     'Wait for BB'
-    }
+    }"""
 
     def __init__(self, player):
         self.player = player
@@ -62,107 +81,80 @@ class Action:
                 return a
         raise KeyError(Action.actionRepr[actName])
 
-    def __repr__(self):
-        s = ''
-        if self.player:
-            s += 'Player: %s\n'%self.player.nickname
+    def notation(self):
+        actdict = {}
         for act in self.actions:
-            s += '  %s'%Action.actionRepr[act[0]]
-            if len(act) > 1:
-                s += ' %d'%act[1]
-                if len(act) > 2:
-                    s += '-%d'%act[2]
-            s += '\n'
-        return s
+            actName = Action.actionRepr[act[0]]
+            actdict[actName] = act[1:]
+        notat = {'player': self.player.nickname, 'actions': actdict}
+        return notat
 
 class CardsDealt:
     def __init__(self, players):
         self.players = players
-    def __repr__(self):
-        s = 'Dealt to:\n'
-        for p in self.players:
-            c = p.cards
-            s += '  %s: [ %s %s ]\n'%(p.nickname, c[0], c[1])
-        return s
 
 class CollectedMoney:
     def __init__(self, player, amount):
         self.player = player
         self.amount = amount
-    def __repr__(self):
-        pname = self.player.nickname
-        return '%s collected %d from the pot\n'%(pname, self.amount)
+    def notation(self):
+        return {'collected': self.amount, 'player': self.player.nickname}
 
 class UncalledBet:
     def __init__(self, player, bet):
         self.player = player
         self.bet = bet
-    def __repr__(self):
-        pname = self.player.nickname
-        return 'Uncalled bet of %d returned to %s\n'%(self.bet, pname)
+    def notation(self):
+        return {'uncalled': self.bet, 'player': self.player.nickname}
 
-class FlopDealt:
+# Base class for Flop/Turn/RiverDealt
+class StreetDealt:
     def __init__(self, board, pots):
         self.board = board
         self.pots = pots
-    def __repr__(self):
-        b = self.board
-        s = 'Flop: [ %s %s %s ]\n'%(b[0], b[1], b[2])
-        for p in self.pots:
-            s += '  %s\n'%p
-        return s
+    def notationBase(self, streetName):
+        pots = []
+        for pot in self.pots:
+            pots.append(pot.notation())
+        return {streetName: self.board, 'pots': pots}
 
-class TurnDealt:
-    def __init__(self, board, pots):
-        self.board = board
-        self.pots = pots
-    def __repr__(self):
-        b = self.board
-        s = 'Turn: [ %s %s %s ] [ %s ]\n'%(b[0], b[1], b[2], b[3])
-        for p in self.pots:
-            s += '  %s\n'%p
-        return s
+class FlopDealt(StreetDealt):
+    def notation(self):
+        return self.notationBase('flop')
 
-class RiverDealt:
-    def __init__(self, board, pots):
-        self.board = board
-        self.pots = pots
-    def __repr__(self):
-        b = self.board
-        s = 'River: [ %s %s %s ] [ %s ] [ %s ]\n'% \
-            (b[0], b[1], b[2], b[3], b[4])
-        for p in self.pots:
-            s += '  %s\n'%p
-        return s
+class TurnDealt(StreetDealt):
+    def notation(self):
+        return self.notationBase('turn')
+
+class RiverDealt(StreetDealt):
+    def notation(self):
+        return self.notationBase('river')
 
 class ShowHands:
     def __init__(self, players):
         self.players = players
-    def __repr__(self):
-        s = ''
-        for p in self.players:
-            c = p.parent.cards
-            pname = p.parent.nickname
-            s += '%s shows [ %s %s ]\n'%(pname, c[0], c[1])
-        return s
+    def notation(self):
+        cards = []
+        for pBet in self.players:
+            p = pBet.parent
+            cards.append({'player': p.nickname, 'cards': p.cards})
+        return {'showhands': cards}
 
 class ShowDown:
     def __init__(self, pots):
         self.pots = pots
-    def __repr__(self):
-        s = ''
-        for p in self.pots:
-            s += '%d %d %s\n'%(p.betSize, p.potSize, p.contestors)
-        return s
+    def notation(self):
+        return {'showdown': None, 'pots': self.pots}
 
 class ShowRankings:
     def __init__(self, rankings):
         self.rankings = rankings
-    def __repr__(self):
-        s = ''
+    def notation(self):
+        handRankings = []
         for playerName, handrank in self.rankings:
-            s += '%s shows %s\n'%(playerName, awardhands.handName(handrank))
-        return s
+            handRankings.append({'player': playerName,
+                                 'handname': awardhands.handName(handrank)})
+        return {'showrankings': handRankings}
 
 class Street:
     Nothing = 0
@@ -182,6 +174,10 @@ class StreetStateMachine:
         self.deck = deck
         self.board = board
 
+        # No game with just one player.
+        if len(self.activePlayers) < 2:
+            self.currentStreet = Street.Finished
+
     def finished(self):
         return self.currentStreet == Street.Finished
 
@@ -200,19 +196,9 @@ class StreetStateMachine:
 
     def prepareNext(self):
         self.pots.extend(self.rotator.createPots())
-        # award pots with single contestor back to them
-        for pot in []:
-            if len(pot.contestors) < 2:
-                assert(len(pot.contestors) == 1)
-                playerObj = pot.contestors[0].parent
-                playerObj.stack += pot.potSize
-                self.pots.remove(pot)
 
-        # If no pots left then finished
-        if self.rotator.oneBettingPlayer():
-            self.currentStreet = Street.Finished
         # Advance through the streets.
-        elif self.currentStreet  == Street.Preflop:
+        if self.currentStreet == Street.Preflop:
             self.currentStreet = Street.Flop
             # deal flop
             self.dealCard()
@@ -225,11 +211,11 @@ class StreetStateMachine:
             self.currentStreet = Street.Turn
             # deal turn
             self.dealCard()
-        elif self.currentStreet  == Street.Turn:
+        elif self.currentStreet == Street.Turn:
             self.currentStreet = Street.River
             # deal river
             self.dealCard()
-        elif self.currentStreet  == Street.River:
+        elif self.currentStreet == Street.River:
             self.currentStreet = Street.Finished
 
     def investedPlayers(self):
@@ -310,8 +296,18 @@ class Script:
             choiceActions.add(blindState, blindPayment)
             if blindState == Action.PostSBBB:
                 choiceActions.add(Action.WaitBB)
+            choiceActions.add(Action.AutopostBlinds)
             choiceActions.add(Action.SitOut)
-            response = yield choiceActions
+
+            #### MASSIVE HACK!
+            if not player.settings.autopost:
+                response = yield choiceActions
+            else:
+                response = (blindState,)
+
+            if response[0] == Action.AutopostBlinds:
+                player.settings.autopost = True
+                response = (blindState,)
 
             if (response[0] == Action.PostSB or
                 response[0] == Action.PostBB or
@@ -385,6 +381,25 @@ class Script:
                     if remainder > 0:
                         assert(rotatorControl.onePlayer())
                         response = yield CollectedMoney(player, remainder)
+
+                # Award pots with single contestor back to them
+                for pot in pots:
+                    if len(pot.contestors) < 2:
+                        assert(len(pot.contestors) == 1)
+                        playerObj = pot.contestors[0].parent
+                        playerObj.stack += pot.potSize
+                        self.pots.remove(pot)
+                        response = yield CollectMoney(player, pot.potSize)
+
+                # Merge pots with same players in them.
+                # Happens when you had a preflop pot and then a flop pot.
+                """for potA in pots:
+                    for potB in pots:
+                        if potA == potB:
+                            continue
+                        if potA.contestors == potB.contestors:
+                            # merge pots
+                            pass"""
 
                 if streetState.currentStreet == Street.Flop:
                     response = yield FlopDealt(self.board, pots)

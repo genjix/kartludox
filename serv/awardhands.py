@@ -20,6 +20,7 @@ class AwardHands:
             name = playerObj.nickname
             cards = list(playerObj.cards) + self.board
             playerBet.handRanking = self.pokerEval.best('hi', cards)
+            assert(playerBet.handRanking)
             rankings.append((name, playerBet.handRanking[1]))
         return rankings
 

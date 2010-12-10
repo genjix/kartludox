@@ -1,5 +1,7 @@
-import script, table
 from twisted.internet import reactor
+import json
+import table
+import script
 
 class Schedule:
     def __init__(self, message):
@@ -22,22 +24,25 @@ class Handler:
         self.script = None
         self.actIter = None
         self.currentAct = None
-    def start(self, script):
-        self.running = True
-        self.script = script
-        self.actIter = script.run()
 
-        self.currentAct = self.actIter.next()
-        self.displayAct()
+    def start(self, scriptObj):
+        self.running = True
+        self.script = scriptObj
+        self.actIter = scriptObj.run()
+
+        while not isinstance(self.currentAct, script.Action):
+            self.currentAct = self.actIter.next()
+            self.displayAct()
     def pmHands(self, cardsDealt):
         players = cardsDealt.players
         for player in players:
             c = player.cards
-            hand = '[ %s %s ]'%(c[0], c[1])
-            self.adapter.privmsg('genjix', hand)
+            self.adapter.privmsg('genjix', {'cards': c})
     def displayAct(self):
-        for line in self.currentAct.__repr__().split('\n'):
-            self.adapter.reply(line)
+        if isinstance(self.currentAct, script.CardsDealt):
+            self.pmHands(self.currentAct)
+        else:
+            self.adapter.reply(json.dumps(self.currentAct.notation()))
     def update(self, player, response):
         if not self.running:
             return
@@ -46,7 +51,8 @@ class Handler:
             return
         elif player != self.currentAct.player.nickname:
             # People are allowed to sit out, out of turn
-            if response[0] != script.Action.SitOut:
+            if (response[0] != script.Action.SitOut and
+                response[0] != script.Action.AutopostBlinds):
                 self.adapter.reply('Don\'t act out of turn!')
             return
         if response[0] not in self.currentAct.actionNames():
@@ -55,26 +61,8 @@ class Handler:
         try:
             self.currentAct = self.actIter.send(response)
             # handle cards dealt .etc here
-            """if isinstance(self.currentAct, script.CardsDealt):
-                self.displayAct()
-                self.currentAct = self.actIter.next()
-            elif isinstance(self.currentAct, script.FlopDealt):
-                self.displayAct()
-                self.currentAct = self.actIter.next()
-            elif isinstance(self.currentAct, script.TurnDealt):
-                self.displayAct()
-                self.currentAct = self.actIter.next()
-            elif isinstance(self.currentAct, script.RiverDealt):
-                self.displayAct()
-                self.currentAct = self.actIter.next()
-            elif isinstance(self.currentAct, script.ShowDown):
-                self.displayAct()
-                self.currentAct = self.actIter.next()"""
             while not isinstance(self.currentAct, script.Action):
-                if isinstance(self.currentAct, script.CardsDealt):
-                    self.pmHands(self.currentAct)
-                else:
-                    self.displayAct()
+                self.displayAct()
                 self.currentAct = self.actIter.next()
             self.displayAct()
         except StopIteration:
@@ -110,6 +98,10 @@ class Adapter:
         self.cash.sitIn('b')
         self.cash.sitIn('c')
         self.cash.sitIn('d')
+        self.cash.setAutopost('a', True)
+        self.cash.setAutopost('b', True)
+        self.cash.setAutopost('c', True)
+        self.cash.setAutopost('d', True)
     def msg(self, user, message):
         print('%s: %s'%(user, message))
 
@@ -142,7 +134,7 @@ class Adapter:
                 print self.cash
 
     def runCommand(self, player, command, param):
-        if command == 'reg':
+        if command == 'join':
             self.cash.addPlayer(player, int(param))
         elif command == 'buyin':
             if not self.cash.addMoney(player, int(param)):
@@ -152,6 +144,9 @@ class Adapter:
         elif command == 'sitout':
             self.cash.sitOut(player)
             self.handler.update(player, (script.Action.SitOut,))
+        elif command == 'autopost':
+            self.cash.setAutopost(player, True)
+            self.handler.update(player, (script.Action.AutopostBlinds,))
         elif command == 'postsb':
             self.handler.update(player, (script.Action.PostSB,))
         elif command == 'postbb':
@@ -182,5 +177,6 @@ class Adapter:
     def reply(self, message):
         self.prot.msg(self.chan, message)
     def privmsg(self, user, message):
-        self.prot.msg(user, '%s %s'%(self.chan, message))
+        message['table'] = self.chan
+        self.prot.msg(user, '%s'%message)
 
