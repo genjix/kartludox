@@ -9,8 +9,9 @@ app remember prev settings
 WANT: panels move the main view.
 WANT: move slider up to avoid misclicking raise.
 
-TODO: pot sizes with new dealt hands
-TODO: autopost blinds.
+TODO: clean up script autopost.
+TODO: general clean up
+TODO: rotator re-write.
 TODO: timebank
 TODO: timeToDie/player leaving channel (auto sitout, set timetodie)
 TODO: log HH for debugging purposes
