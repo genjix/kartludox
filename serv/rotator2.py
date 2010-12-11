@@ -24,6 +24,8 @@ class BettingPlayer:
         self.min_raise = 0
         self.max_raise = 0
         self.call_price = 0
+        # set by rotator
+        self.begin_stack = 0
 
     def link(self, parent):
         self.parent = parent
@@ -37,6 +39,7 @@ class BettingPlayer:
         self.parent.stack -= charge
         self.darkbet += charge
 
+    @property
     def stack(self):
         return self.parent.stack
 
@@ -91,9 +94,12 @@ class Rotator:
         self.last_raise = self.current_bet
 
     def run(self):
+        for player in self.players:
+            bettor = player.betpart
+            bettor.begin_stack = player.stack
+
         for player in itertools.cycle(self.players):
             bettor = player.betpart
-            print 'self.state = %d'%self.state
             if self.state == Rotator.BettingOpen:
                 if self.prompt_open(bettor):
                     yield bettor
@@ -125,23 +131,19 @@ class Rotator:
                 self.state != Rotator.BettingFinished))
         if self.state == Rotator.BettingOpen:
             facing_bet = self.current_bet
+            min_raise = self.current_bet + self.last_raise
         elif self.state == Rotator.BettingCapped:
             facing_bet = self.cap_bettor.bet
+            min_raise = self.current_bet + 2*self.last_raise
 
-        stack_total = bettor.stack() + bettor.bet
-        if bettor.stack() > facing_bet:
+        if bettor.begin_stack > facing_bet:
             bettor.can_raise = True
-            min_raise = facing_bet + self.last_raise
-            bettor.min_raise = min(min_raise, stack_total)
-            bettor.max_raise = stack_total
+            bettor.min_raise = min(min_raise, bettor.begin_stack)
+            bettor.max_raise = bettor.begin_stack
             bettor.call_price = facing_bet
         else:
             bettor.can_raise = False
-            bettor.call_price = stack_total
-
-        print bettor
-        print 'free_raise'
-        print '|nick, curbet, lastraise', self.last_bettor.parent.nickname, self.current_bet, self.last_raise
+            bettor.call_price = bettor.begin_stack
 
     def prompt_capped(self, bettor):
         if not bettor.active:
@@ -159,22 +161,18 @@ class Rotator:
             # can raise
             self.bettor_free_raise(bettor)
 
-        print bettor
-        print 'prompt_capped'
-        print '|nick, curbet, lastraise', self.last_bettor.parent.nickname, self.current_bet, self.last_raise
         return True
 
     def bettor_capped_raise(self, bettor):
         bettor.can_raise = False
-        stack_total = bettor.stack() + bettor.bet
         # Can only pay as much as can afford.
-        bettor.call_price = min(self.cap_bettor.bet, stack_total)
+        bettor.call_price = min(self.cap_bettor.bet, bettor.begin_stack)
 
     def num_bettors(self):
         return len([p for p in self.players if p.betpart.active])
     def num_active_bettors(self):
         return len([p for p in self.players if 
-                    p.betpart.active and p.stack() > 0])
+                    p.betpart.active and p.stack > 0])
 
     def fold(self, bettor):
         bettor.fold()
@@ -199,7 +197,6 @@ class Rotator:
                 self.last_bettor = bettor
                 self.last_raise = raise_size
                 self.current_bet = bettor.bet
-            print allin
         else:
             # Re-open betting
             if self.state == Rotator.BettingCapped:
@@ -207,8 +204,6 @@ class Rotator:
             self.last_bettor = bettor
             self.last_raise = bettor.bet - self.current_bet
             self.current_bet = bettor.bet
-            print '%s raised'%self.last_bettor.parent.nickname
-            print '  by %d to %d'%(self.last_raise, self.current_bet)
 
 if __name__ == '__main__':
     class P:
@@ -218,9 +213,11 @@ if __name__ == '__main__':
         def __repr__(self):
             return self.nickname
 
-    players = [P('a', 900), P('b', 200), P('c', 800), P('d', 150), P('e', 800)]
+    #players = [P('a', 900), P('b', 200), P('c', 800), P('d', 150), P('e', 800)]
+    players = [P('UTG', 100), P('SS', 6), P('CO', 100), P('BTN', 100)]
     rotator = Rotator(players, 1)
     for b in rotator.run():
+        print b
         cc = raw_input()
         if cc[0] == 'f':
             rotator.fold(b)
