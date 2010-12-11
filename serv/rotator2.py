@@ -101,7 +101,7 @@ class Rotator:
     There are 4 states: Open, Capped, Closed and Finished.
     These dictate the type of betting action occuring on the table."""
 
-    # All of these states can move to BettingFinished at any time.
+    # All of these states can move to BettingFinished
     BettingOpen = 0     # Normal betting -> BettingCapped
     BettingCapped = 1   # Allin < full raise -> (BettingOpen, BettingClosed)
     BettingClosed = 2   # No more raising allowed.
@@ -121,19 +121,18 @@ class Rotator:
 
         self.last_bettor = None
         self.cap_bettor = None
-        # Stores rotator state. V. important
+        # Stores rotator state. Important
         self.state = Rotator.BettingOpen
         # For the first round at least, current_bet != last_bettor.bet
         self.current_bet = current_bet
         self.last_raise = self.current_bet
 
     def run(self):
-        """Main run loop. Just continually cycle until we reach
+        """Main run loop. Continually cycle until we reach
         the end state. Branches into relevant subfunctions:
             - prompt_open
             - prompt_capped
-        depending on current state. They return True to return
-        that player."""
+        depending on current state. They return True to yield bettor."""
         for player in itertools.cycle(self.players):
             bettor = player.betpart
             if self.state == Rotator.BettingOpen:
@@ -179,7 +178,7 @@ class Rotator:
         # Someone went in for < full raise. However raising is still allowed
         # as this bettor hasn't acted yet.
         elif self.state == Rotator.BettingCapped:
-            # Current price to call = all in price
+            # Current price to call = cap bettor all in price
             facing_bet = self.cap_bettor.bet
             # Original Bet + All-in bet + Price to complete + another raise
             min_raise = self.current_bet + 2*self.last_raise
@@ -273,8 +272,7 @@ if __name__ == '__main__':
         def __repr__(self):
             return self.nickname
 
-    #players = [P('a', 900), P('b', 200), P('c', 800), P('d', 150), P('e', 800)]
-    players = [P('UTG', 80), P('SS', 100), P('CO', 100), P('BTN', 100)]
+    players = [P('a', 900), P('b', 200), P('c', 800), P('d', 150), P('e', 800)]
     rotator = Rotator(players, 1)
     for b in rotator.run():
         print b
