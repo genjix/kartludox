@@ -290,6 +290,10 @@ class BlindsEnforcer:
         else:
             return table.Player.PaidSBBB
 
+    def do_autopost(self, player):
+        response = (self.blind_state,)
+        self.process_response(player, response)
+
     def process_response(self, player, response):
         """Carry out the response from the blind player. Returns True if they
         are playing this hand. False if not."""
@@ -298,7 +302,7 @@ class BlindsEnforcer:
         
         if response == Action.AutopostBlinds:
             player.settings.autopost = True
-            response = blind_state
+            response = self.blind_state
         assert(response in (self.blind_state, Action.SitOut, Action.WaitBB))
 
         if response == self.blind_state:
@@ -362,13 +366,16 @@ class Script:
 
         self.small_blind = self.table.sb
         self.big_blind = table.convFact
-        blinds_enforcer = BlindsEnforcer(active_seats,
-                                         self.small_blind, self.big_blind)
+        blinds_enforcer = BlindsEnforcer(self.small_blind, self.big_blind)
         for player in active_seats:
             if not blinds_enforcer.prompt(player):
                 continue
-            response = yield blinds_enforcer.choice_actions(player)
-            blinds_enforcer.process_response(player, response)
+            choice_actions = blinds_enforcer.choice_actions(player)
+            if player.settings.autopost:
+                blinds_enforcer.do_autopost(player)
+            else:
+                response = yield choice_actions
+                blinds_enforcer.process_response(player, response)
 
         #------------------
         # DEAL HANDS!

@@ -6,7 +6,7 @@ import time, sys
 import adapter
 
 class GamerBot(irc.IRCClient):
-    nickname = "donistoIII"
+    nickname = "donisto"
 
     def connectionMade(self):
         irc.IRCClient.connectionMade(self)
@@ -112,7 +112,7 @@ if __name__ == '__main__':
 
     # connect factory to this host and port
     #reactor.connectSSL
-    reactor.connectTCP("irc.freenode.net", 6667, f)
+    reactor.connectTCP("irc.freenode.org", 6667, f)
 
     # run bot
     reactor.run()
