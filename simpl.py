@@ -31,14 +31,15 @@ class TableWindow(QMainWindow):
 
         JimiThing34 = QTreeWidgetItem(['Jimithing34', '100'])
         players.append(JimiThing34)
+        JimiThing34 = QTreeWidgetItem(['', ''])
+        players.append(JimiThing34)
+        JimiThing34 = QTreeWidgetItem(['Pot size', '20'])
+        players.append(JimiThing34)
 
-        """button = QPushButton('Hello')
-        buttonItem = QTreeWidgetItem(['Hello'])
-        buttonSubItem = QTreeWidgetItem()
-        buttonSubItem.setItemWidget(button)
-        buttonItem.addChild(buttonSubItem)
-        players.append(buttonItem)"""
-
+        mainpot = QTreeWidgetItem(['Main pot', '15'])
+        sidepot = QTreeWidgetItem(['Side pot', '5'])
+        JimiThing34.addChild(mainpot)
+        JimiThing34.addChild(sidepot)
 
         playerList.addTopLevelItems(players)
 
