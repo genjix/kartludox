@@ -11,7 +11,6 @@ WANT: move slider up to avoid misclicking raise.
 
 TODO: clean up script autopost.
 TODO: general clean up
-TODO: rotator re-write.
 TODO: timebank
 TODO: timeToDie/player leaving channel (auto sitout, set timetodie)
 TODO: log HH for debugging purposes
