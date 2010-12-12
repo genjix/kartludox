@@ -13,10 +13,11 @@ class IllegalRaise:
       - Not allowed to raise.
       - Raise below the minimum.
       - Or above the maximum."""
-    def __init__(self, bettor):
+    def __init__(self, bettor, rsize):
         self.bettor = bettor
+        self.rsize = rsize
     def __repr__(self):
-        return 'Non-allowed raise for:\n%s'%self.bettor
+        return 'Non-allowed raise %d for:\n%s'%(self.rsize, self.bettor)
 
 class BettingPlayer:
     """ Represents the betting 'part' of a player.
@@ -48,9 +49,11 @@ class BettingPlayer:
         self.bet = 0
 
     def pay(self, charge):
+        assert(not charge < 0)
         self.parent.stack -= charge
         self.bet += charge
     def pay_dark(self, charge):
+        assert(not charge < 0)
         self.parent.stack -= charge
         self.darkbet += charge
 
@@ -239,7 +242,7 @@ class Rotator:
     def raiseto(self, bettor, amount):
         if (not bettor.min_raise <= amount <= bettor.max_raise or
             not bettor.can_raise):
-            raise IllegalRaise(bettor)
+            raise IllegalRaise(bettor, amount)
         try:
             bettor.raiseto(amount)
         except AllIn as allin:
