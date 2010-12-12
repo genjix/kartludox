@@ -1,5 +1,6 @@
 import table
 import rotator
+import rotator2
 import awardhands
 
 class Action:
@@ -221,19 +222,120 @@ class StreetStateMachine:
     def investedPlayers(self):
         return [p for p in self.activePlayers if p.stillActive]
 
+class BlindsEnforcer:
+    def __init__(self, small_blind, big_blind):
+        self.small_blind = small_blind
+        self.big_blind = big_blind
+
+        self.blind_todo = [Action.PostSBBB, Action.PostBB, Action.PostSB]
+        self.blind_state = self.blind_todo.pop()
+        self.active_players = []
+        self.blind_payment = [None, None]
+
+    def prompt(self, player):
+        if player is None:
+            return False
+        if self.blind_state == Action.PostBB:
+            player.paid_state = player.PaidNothing
+        elif self.blind_state == Action.PostSB:
+            player.paid_state = player.PaidBB
+
+        # Everything below this point requires player to be sitting-in
+        if player.sitting_out:
+            return False
+
+        # Non-blinds player has already paid blinds
+        if (self.blind_state == Action.PostSBBB and
+            player.paid_state == player.PaidSBBB):
+            self.active_players.append(player)
+            return False
+
+        return True
+
+    def calc_payment(self, bettor, pay, darkpay):
+        """Calculates the payment possible by a blind player when
+        stacksize is too small."""
+        assert(max(pay, darkpay) == pay)
+        if pay > bettor.stack:
+            pay = bettor.stack
+            darkpay = 0
+        elif pay + darkpay > bettor.stack:
+            darkpay = bettor.stack - pay
+        self.blind_payment[0] = pay
+        self.blind_payment[1] = darkpay
+
+    def choice_actions(self, player):
+        """Build choice action list for person need to pay blinds."""
+        choice_actions = Action(player)
+        choice_actions.add(Action.AutopostBlinds)
+        choice_actions.add(Action.SitOut)
+        assert(self.blind_state in (Action.PostSB, Action.PostBB, 
+                                    Action.PostSBBB))
+        bettor = player.bettor
+        if self.blind_state == Action.PostSB:
+            choice_actions.add(Action.PostSB, self.small_blind)
+            self.calc_payment(bettor, self.small_blind, 0)
+        elif self.blind_state == Action.PostBB:
+            self.calc_payment(bettor, self.big_blind, 0)
+        elif self.blind_state == Action.PostSBBB:
+            self.calc_payment(bettor, self.big_blind, self.small_blind)
+            choice_actions.add(Action.WaitBB)
+        choice_actions.add(self.blind_state, sum(self.blind_payment))
+        return choice_actions
+
+    def blind_to_paidstate(self, blind_state):
+        assert(blind_state in (Action.PostSB, Action.PostBB, Action.PostSBBB))
+        if blind_state == Action.PostBB:
+            return table.Player.PaidBB
+        else:
+            return table.Player.PaidSBBB
+
+    def process_response(self, player, response):
+        """Carry out the response from the blind player. Returns True if they
+        are playing this hand. False if not."""
+        # Discard args as not needed here.
+        response = response[0]
+        
+        if response == Action.AutopostBlinds:
+            player.settings.autopost = True
+            response = blind_state
+        assert(response in (self.blind_state, Action.SitOut, Action.WaitBB))
+
+        if response == self.blind_state:
+            player.paid_state = self.blind_to_paidstate(self.blind_state)
+            player.bettor.pay(self.blind_payment[0])
+            player.bettor.pay_dark(self.blind_payment[1])
+
+            self.active_players.append(player)
+            if self.blind_todo:
+                self.blind_state = self.blind_todo.pop()
+
 class Script:
     def __init__(self, table):
+        # Variables that stay constant between hands
         self.table = table
+        # Variables that are externally accessible
         self.board = None
 
-    def run(self):
+    def active_seats(self):
         seats = self.table.seats
         dealer = self.table.dealer
         # Rotate the seats around the dealer.
         # If we have 6 seats and dealer = seat 3 then we get a list like:
         #   [p3, p4, p5, p0, p1, p2]
         seats = seats[dealer:] + seats[:dealer]
+        # Filter empty seats & non players
+        seats = [p for p in seats if p and not p.sitting_out]
+        if len(seats) != 2:
+            assert(len(seats) > 2)
+            # SB is next seat after the dealer. Tag dealer on the end
+            seats = seats[1:] + seats[:1]
+        #else:
+            # heads up is a special case
+            # dealer *is* the small blind
+        return seats
 
+    def run(self):
         # Active people in the current hand
         # Added to the list preflop as the hand progresses.
         activePlayers = []
@@ -251,89 +353,22 @@ class Script:
         # Make them pay the relevant blind.
         # Move to next blind: PostSB -> PostBB -> PostSB/BB
 
-        activeSeats = [p for p in seats if p and not p.sitOut]
+        active_seats = self.active_seats()
         # Set up bet holding objects
-        for player in activeSeats:
+        for player in active_seats:
+            bettor = rotator2.BettingPlayer()
+            player.link(bettor)
             player.newBetPart()
 
-        if len(activeSeats) == 2:
-            # heads up is a special case
-            # dealer *is* the small blind
-            # Copy list cos we're going to move elements around
-            blindList = seats[:]
-        else:
-            # SB is next seat after the dealer. Tag dealer on the end
-            blindList = seats[1:] + seats[:1]
-
-        blindToDo = [Action.PostSBBB, Action.PostBB, Action.PostSB]
-        blindState = blindToDo.pop()
-
-        # Try to get payment
-        for player in blindList:
-            if player is None:
+        self.small_blind = self.table.sb
+        self.big_blind = table.convFact
+        blinds_enforcer = BlindsEnforcer(active_seats,
+                                         self.small_blind, self.big_blind)
+        for player in active_seats:
+            if not blinds_enforcer.prompt(player):
                 continue
-            if blindState == Action.PostBB:
-                player.paidState = table.Player.PaidState.Nothing
-            # Non-blinds player has already paid blinds
-            elif (blindState == Action.PostSBBB and
-                  player.paidState == player.PaidState.PaidSBBB):
-                activePlayers.append(player)
-                continue
-            if player.sitOut:
-                continue
-
-            if blindState == Action.PostSB:
-                blindSize = self.table.sb
-            elif blindState == Action.PostBB:
-                blindSize = table.convFact
-            elif blindState == Action.PostSBBB:
-                blindSize = self.table.sb + table.convFact
-            # If they have a puny stack < SB, then pay as much as pos
-            blindPayment = \
-                player.stack > blindSize and blindSize or player.stack
-            # Build up response set
-            choiceActions = Action(player)
-            choiceActions.add(blindState, blindPayment)
-            if blindState == Action.PostSBBB:
-                choiceActions.add(Action.WaitBB)
-            choiceActions.add(Action.AutopostBlinds)
-            choiceActions.add(Action.SitOut)
-
-            #### MASSIVE HACK!
-            if not player.settings.autopost:
-                response = yield choiceActions
-            else:
-                response = (blindState,)
-
-            if response[0] == Action.AutopostBlinds:
-                player.settings.autopost = True
-                response = (blindState,)
-
-            if (response[0] == Action.PostSB or
-                response[0] == Action.PostBB or
-                response[0] == Action.PostSBBB):
-                # Player has payed up! Mark them as such.
-                if blindState == Action.PostSB:
-                    player.paidState = table.Player.PaidState.PaidSBBB
-                    player.betPart.pay(blindPayment)
-                elif blindState == Action.PostSBBB:
-                    player.paidState = table.Player.PaidState.PaidSBBB
-                    player.betPart.pay(table.convFact)
-                    player.betPart.payDark(self.table.sb)
-                elif blindState == Action.PostBB:
-                    player.paidState = table.Player.PaidState.PaidBB
-                    player.betPart.pay(blindPayment)
-                activePlayers.append(player)
-                # Move to the next state. Stop at the last state.
-                if blindToDo:
-                    blindState = blindToDo.pop()
-            elif response[0] == Action.SitOut:
-                if blindState == Action.PostSB:
-                    player.paidState = table.Player.PaidState.PaidBB
-                elif (blindState == Action.PostBB or
-                      blindState == Action.PostSBBB):
-                    player.paidState = table.Player.PaidState.Nothing
-        del blindList
+            response = yield blinds_enforcer.choice_actions(player)
+            blinds_enforcer.process_response(player, response)
 
         #------------------
         # DEAL HANDS!
@@ -516,59 +551,4 @@ class Script:
             player.parent.stack -= addedBet
 
 if __name__ == '__main__':
-    cash = table.Table(9, 0.25, 0.5, 0, 5000, 25000)
-    cash.registerScheduler(table.Schedule())
-    cash.start()
-    cash.addPlayer('john', 0)
-    cash.addMoney('john', 5000)
-    cash.addPlayer('mison', 1)
-    cash.addMoney('mison', 10000)
-    cash.addPlayer('lorea', 2)
-    cash.addMoney('lorea', 10000)
-    cash.addPlayer('honn', 3)
-    cash.addMoney('honn', 10000)
-    cash.addPlayer('mizir', 6)
-    cash.addMoney('mizir', 10000)
-    cash.sitIn('honn')
-    cash.sitIn('lorea')
-    print cash
-    #cash.sitOut('honn')
-    cash.sitIn('honn')
-    cash.sitIn('mison')
-    cash.sitIn('john')
-    cash.sitIn('mizir')
-    cash.dealer = 3
-
-    cash.seats[3].stack = 400
-
-    print '-------------'
-
-    scr = Script(cash)
-    run = scr.run()
-    act = run.next()
-    print act
-    try:
-        act = run.send((Action.PostSB,))
-        #act.player.sitOut = True
-        # check game shouldn't halt here
-        print act
-        #print run.send((Action.SitOut,))
-        print run.send((Action.PostBB,))
-        print run.send((Action.PostSBBB,))
-        print run.send((Action.PostSBBB,))
-        act = run.send((Action.PostSBBB,))
-
-        print act
-
-        print run.send((Action.Call,))
-        act = run.send((Action.Call,))
-        print act
-
-        if len(act.actions) == 3:
-            print run.send((Action.Raise, act.actions[2][1]))
-        else:
-            print run.send((Action.Call,))
-        print run.send((Action.Call,))
-    except StopIteration:
-        print 'END'
-    print cash
+    pass
