@@ -28,8 +28,13 @@ class Handler:
         self.actIter = scriptObj.run()
 
         while not isinstance(self.currentAct, script.Action):
-            self.currentAct = self.actIter.next()
-            self.displayAct()
+            try:
+                self.currentAct = self.actIter.next()
+            except StopIteration:
+                self.adapter.reply('start() END...')
+                raise Exception('Internal Error: script didn\'t do anything!')
+            else:
+                self.displayAct()
     def pmHands(self, cardsDealt):
         players = cardsDealt.players
         for player in players:
@@ -98,10 +103,10 @@ class Adapter:
         self.cash.sitIn('b')
         self.cash.sitIn('c')
         self.cash.sitIn('d')
-        """self.cash.setAutopost('a', True)
+        self.cash.setAutopost('a', True)
         self.cash.setAutopost('b', True)
         self.cash.setAutopost('c', True)
-        self.cash.setAutopost('d', True)"""
+        self.cash.setAutopost('d', True)
     def msg(self, user, message):
         print('%s: %s'%(user, message))
 
