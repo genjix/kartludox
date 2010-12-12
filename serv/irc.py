@@ -6,7 +6,7 @@ import time, sys
 import adapter
 
 class GamerBot(irc.IRCClient):
-    nickname = "donisto"
+    nickname = "donistoIII"
 
     def connectionMade(self):
         irc.IRCClient.connectionMade(self)
@@ -22,7 +22,7 @@ class GamerBot(irc.IRCClient):
 
     def joined(self, channel):
         """This will get called when the bot joins the channel."""
-        if channel == '#pangaea':
+        if channel == '#gondwana':
             self.adapter[channel] = adapter.Adapter(self, channel)
         #self.msg(channel, "\x0304red friend =)\x03")
         """self.msg(channel, "\x0303green friend =)\x03")
@@ -108,7 +108,7 @@ if __name__ == '__main__':
     #log.startLogging(sys.stdout)
     
     # create factory protocol and application
-    f = GamerBotFactory('#pangaea')
+    f = GamerBotFactory('#gondwana')
 
     # connect factory to this host and port
     #reactor.connectSSL
