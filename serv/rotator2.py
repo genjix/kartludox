@@ -24,7 +24,7 @@ class BettingPlayer:
     def __init__(self):
         # The current bet placed.
         self.bet = 0
-        # Dark bets are not counted as part of the current bet
+        # Dark pool bets are not counted as part of the current bet
         # e.g antes
         self.darkbet = 0
         # Folded players are set inactive.
@@ -35,13 +35,17 @@ class BettingPlayer:
         self.min_raise = 0
         self.max_raise = 0
         self.call_price = 0
-        # Set by rotator
-        self.begin_stack = 0
 
-    def link(self, parent):
+    def add_parent(self, parent):
         self.parent = parent
-        # Attach self to parent
-        self.parent.betpart = self
+        self.new_street()
+
+    def new_street(self):
+        """Called at the beginning of each new betting street.
+        Places the current bet in the darkpool and resets itself."""
+        self.begin_stack = self.parent.stack
+        self.darkbet += self.bet
+        self.bet = 0
 
     def pay(self, charge):
         self.parent.stack -= charge
@@ -82,12 +86,12 @@ class BettingPlayer:
         self.call_price = call
 
     def __repr__(self):
-        srep = '%s %d (%d, %d) active=%s'%(self.parent.nickname,
-                                           self.parent.stack, self.bet,
-                                           self.darkbet, self.active)
-        srep += '\nraise %s from %d to %d'%(self.can_raise, self.min_raise,
-                                            self.max_raise)
-        srep += '\ncall = %d'%self.call_price
+        srep = '%s stack=%d bets=(%d, %d) active=%s\n'%\
+                    (self.parent.nickname, self.parent.stack, self.bet,
+                     self.darkbet, self.active)
+        srep += 'call=%d'%self.call_price
+        if self.can_raise:
+            srep += '\traise=%d to %d'%(self.min_raise, self.max_raise)
         return srep
 
 class Rotator:
@@ -107,25 +111,21 @@ class Rotator:
     BettingClosed = 2   # No more raising allowed.
     BettingFinished = 3 # Stop.
 
-    def __init__(self, active_players, current_bet):
+    def __init__(self, active_players, current_bet, last_raise):
         """active_players should be the players that posted their blinds
         and are sitting in.
         current_bet is the size of the bet (usually the big blind size)."""
 
         self.players = active_players
-        # Attach betting objects to all the players.
-        for player in self.players:
-            bettor = BettingPlayer()
-            bettor.link(player)
-            bettor.begin_stack = player.stack
 
         self.last_bettor = None
         self.cap_bettor = None
         # Stores rotator state. Important
         self.state = Rotator.BettingOpen
         # For the first round at least, current_bet != last_bettor.bet
+        # Like when the BB is all-in < 1 bb.
         self.current_bet = current_bet
-        self.last_raise = self.current_bet
+        self.last_raise = last_raise
 
     def run(self):
         """Main run loop. Continually cycle until we reach
@@ -134,7 +134,7 @@ class Rotator:
             - prompt_capped
         depending on current state. They return True to yield bettor."""
         for player in itertools.cycle(self.players):
-            bettor = player.betpart
+            bettor = player.bettor
             if self.state == Rotator.BettingOpen:
                 if self.prompt_open(bettor):
                     yield bettor
@@ -222,11 +222,11 @@ class Rotator:
 
     def num_bettors(self):
         """Number of bettors NOT folded."""
-        return len([p for p in self.players if p.betpart.active])
+        return len([p for p in self.players if p.bettor.active])
     def num_active_bettors(self):
         """Number of bettors NOT folded and NOT allin."""
         return len([p for p in self.players if 
-                    p.betpart.active and p.stack > 0])
+                    p.bettor.active and p.stack > 0])
 
     def fold(self, bettor):
         bettor.fold()
@@ -269,33 +269,56 @@ if __name__ == '__main__':
         def __init__(self, n, s):
             self.nickname = n
             self.stack = s
+        def link(self, bettor):
+            self.bettor = bettor
+            self.bettor.add_parent(self)
         def __repr__(self):
             return self.nickname
 
-    players = [P('a', 900), P('b', 200), P('c', 800), P('d', 150), P('e', 800)]
-    rotator = Rotator(players, 1)
-    for b in rotator.run():
-        print b
-        cc = raw_input()
-        if cc[0] == 'f':
-            rotator.fold(b)
-        elif cc[0] == 'c':
-            rotator.call(b)
-        elif cc[0] == 'r':
-            rotator.raiseto(b, int(cc[1:]))
-        print b
-        if rotator.state == Rotator.BettingOpen:
-            print 'Betting Open'
-        elif rotator.state == Rotator.BettingCapped:
-            print 'Someone went all-in < full raise but can still bet'
-        elif rotator.state == Rotator.BettingClosed:
-            print 'No more raises.'
-        elif rotator.state == Rotator.BettingFinished:
-            print 'Betting finished. Closing up shop.'
-        else:
-            print 'Sever error wtf %d'%rotator.state
-        print '---------'
+    def do_rotation(rotator):
+        for b in rotator.run():
+            print b
+            cc = raw_input()
+            if cc[0] == 'f':
+                rotator.fold(b)
+            elif cc[0] == 'c':
+                rotator.call(b)
+            elif cc[0] == 'r':
+                rotator.raiseto(b, int(cc[1:]))
+            print b
+            if rotator.state == Rotator.BettingOpen:
+                print 'Betting Open'
+            elif rotator.state == Rotator.BettingCapped:
+                print 'Someone went all-in < full raise but can still bet'
+            elif rotator.state == Rotator.BettingClosed:
+                print 'No more raises.'
+            elif rotator.state == Rotator.BettingFinished:
+                print 'Betting finished. Closing up shop.'
+            else:
+                print 'Severe error wtf %d'%rotator.state
+            print '---------'
 
-    for b in [p.betpart for p in players]:
-        print b
+    def show_all(players):
+        for b in [p.bettor for p in players]:
+            print b
+
+    players = [P('a', 900), P('b', 200), P('c', 800), P('SB', 150), P('BB', 800)]
+    # Attach betting objects to all the players.
+    for player in players:
+        bettor = BettingPlayer()
+        player.link(bettor)
+
+    rotator = Rotator(players, 1, 1)
+    do_rotation(rotator)
+
+    # Begin new street
+    for player in players:
+        player.bettor.new_street()
+    show_all(players)
+    print '---------'
+
+    players = players[-2:] + players[:-2]
+    rotator = Rotator(players, 0, 1)
+    do_rotation(rotator)
+    show_all(players)
 
