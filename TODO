@@ -9,8 +9,8 @@ app remember prev settings
 WANT: panels move the main view.
 WANT: move slider up to avoid misclicking raise.
 
-TODO: clean up script autopost.
-TODO: general clean up
+TODO: wait for BB
+TODO: migrate case/style
 TODO: timebank
 TODO: timeToDie/player leaving channel (auto sitout, set timetodie)
 TODO: log HH for debugging purposes
