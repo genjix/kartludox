@@ -19,11 +19,8 @@ class Schedule:
 class Handler:
     """When the game starts then the table notifies this handler."""
     def __init__(self, adapter):
-        self.running = False
         self.adapter = adapter
-        self.script = None
-        self.actIter = None
-        self.currentAct = None
+        self.stop()
 
     def start(self, scriptObj):
         self.running = True
@@ -70,6 +67,9 @@ class Handler:
             self.start(self.script)
     def stop(self):
         self.running = False
+        self.script = None
+        self.actIter = None
+        self.currentAct = None
         # award pot to remaining player sitting in.
         print 'stopped'
 
@@ -98,10 +98,10 @@ class Adapter:
         self.cash.sitIn('b')
         self.cash.sitIn('c')
         self.cash.sitIn('d')
-        self.cash.setAutopost('a', True)
+        """self.cash.setAutopost('a', True)
         self.cash.setAutopost('b', True)
         self.cash.setAutopost('c', True)
-        self.cash.setAutopost('d', True)
+        self.cash.setAutopost('d', True)"""
     def msg(self, user, message):
         print('%s: %s'%(user, message))
 
