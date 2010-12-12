@@ -13,7 +13,12 @@ def realToTiny(real, bigBlind):
     """See tinyToReal."""
     return int(real * convFact / float(bigBlind))
 
-class Player:
+class Player(object):
+    PaidNothing = 0
+    WaitingBB = 1
+    PaidBB = 2
+    PaidSBBB = 3
+
     class PaidState:
         Nothing = 0
         WaitingBB = 1
@@ -64,10 +69,27 @@ class Player:
         self.cards = None
         # Stores bets and actions by player
         self.betPart = None
+        self.bettor = None
         self.settings = self.Settings(self)
+
+    def get_sitting_out(self):
+        return self.sitOut
+    def set_sitting_out(self, sitout):
+        self.sitOut = sitout
+    sitting_out = property(get_sitting_out, set_sitting_out)
+
+    def get_paid_state(self):
+        return self.paidState
+    def set_paid_state(self, paidstate):
+        self.paidState = paidstate
+    paid_state = property(get_paid_state, set_paid_state)
 
     def newBetPart(self):
         self.betPart = self.Bets(self)
+
+    def link(self, bettor):
+        self.bettor = bettor
+        self.bettor.add_parent(self)
 
     def __repr__(self):
         if self.cards:
