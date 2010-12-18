@@ -330,15 +330,15 @@ class Table:
             [i for i, p in enumerate(self.seats) if p and not p.sitOut]
         self.dealer = random.choice(occupiedSeats)
 
-        # Start the actual game
-        scr = script.Script(self)
-        if self.handler:
-            self.handler.start(scr)
         # Let everyone off paying for the first hand!
         # (Except the blinds)
         for player in self.seats:
             if player is not None and not player.sitOut:
                 player.paidState = player.PaidState.PaidSBBB
+        # Start the actual game
+        scr = script.Script(self)
+        if self.handler:
+            self.handler.start(scr)
 
     def nextDealer(self):
         # Get list of indices of the seats
