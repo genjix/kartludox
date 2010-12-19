@@ -38,7 +38,7 @@ class Handler:
     def pmHands(self, cardsDealt):
         players = cardsDealt.players
         for player in players:
-            c = player.cards
+            c = cardsDealt.get_player_hand(player)
             self.adapter.privmsg('genjix', {'cards': c})
     def displayAct(self):
         if isinstance(self.currentAct, script.CardsDealt):
@@ -129,14 +129,14 @@ class Adapter:
             command = message
             param = None"""
 
+        if self.cash is not None:
+            print self.cash
+
         try:
             self.runCommand(player, command, param)
         except Exception as e:
             self.reply('%s: %s'%(e.__class__.__name__, str(e)))
             raise
-        else:
-            if self.cash is not None:
-                print self.cash
 
     def runCommand(self, player, command, param):
         if command == 'join':
