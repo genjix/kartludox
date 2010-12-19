@@ -237,7 +237,7 @@ class Rotator:
 
     def fold(self, bettor):
         bettor.fold()
-        if self.num_active_bettors() < 2:
+        if self.num_active_bettors() == 0:
             self.state = Rotator.BettingFinished
 
     def call(self, bettor):
@@ -310,15 +310,15 @@ if __name__ == '__main__':
             print b
 
     #players = [P('a', 900), P('b', 200), P('c', 800), P('SB', 150), P('BB', 800)]
-    players = [P('U', 80), P('SB', 50), P('BB', 60)]
+    players = [P('U', 50), P('M', 50), P('SB', 50), P('BB', 80)]
     # Attach betting objects to all the players.
     for player in players:
         bettor = BettingPlayer()
         player.link(bettor)
-    #players[1].bettor.pay(50)
-    #players[2].bettor.pay(100)
+    players[2].bettor.pay(1)
+    players[3].bettor.pay(2)
 
-    rotator = Rotator(players, 1, 1)
+    rotator = Rotator(players, 2, 2)
     do_rotation(rotator)
 
     # Begin new street
