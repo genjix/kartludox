@@ -156,71 +156,6 @@ class ShowRankings:
                                  'handname': awarder.handName(handrank)})
         return {'showrankings': handRankings}
 
-class Street:
-    Nothing = 0
-    Preflop = 1
-    Flop = 2
-    Turn = 3
-    River = 4
-    Finished = 5
-
-class StreetStateMachine:
-    def __init__(self, activePlayers, board, deck):
-        self.activePlayers = [p.betPart for p in activePlayers]
-        self.currentStreet = Street.Preflop
-        self.rotator = None
-        self.pots = []
-
-        self.deck = deck
-        self.board = board
-
-        # No game with just one player.
-        if len(self.activePlayers) < 2:
-            self.currentStreet = Street.Finished
-
-    def finished(self):
-        return self.currentStreet == Street.Finished
-
-    def createRotator(self):
-        if self.currentStreet == Street.Preflop:
-            preflopPlayers = self.activePlayers[2:] + self.activePlayers[:2]
-            self.rotator = rotator_m.Rotator(preflopPlayers)
-            self.rotator_m.setBetSize(table.convFact)
-        else:
-            self.rotator = rotator_m.Rotator(self.activePlayers)
-            self.rotator_m.setRaise(table.convFact)
-        return self.rotator
-
-    def dealCard(self):
-        self.board.append(self.deck.pop())
-
-    def prepareNext(self):
-        self.pots.extend(self.rotator_m.createPots())
-
-        # Advance through the streets.
-        if self.currentStreet == Street.Preflop:
-            self.currentStreet = Street.Flop
-            # deal flop
-            self.dealCard()
-            self.dealCard()
-            self.dealCard()
-            # if game is HU then reverse order.
-            if len(self.activePlayers) == 2:
-                self.activePlayers.reverse()
-        elif self.currentStreet  == Street.Flop:
-            self.currentStreet = Street.Turn
-            # deal turn
-            self.dealCard()
-        elif self.currentStreet == Street.Turn:
-            self.currentStreet = Street.River
-            # deal river
-            self.dealCard()
-        elif self.currentStreet == Street.River:
-            self.currentStreet = Street.Finished
-
-    def investedPlayers(self):
-        return [p for p in self.activePlayers if p.stillActive]
-
 class BlindsEnforcer:
     def __init__(self, small_blind, big_blind):
         self.small_blind = small_blind
@@ -465,6 +400,7 @@ class Script:
         street_statemachine = StreetStateMachine2(active_players, self.board,
                                             card_deck.new_card)
 
+        pots = None
         while not street_statemachine.finished():
             rotator = street_statemachine.create_rotator(self.big_blind)
             # Auto-check it all down since there's 1+ players all-in
@@ -535,41 +471,12 @@ class Script:
             elif street == street_statemachine.River:
                 response = yield RiverDealt(self.board, pots)
 
-        #------------------
-        # ALL FOUR STREETS
-        #------------------
-        if False:
-            pots = streetState.pots
-            if len(pots[-1].contestors) == 1:
-                returnedBet = pots.pop()
-                player = returnedBet.contestors[0].parent
-                potSize = returnedBet.potSize
-                player.stack += potSize
-                betSize = returnedBet.betSize
-                response = yield UncalledBet(player, betSize)
-
-                remainder = potSize - betSize
-                assert(remainder >= 0)
-                if remainder > 0:
-                    assert(rotatorControl.onePlayer())
-                    response = yield CollectedMoney(player, remainder)
-
-            # Award pots with single contestor back to them
-            for pot in pots:
-                if len(pot.contestors) < 2:
-                    assert(len(pot.contestors) == 1)
-                    playerObj = pot.contestors[0].parent
-                    playerObj.stack += pot.potSize
-                    self.pots.remove(pot)
-                    response = yield CollectMoney(player, pot.potSize)
-
-            pots = []
-            if streetState.currentStreet == Street.Flop:
-                response = yield FlopDealt(self.board, pots)
-            elif streetState.currentStreet == Street.Turn:
-                response = yield TurnDealt(self.board, pots)
-            elif streetState.currentStreet == Street.River:
-                response = yield RiverDealt(self.board, pots)
+        if pots:
+            print invested_players[0].__class__.__name__
+            invested_players = [b.parent for b in pots.pots[0].contestors]
+            """for p in invested_players:
+                p.cards = card_deck.get_player_hand(p)
+            response = yield ShowHands(invested_players)"""
 
         if False: # if pots
             # show hands
