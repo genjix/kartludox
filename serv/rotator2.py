@@ -237,7 +237,7 @@ class Rotator:
 
     def fold(self, bettor):
         bettor.fold()
-        if self.num_active_bettors() == 1:
+        if (self.num_bettors() == 1 or self.num_active_bettors() == 0):
             self.state = Rotator.BettingFinished
 
     def call(self, bettor):
@@ -310,7 +310,7 @@ if __name__ == '__main__':
             print b
 
     #players = [P('a', 900), P('b', 200), P('c', 800), P('SB', 150), P('BB', 800)]
-    players = [P('U', 50), P('M', 50), P('SB', 50), P('BB', 80)]
+    players = [P('U', 50), P('M', 50), P('SB', 80), P('BB', 80)]
     # Attach betting objects to all the players.
     for player in players:
         bettor = BettingPlayer()
