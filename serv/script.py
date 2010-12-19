@@ -2,7 +2,7 @@ import random
 import table
 import rotator as rotator_m
 import rotator2
-import awardhands
+import awarder
 
 class Action:
     """This class represents a set of possible choices for a player
@@ -116,10 +116,7 @@ class StreetDealt:
         self.board = board
         self.pots = pots
     def notationBase(self, streetName):
-        pots = []
-        for pot in self.pots:
-            pots.append(pot.notation())
-        return {streetName: self.board, 'pots': pots}
+        return {streetName: self.board, 'pots': self.pots.notation()}
 
 class FlopDealt(StreetDealt):
     def notation(self):
@@ -156,7 +153,7 @@ class ShowRankings:
         handRankings = []
         for playerName, handrank in self.rankings:
             handRankings.append({'player': playerName,
-                                 'handname': awardhands.handName(handrank)})
+                                 'handname': awarder.handName(handrank)})
         return {'showrankings': handRankings}
 
 class Street:
@@ -360,6 +357,9 @@ class StreetStateMachine2:
     def finished(self):
         return self.current_street == self.Finished
 
+    def finish(self):
+        self.current_street = self.Finished
+
     def create_rotator(self, bb):
         if self.current_street == self.Preflop:
             preflop_players = self.players[2:] + self.players[:2]
@@ -373,35 +373,22 @@ class StreetStateMachine2:
         if self.current_street == self.Preflop:
             self.current_street = self.Flop
             # deal flop
-            self.deal_new_card()
-            self.deal_new_card()
-            self.deal_new_card()
+            self.board.append(self.deal_new_card())
+            self.board.append(self.deal_new_card())
+            self.board.append(self.deal_new_card())
             # if game is HU then reverse order.
             if len(self.players) == 2:
                 self.players.reverse()
         elif self.current_street  == self.Flop:
             self.current_street = self.Turn
             # deal turn
-            self.deal_new_card()
+            self.board.append(self.deal_new_card())
         elif self.current_street == self.Turn:
             self.current_street = self.River
             # deal river
-            self.deal_new_card()
+            self.board.append(self.deal_new_card())
         elif self.current_street == self.River:
             self.current_street = self.Finished
-
-class Pots:
-    class Abacus:
-        def __init__(self, bettor):
-            self.bettor = bettor
-            self.total_bet = bettor.bet + bettor.darkbet
-        def __repr__(self):
-            return '%s (%d)'%(self.bettor.parent.nickname, self.total_bet)
-
-    def compute(bettors):
-        abacuses = [Abacus(b) for b in bettors]
-        pots = []
-        return pots
 
 class Script:
     def __init__(self, table):
@@ -523,7 +510,9 @@ class Script:
                 b.new_street()
             street_statemachine.next()
 
-            pots = Pots.compute(bettors)
+            pots = awarder.Pots(bettors)
+            if pots.uncontested():
+                street_statemachine.finish()
 
             street = street_statemachine.current_street
             if street == street_statemachine.Flop:
@@ -599,11 +588,11 @@ class Script:
             endPlayers = streetState.investedPlayers()
             response = yield ShowHands(endPlayers)
             # show hand rankings
-            award = awardhands.AwardHands(endPlayers, pots, self.board)
-            rankings = award.calculateRankings()
+            award = awarder.AwardHands(endPlayers, pots, self.board)
+            rankings = awarder.calculateRankings()
             response = yield ShowRankings(rankings)
             # who wins what.
-            for winner in award.award():
+            for winner in awarder.award():
                 response = yield CollectedMoney(*winner)
             #   CollectedMoney
             # go through and award players the pots
