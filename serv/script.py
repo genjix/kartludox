@@ -512,13 +512,22 @@ class Script:
 
             pots = awarder.Pots(bettors)
             uncontested_pots = pots.uncontested()
+            assert(len(uncontested_pots) < 2)
             if uncontested_pots:
-                for unpot in uncontested_pots:
-                    player = unpot.contestors[0].parent
+                if len(uncontested_pots) == len(pots):
+                    for unpot in uncontested_pots:
+                        player = unpot.contestors[0].parent
+                        print unpot
+                        yield CollectedMoney(player, unpot.size)
+                else:
+                    unpot = uncontested_pots.pop()
+                    assert(not uncontested_pots)
+                    bettor = unpot.contestors[0]
+                    player = bettor.parent
                     yield UncalledBet(player, unpot.size)
-
-                if len(uncontested_pots) == 1:
-                    street_statemachine.finish()
+                    # Awards it back to them.
+                    bettor.darkbet -= unpot.bet
+                    bettor.stack += unpot.size
 
             street = street_statemachine.current_street
             if street == street_statemachine.Flop:
