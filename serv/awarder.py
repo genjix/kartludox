@@ -57,7 +57,7 @@ class Pots:
         return pots
 
     def uncontested(self):
-        return len(self.pots) == 1 and len(self.pots[0].contestors) == 1
+        return [p for p in self.pots if len(p.contestors) < 2]
 
     def notation(self):
         return [p.notation() for p in self.pots]

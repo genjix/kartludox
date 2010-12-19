@@ -512,8 +512,13 @@ class Script:
 
             pots = awarder.Pots(bettors)
             uncontested_pots = pots.uncontested()
-            if len(uncontested_pots) == 1:
-                street_statemachine.finish()
+            if uncontested_pots:
+                for unpot in uncontested_pots:
+                    player = unpot.contestors[0].parent
+                    yield UncalledBet(player, unpot.size)
+
+                if len(uncontested_pots) == 1:
+                    street_statemachine.finish()
 
             street = street_statemachine.current_street
             if street == street_statemachine.Flop:
@@ -559,8 +564,7 @@ class Script:
             elif streetState.currentStreet == Street.River:
                 response = yield RiverDealt(self.board, pots)
 
-        pots = streetState.pots
-        if pots:
+        if False: # if pots
             # show hands
             endPlayers = streetState.investedPlayers()
             response = yield ShowHands(endPlayers)
