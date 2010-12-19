@@ -9,11 +9,29 @@ class Pots:
         def __repr__(self):
             return '%s (%d)'%(self.bettor.parent.nickname, self.total_bet)
 
-    @classmethod
-    def compute(cls, bettors):
+    class Pot:
+        def __init__(self, bet, potsize, contestors):
+            self.bet = bet
+            self.size = potsize
+            self.contestors = contestors
+
+        def names(self):
+            return [c.parent.nickname for c in self.contestors]
+
+        def notation(self):
+            return {'bet': self.bet, 'size': self.size,
+                    'players': self.names()}
+
+        def __repr__(self):
+            return '[%d, %d,  %s]'%(self.bet, self.size, self.names())
+
+    def __init__(self, bettors):
+        self.pots = self.compute(bettors)
+
+    def compute(self, bettors):
         """Take a bunch of bettors and compute the various pots
         depending on the bets made."""
-        abacuses = [cls.Abacus(b) for b in bettors]
+        abacuses = [self.Abacus(b) for b in bettors]
         abacuses.sort(key=lambda a: a.total_bet)
         pots = []
         # The current absolute bet size
@@ -35,9 +53,20 @@ class Pots:
                     else:
                         potsize += remain_bet
                         baba.total_bet -= remain_bet
-                pots.append((current_bet, potsize, contestors))
-                #print current_bet, potsize, [c.parent.nickname for c in contestors]
+                pots.append(self.Pot(current_bet, potsize, contestors))
         return pots
+
+    def uncontested(self):
+        return len(self.pots) == 1 and len(self.pots[0].contestors) == 1
+
+    def notation(self):
+        return [p.notation() for p in self.pots]
+
+    def __repr__(self):
+        s = ''
+        for p in self.pots:
+            s += '%s\n'%p
+        return s
 
 def handName(handrank):
     """Gives nice string describing five-card hand like
@@ -87,10 +116,6 @@ if __name__ == '__main__':
                 self.active = active
             def __repr__(self):
                 return '%s(%d)'%(self.parent.nickname, self.bet)
-        def print_pot(pot):
-            for p in pot:
-                print p
-            print
 
         bettors = [
             B('a', 0, False),
@@ -104,7 +129,7 @@ if __name__ == '__main__':
         #    3         13        c, e, f
         #    7         10        e, f
         #    9         2         f
-        print_pot(Pots.compute(bettors))
+        print Pots(bettors)
 
         bettors = [
             B('a', 2, True),
@@ -113,5 +138,5 @@ if __name__ == '__main__':
             B('d', 3, True)]
         #    2         8         a, b, c, d
         #    3         1         d
-        print_pot(Pots.compute(bettors))
+        print Pots(bettors)
     unittest_pots()
