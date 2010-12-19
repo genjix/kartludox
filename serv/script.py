@@ -1,5 +1,6 @@
+import random
 import table
-import rotator
+import rotator as rotator_m
 import rotator2
 import awardhands
 
@@ -91,8 +92,9 @@ class Action:
         return notat
 
 class CardsDealt:
-    def __init__(self, players):
+    def __init__(self, players, get_player_hand):
         self.players = players
+        self.get_player_hand = get_player_hand
 
 class CollectedMoney:
     def __init__(self, player, amount):
@@ -185,18 +187,18 @@ class StreetStateMachine:
     def createRotator(self):
         if self.currentStreet == Street.Preflop:
             preflopPlayers = self.activePlayers[2:] + self.activePlayers[:2]
-            self.rotator = rotator.Rotator(preflopPlayers)
-            self.rotator.setBetSize(table.convFact)
+            self.rotator = rotator_m.Rotator(preflopPlayers)
+            self.rotator_m.setBetSize(table.convFact)
         else:
-            self.rotator = rotator.Rotator(self.activePlayers)
-            self.rotator.setRaise(table.convFact)
+            self.rotator = rotator_m.Rotator(self.activePlayers)
+            self.rotator_m.setRaise(table.convFact)
         return self.rotator
 
     def dealCard(self):
         self.board.append(self.deck.pop())
 
     def prepareNext(self):
-        self.pots.extend(self.rotator.createPots())
+        self.pots.extend(self.rotator_m.createPots())
 
         # Advance through the streets.
         if self.currentStreet == Street.Preflop:
@@ -314,6 +316,93 @@ class BlindsEnforcer:
             if self.blind_todo:
                 self.blind_state = self.blind_todo.pop()
 
+class CardDeck:
+    """Represents a deck of cards."""
+    def __init__(self):
+        # Generate a new deck and shuffle the hands
+        ranks = "23456789TJQKA"
+        suits = "hdcs"
+        self.deck = [rank + suit for rank in ranks for suit in suits]
+        random.shuffle(self.deck)
+        # Player hands are stored here in a map for added security
+        # since this object is created on the heap.
+        self.player_hands = {}
+
+    def new_card(self):
+        return self.deck.pop()
+
+    def deal_hands(self, players):
+        for p in players:
+            hand = self.new_card(), self.new_card()
+            self.player_hands[p] = hand
+
+    def get_player_hand(self, player):
+        return self.player_hands[player]
+
+class StreetStateMachine2:
+    Preflop = 0
+    Flop = 1
+    Turn = 2
+    River = 3
+    Finished = 4
+
+    def __init__(self, active_players, board, new_card):
+        self.players = active_players
+        self.current_street = self.Preflop
+
+        self.board = board
+        self.deal_new_card = new_card
+
+        # No game with just one player.
+        if len(self.players) < 2:
+            self.current_street = self.Finished
+
+    def finished(self):
+        return self.current_street == self.Finished
+
+    def create_rotator(self, bb):
+        if self.current_street == self.Preflop:
+            preflop_players = self.players[2:] + self.players[:2]
+            rotator = rotator2.Rotator(preflop_players, bb, bb)
+        else:
+            rotator = rotator2.Rotator(self.players, 0, bb)
+        return rotator
+
+    def next(self):
+        # Advance through the streets.
+        if self.current_street == self.Preflop:
+            self.current_street = self.Flop
+            # deal flop
+            self.deal_new_card()
+            self.deal_new_card()
+            self.deal_new_card()
+            # if game is HU then reverse order.
+            if len(self.players) == 2:
+                self.players.reverse()
+        elif self.current_street  == self.Flop:
+            self.current_street = self.Turn
+            # deal turn
+            self.deal_new_card()
+        elif self.current_street == self.Turn:
+            self.current_street = self.River
+            # deal river
+            self.deal_new_card()
+        elif self.current_street == self.River:
+            self.current_street = self.Finished
+
+class Pots:
+    class Abacus:
+        def __init__(self, bettor):
+            self.bettor = bettor
+            self.total_bet = bettor.bet + bettor.darkbet
+        def __repr__(self):
+            return '%s (%d)'%(self.bettor.parent.nickname, self.total_bet)
+
+    def compute(bettors):
+        abacuses = [Abacus(b) for b in bettors]
+        pots = []
+        return pots
+
 class Script:
     def __init__(self, table):
         # Variables that stay constant between hands
@@ -377,24 +466,77 @@ class Script:
                 response = yield choice_actions
                 blinds_enforcer.process_response(player, response)
 
+        active_players = blinds_enforcer.active_players
+
         #------------------
         # DEAL HANDS!
         #------------------
-        # Generate a new deck and shuffle the hands
-        ranks = "23456789TJQKA"
-        suits = "hdcs"
-        deck = [rank + suit for rank in ranks for suit in suits]
-        table.random.shuffle(deck)
+        card_deck = CardDeck()
+        card_deck.deal_hands(active_players)
+        yield CardsDealt(active_players, card_deck.get_player_hand)
 
-        # Deal cards!
-        for player in activePlayers:
-            player.cards = deck.pop(), deck.pop()
-        yield CardsDealt(activePlayers)
+        street_statemachine = StreetStateMachine2(active_players, self.board,
+                                            card_deck.new_card)
+
+        while not street_statemachine.finished():
+            rotator = street_statemachine.create_rotator(self.big_blind)
+            # Auto-check it all down since there's 1+ players all-in
+            # vs 1 active player.
+            if rotator.num_active_bettors() > 1:
+                for bettor in rotator.run():
+                    player = bettor.parent
+                    # Players can sit-out beforehand
+                    if player.sitting_out:
+                        continue
+                    choice_actions = Action(player)
+                    choice_actions.add(Action.SitOut)
+                    choice_actions.add(Action.Fold)
+                    to_call = bettor.call_price - bettor.bet
+                    if to_call == 0:
+                        choice_actions.add(Action.Check)
+                    else:
+                        assert(to_call > 0)
+                        choice_actions.add(Action.Call, to_call)
+                    if bettor.can_raise:
+                        if rotator.last_raise > 0:
+                            bet_or_raise = Action.Raise
+                        else:
+                            bet_or_raise = Action.Bet
+                        choice_actions.add(bet_or_raise, bettor.min_raise,
+                                           bettor.max_raise)
+                    response = yield choice_actions
+                    if len(response) == 1:
+                        response, param = response[0], None
+                    else:
+                        response, param = response[0], int(response[1])
+
+                    if response == Action.Fold or response == Action.SitOut:
+                        rotator.fold(bettor)
+                    elif response == Action.Call:
+                        rotator.call(bettor)
+                    elif response == Action.Raise or response == Action.Bet:
+                        assert(param is not None)
+                        rotator.raiseto(bettor, param)
+
+            bettors = [p.bettor for p in active_players]
+            for b in bettors:
+                b.new_street()
+            street_statemachine.next()
+
+            pots = Pots.compute(bettors)
+
+            street = street_statemachine.current_street
+            if street == street_statemachine.Flop:
+                response = yield FlopDealt(self.board, pots)
+            elif street == street_statemachine.Turn:
+                response = yield TurnDealt(self.board, pots)
+            elif street == street_statemachine.River:
+                response = yield RiverDealt(self.board, pots)
 
         #------------------
         # ALL FOUR STREETS
         #------------------
-        streetState = StreetStateMachine(activePlayers, self.board, deck)
+        streetState = StreetStateMachine(activePlayers, self.board, card_deck.deck)
 
         while not streetState.finished():
             rotatorControl = streetState.createRotator()
@@ -443,6 +585,7 @@ class Script:
                             # merge pots
                             pass"""
 
+                pots = []
                 if streetState.currentStreet == Street.Flop:
                     response = yield FlopDealt(self.board, pots)
                 elif streetState.currentStreet == Street.Turn:
