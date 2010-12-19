@@ -10,7 +10,8 @@ class Schedule:
     def callback(self, functor, secs):
         # If already scheduled then make sure not to schedule event twice.
         if not self.started:
-            self.message('A new game will begin in %d seconds.'%secs)
+            msg = 'A new game will begin in %d seconds.'%secs
+            self.message(json.dumps({'status': 'newgame', 'message': msg}))
         started = True
         reactor.callLater(secs, functor)
     def clear(self):
@@ -26,6 +27,8 @@ class Handler:
         self.running = True
         self.script = scriptObj
         self.actIter = scriptObj.run()
+
+        self.adapter.show_table()
 
         while not isinstance(self.currentAct, script.Action):
             try:
@@ -135,8 +138,21 @@ class Adapter:
         try:
             self.runCommand(player, command, param)
         except Exception as e:
-            self.reply('%s: %s'%(e.__class__.__name__, str(e)))
-            raise
+            self.reply(json.dumps({'error': e.__class__.__name__,
+                                   'message': str(e)}))
+            raise e
+
+    def show_table(self):
+        notate = {'dealer': self.cash.dealer}
+        seats = []
+        for s in self.cash.seats:
+            if s is None:
+                seats.append(None)
+            else:
+                seats.append({'player': s.nickname, 'stack': s.stack,
+                              'sittingout': s.sitting_out})
+        notate['players'] = seats
+        self.reply(json.dumps(notate))
 
     def runCommand(self, player, command, param):
         if command == 'join':
@@ -169,8 +185,7 @@ class Adapter:
         elif command == 'raise':
             self.handler.update(player, (script.Action.Raise, int(param)))
         elif command == 'show':
-            for line in self.cash.__repr__().split('\n'):
-                self.reply(line)
+            self.show_table()
 
         # debug command only
         elif command == 'ereg':
