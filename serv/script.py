@@ -511,7 +511,8 @@ class Script:
             street_statemachine.next()
 
             pots = awarder.Pots(bettors)
-            if pots.uncontested():
+            uncontested_pots = pots.uncontested()
+            if len(uncontested_pots) == 1:
                 street_statemachine.finish()
 
             street = street_statemachine.current_street
@@ -525,62 +526,38 @@ class Script:
         #------------------
         # ALL FOUR STREETS
         #------------------
-        streetState = StreetStateMachine(activePlayers, self.board, card_deck.deck)
+        if False:
+            pots = streetState.pots
+            if len(pots[-1].contestors) == 1:
+                returnedBet = pots.pop()
+                player = returnedBet.contestors[0].parent
+                potSize = returnedBet.potSize
+                player.stack += potSize
+                betSize = returnedBet.betSize
+                response = yield UncalledBet(player, betSize)
 
-        while not streetState.finished():
-            rotatorControl = streetState.createRotator()
+                remainder = potSize - betSize
+                assert(remainder >= 0)
+                if remainder > 0:
+                    assert(rotatorControl.onePlayer())
+                    response = yield CollectedMoney(player, remainder)
 
-            i = self.rotateTheAction(rotatorControl)
-            try:
-                # re-yield rotateTheAction
-                choiceActions = i.next()
-                while True:
-                    response = yield choiceActions
-                    choiceActions = i.send(response)
-            except StopIteration:
-                streetState.prepareNext()
+            # Award pots with single contestor back to them
+            for pot in pots:
+                if len(pot.contestors) < 2:
+                    assert(len(pot.contestors) == 1)
+                    playerObj = pot.contestors[0].parent
+                    playerObj.stack += pot.potSize
+                    self.pots.remove(pot)
+                    response = yield CollectMoney(player, pot.potSize)
 
-                pots = streetState.pots
-                if len(pots[-1].contestors) == 1:
-                    returnedBet = pots.pop()
-                    player = returnedBet.contestors[0].parent
-                    potSize = returnedBet.potSize
-                    player.stack += potSize
-                    betSize = returnedBet.betSize
-                    response = yield UncalledBet(player, betSize)
-
-                    remainder = potSize - betSize
-                    assert(remainder >= 0)
-                    if remainder > 0:
-                        assert(rotatorControl.onePlayer())
-                        response = yield CollectedMoney(player, remainder)
-
-                # Award pots with single contestor back to them
-                for pot in pots:
-                    if len(pot.contestors) < 2:
-                        assert(len(pot.contestors) == 1)
-                        playerObj = pot.contestors[0].parent
-                        playerObj.stack += pot.potSize
-                        self.pots.remove(pot)
-                        response = yield CollectMoney(player, pot.potSize)
-
-                # Merge pots with same players in them.
-                # Happens when you had a preflop pot and then a flop pot.
-                """for potA in pots:
-                    for potB in pots:
-                        if potA == potB:
-                            continue
-                        if potA.contestors == potB.contestors:
-                            # merge pots
-                            pass"""
-
-                pots = []
-                if streetState.currentStreet == Street.Flop:
-                    response = yield FlopDealt(self.board, pots)
-                elif streetState.currentStreet == Street.Turn:
-                    response = yield TurnDealt(self.board, pots)
-                elif streetState.currentStreet == Street.River:
-                    response = yield RiverDealt(self.board, pots)
+            pots = []
+            if streetState.currentStreet == Street.Flop:
+                response = yield FlopDealt(self.board, pots)
+            elif streetState.currentStreet == Street.Turn:
+                response = yield TurnDealt(self.board, pots)
+            elif streetState.currentStreet == Street.River:
+                response = yield RiverDealt(self.board, pots)
 
         pots = streetState.pots
         if pots:
@@ -613,81 +590,6 @@ class Script:
         if self.table.gameState == table.GameState.Running:
             # Find next dealer
             self.table.nextDealer()
-
-    def rotateTheAction(self, rotatorControl):
-        # Auto-check it all down since there's 1+ players all-in
-        # vs 1 active player.
-        if rotatorControl.oneBettingPlayer():
-            raise StopIteration
-
-        for player, capped in rotatorControl.run():
-            # Players can sit-out beforehand
-            if player.parent.sitOut:
-                continue
-
-            stackSize = player.parent.stack
-            canRaise = not capped
-            callAllIn = False
-            raiseAllIn = False
-            callSizeTotal = rotatorControl.call()
-            minRaiseSize = rotatorControl.minRaise()
-            maxRaiseSize = player.betPlaced + stackSize
-            prevBet = player.betPlaced
-
-            toCall = callSizeTotal - prevBet
-            if stackSize <= toCall:
-                canRaise = False
-                callAllIn = True
-                callSizeTotal = stackSize + prevBet
-                toCall = stackSize
-            toMinRaise = minRaiseSize - prevBet
-            if stackSize <= toMinRaise:
-                minRaiseSize = stackSize + prevBet
-                maxRaiseSize = minRaiseSize
-                raiseAllIn = True
-
-            choiceActions = Action(player.parent)
-            choiceActions.add(Action.SitOut)
-            choiceActions.add(Action.Fold)
-            if toCall == 0:
-                choiceActions.add(Action.Check)
-            else:
-                choiceActions.add(Action.Call, toCall)
-            if canRaise:
-                if rotatorControl.lastBet > 0:
-                    betraiseAct = Action.Raise
-                else:
-                    betraiseAct = Action.Bet
-                choiceActions.add(betraiseAct, minRaiseSize, maxRaiseSize)
-            response = yield choiceActions
-
-            if response[0] == Action.Call:
-                player.betPlaced = callSizeTotal
-                if callAllIn:
-                    player.isAllIn = True
-            elif (response[0] == Action.Raise or
-                  response[0] == Action.Bet):
-                raiseSize = response[1]
-
-                if raiseSize < minRaiseSize:
-                    raiseSize = minRaiseSize
-                elif raiseSize > maxRaiseSize:
-                    raiseSize = maxRaiseSize
-
-                if raiseAllIn:
-                    player.betPlaced = minRaiseSize
-                    player.isAllIn = True
-                elif raiseSize == maxRaiseSize:
-                    player.betPlaced = maxRaiseSize
-                    player.isAllIn = True
-                elif raiseSize >= minRaiseSize:
-                    player.betPlaced = raiseSize
-            elif response[0] == Action.Fold or response[0] == Action.SitOut:
-                player.stillActive = False
-                continue
-
-            addedBet = player.betPlaced - prevBet
-            player.parent.stack -= addedBet
 
 if __name__ == '__main__':
     pass
