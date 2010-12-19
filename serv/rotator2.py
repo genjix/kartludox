@@ -237,7 +237,7 @@ class Rotator:
 
     def fold(self, bettor):
         bettor.fold()
-        if self.num_active_bettors() == 0:
+        if self.num_active_bettors() == 1:
             self.state = Rotator.BettingFinished
 
     def call(self, bettor):
