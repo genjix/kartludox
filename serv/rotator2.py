@@ -151,12 +151,12 @@ class Rotator:
                 break
 
     def prompt_open(self, bettor):
-        if not bettor.active:
-            # Player folded. Continue on.
-            return False
-        elif bettor == self.last_bettor:
+        if bettor == self.last_bettor:
             # Table went a full cycle without re-raising. Finish up.
             self.state = Rotator.BettingFinished
+            return False
+        elif not bettor.active:
+            # Player folded. Continue on.
             return False
         elif bettor.stack == 0:
             # Player is all-in. Continue on.
@@ -305,13 +305,16 @@ if __name__ == '__main__':
         for b in [p.bettor for p in players]:
             print b
 
-    players = [P('a', 900), P('b', 200), P('c', 800), P('SB', 150), P('BB', 800)]
+    #players = [P('a', 900), P('b', 200), P('c', 800), P('SB', 150), P('BB', 800)]
+    players = [P('U', 900), P('SB', 900), P('BB', 900)]
     # Attach betting objects to all the players.
     for player in players:
         bettor = BettingPlayer()
         player.link(bettor)
+    players[1].bettor.pay(50)
+    players[2].bettor.pay(100)
 
-    rotator = Rotator(players, 1, 1)
+    rotator = Rotator(players, 100, 100)
     do_rotation(rotator)
 
     # Begin new street
@@ -321,7 +324,7 @@ if __name__ == '__main__':
     print '---------'
 
     players = players[-2:] + players[:-2]
-    rotator = Rotator(players, 0, 1)
-    do_rotation(rotator)
-    show_all(players)
+    rotator = Rotator(players, 0, 100)
+    #do_rotation(rotator)
+    #show_all(players)
 
