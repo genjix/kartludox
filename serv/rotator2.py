@@ -210,6 +210,10 @@ class Rotator:
             self.state = Rotator.BettingFinished
             return False
 
+        if bettor.stack == 0:
+            # Player is all-in. Continue on.
+            return False
+
         if self.state == Rotator.BettingClosed:
             # Cannot raise
             self.bettor_capped_raise(bettor)
@@ -306,15 +310,15 @@ if __name__ == '__main__':
             print b
 
     #players = [P('a', 900), P('b', 200), P('c', 800), P('SB', 150), P('BB', 800)]
-    players = [P('U', 900), P('SB', 900), P('BB', 900)]
+    players = [P('U', 80), P('SB', 50), P('BB', 60)]
     # Attach betting objects to all the players.
     for player in players:
         bettor = BettingPlayer()
         player.link(bettor)
-    players[1].bettor.pay(50)
-    players[2].bettor.pay(100)
+    #players[1].bettor.pay(50)
+    #players[2].bettor.pay(100)
 
-    rotator = Rotator(players, 100, 100)
+    rotator = Rotator(players, 1, 1)
     do_rotation(rotator)
 
     # Begin new street
