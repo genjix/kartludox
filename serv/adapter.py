@@ -155,7 +155,7 @@ class Adapter:
             else:
                 seats.append({'player': s.nickname, 'stack': s.stack,
                               'sittingout': s.sitting_out})
-        notate['players'] = seats
+        notate['table'] = seats
         self.reply(json.dumps(notate))
 
     def runCommand(self, player, command, param):
