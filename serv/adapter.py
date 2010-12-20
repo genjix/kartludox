@@ -140,7 +140,7 @@ class Adapter:
         except Exception as e:
             self.reply(json.dumps({'error': e.__class__.__name__,
                                    'message': str(e)}))
-            raise e
+            raise
 
     def show_table(self):
         notate = {'dealer': self.cash.dealer}

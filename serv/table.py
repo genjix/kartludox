@@ -250,7 +250,7 @@ class Table:
         if True:
             player.stack += amount
 
-    def executePendingRebuys(self):
+    def execute_pending_rebuys(self):
         """Called at the end of every hand. Does any pending rebuys."""
         for player, amount in self.rebuys:
             self.addMoneyPlayer(player, amount)
@@ -269,11 +269,14 @@ class Table:
         If seated players drops below 2 then game stops running."""
         seat, player = self.lookupPlayer(nickname)
         self.sitOutPlayer(player)
-    def sitOutPlayer(self, player):
+
+    def sit_out_player(self, player):
         """Sit player out.
         Uses player object rather than nickname string."""
         player.sitOut = True
         self.checkState()
+    def sitOutPlayer(self, player):
+        self.sit_out_player(player)
 
     def setAutopost(self, nickname, autopost):
         """Set autopost blinds on a player."""
@@ -340,7 +343,7 @@ class Table:
         if self.handler:
             self.handler.start(scr)
 
-    def nextDealer(self):
+    def next_dealer(self):
         # Get list of indices of the seats
         rotatedSeats = [i for i, p in enumerate(self.seats)]
         # Rotate it around the current dealer position + 1

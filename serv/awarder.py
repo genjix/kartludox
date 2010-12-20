@@ -62,46 +62,47 @@ class Pots:
     def notation(self):
         return [p.notation() for p in self.pots]
 
+    def __getitem__(self, i):
+        return self.pots[i]
+
+    def __len__(self):
+        return len(self.pots)
+
     def __repr__(self):
         s = ''
         for p in self.pots:
             s += '%s\n'%p
         return s
 
-def handName(handrank):
+def hand_name(handrank):
     """Gives nice string describing five-card hand like
         two pair, Kings and Queens
         straight, Seven high"""
-    return handrank[0]
+    return handrank[1][0]
 
 class AwardHands:
-    def __init__(self, players, pots, board):
-        self.players = players
+    def __init__(self, invested_players, gethand, pots, board):
+        self.players = invested_players
+        self.gethand = gethand
         self.pots = pots
         self.board = board
-        self.pokerEval = pokereval.PokerEval()
+        self.pokereval = pokereval.PokerEval()
+        self.rankings = {}
 
-    def calculateRankings(self):
-        rankings = []
-        for playerBet in self.players:
-            playerObj = playerBet.parent
-            name = playerObj.nickname
-            cards = list(playerObj.cards) + self.board
-            playerBet.handRanking = self.pokerEval.best('hi', cards)
-            assert(playerBet.handRanking)
-            rankings.append((name, playerBet.handRanking[1]))
-        return rankings
+    def calculate_rankings(self):
+        for player in self.players:
+            cards = list(self.gethand(player)) + self.board
+            self.rankings[player] = self.pokereval.best('hi', cards)
+        return self.rankings
 
-    def award(self):
-        award = []
+    def calculate_winners(self):
+        winners = []
         for pot in self.pots:
-            potSize = pot.potSize
-            players = pot.contestors
-            winner = max(players, key=lambda p: p.handRanking[0])
-            winner.parent.stack += potSize
-            #award.append((winner.parent.nickname, potSize))
-            award.append((winner.parent, potSize))
-        return award
+            winning_bettor = max(pot.contestors,
+                                 key=lambda b: self.rankings[b.parent])
+            winning_player = winning_bettor.parent
+            winners.append((winning_player, pot.size))
+        return winners
 
 if __name__ == '__main__':
     def unittest_pots():
