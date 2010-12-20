@@ -131,12 +131,13 @@ class RiverDealt(StreetDealt):
         return self.notationBase('river')
 
 class ShowHands:
-    def __init__(self, players):
+    def __init__(self, players, gethand):
         self.players = players
+        self.gethand = gethand
     def notation(self):
         cards = []
         for p in self.players:
-            cards.append({'player': p.nickname, 'cards': p.cards})
+            cards.append({'player': p.nickname, 'cards': self.gethand(p)})
         return {'showhands': cards}
 
 class ShowDown:
@@ -149,11 +150,11 @@ class ShowRankings:
     def __init__(self, rankings):
         self.rankings = rankings
     def notation(self):
-        handRankings = []
-        for playerName, handrank in self.rankings:
-            handRankings.append({'player': playerName,
-                                 'handname': awarder.handName(handrank)})
-        return {'showrankings': handRankings}
+        hand_rankings = []
+        for player, handrank in self.rankings.items():
+            hand_rankings.append({'player': player.nickname,
+                                  'handname': awarder.hand_name(handrank)})
+        return {'showrankings': hand_rankings}
 
 class BlindsEnforcer:
     def __init__(self, small_blind, big_blind):
@@ -475,26 +476,16 @@ class Script:
             first_pot = pots.pots[0]
             all_contestors = first_pot.contestors
             invested_players = [b.parent for b in all_contestors]
-            for p in invested_players:
-                p.cards = card_deck.get_player_hand(p)
-            response = yield ShowHands(invested_players)
-
-        if False: # if pots
-            # show hands
-            endPlayers = streetState.investedPlayers()
-            response = yield ShowHands(endPlayers)
-            # show hand rankings
-            award = awarder.AwardHands(endPlayers, pots, self.board)
-            rankings = awarder.calculateRankings()
+            gethand = card_deck.get_player_hand
+            response = yield ShowHands(invested_players, gethand)
+            award_hands = awarder.AwardHands(invested_players, gethand,
+                                             pots, self.board)
+            rankings = award_hands.calculate_rankings()
             response = yield ShowRankings(rankings)
-            # who wins what.
-            for winner in awarder.award():
-                response = yield CollectedMoney(*winner)
-            #   CollectedMoney
-            # go through and award players the pots
-            #response = yield ShowDown(pots)
+            winners = award_hands.calculate_winners()
+            for player, potsize in winners:
+                yield CollectedMoney(player, potsize)
 
-        ### Do this at the end of the hand
         #-------------------
         # DEALER
         #-------------------
