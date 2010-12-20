@@ -485,6 +485,7 @@ class Script:
             winners = award_hands.calculate_winners()
             for player, potsize in winners:
                 yield CollectedMoney(player, potsize)
+                player.stack += potsize
 
         #-------------------
         # DEALER
