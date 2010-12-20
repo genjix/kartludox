@@ -135,8 +135,7 @@ class ShowHands:
         self.players = players
     def notation(self):
         cards = []
-        for pBet in self.players:
-            p = pBet.parent
+        for p in self.players:
             cards.append({'player': p.nickname, 'cards': p.cards})
         return {'showhands': cards}
 
@@ -456,6 +455,7 @@ class Script:
                 if len(pots) == 1:  # only one uncontested_pot
                     yield CollectedMoney(player, unpot.size)
                     street_statemachine.finish()
+                    pots.remove(unpot)
                 else:
                     assert(not uncontested_pots)
                     yield UncalledBet(player, unpot.size)
@@ -472,11 +472,12 @@ class Script:
                 response = yield RiverDealt(self.board, pots)
 
         if pots:
-            print invested_players[0].__class__.__name__
-            invested_players = [b.parent for b in pots.pots[0].contestors]
-            """for p in invested_players:
+            first_pot = pots.pots[0]
+            all_contestors = first_pot.contestors
+            invested_players = [b.parent for b in all_contestors]
+            for p in invested_players:
                 p.cards = card_deck.get_player_hand(p)
-            response = yield ShowHands(invested_players)"""
+            response = yield ShowHands(invested_players)
 
         if False: # if pots
             # show hands
@@ -498,16 +499,14 @@ class Script:
         # DEALER
         #-------------------
         # Add rebuys from table
-        self.table.executePendingRebuys()
+        self.table.execute_pending_rebuys()
 
         # Set everyone with zero stack size to sit out
-        for player in activePlayers:
+        for player in active_players:
             if player.stack == 0:
-                self.table.sitOutPlayer(player)
+                self.table.sit_out_player(player)
 
         if self.table.gameState == table.GameState.Running:
             # Find next dealer
-            self.table.nextDealer()
+            self.table.next_dealer()
 
-if __name__ == '__main__':
-    pass
