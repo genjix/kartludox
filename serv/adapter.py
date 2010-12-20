@@ -72,7 +72,10 @@ class Handler:
             self.displayAct()
         except StopIteration:
             self.adapter.reply('END!!')
-            self.start(self.script)
+            # if adapter stops then this becomes none.
+            if self.script is not None:
+                # restart next hand.
+                self.start(self.script)
     def stop(self):
         self.running = False
         self.script = None
