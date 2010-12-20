@@ -19,7 +19,7 @@ class IllegalRaise:
     def __repr__(self):
         return 'Non-allowed raise %d for:\n%s'%(self.rsize, self.bettor)
 
-class BettingPlayer:
+class BettingPlayer(object):
     """ Represents the betting 'part' of a player.
     Is non static and changes between hands."""
     def __init__(self):
@@ -57,9 +57,11 @@ class BettingPlayer:
         self.parent.stack -= charge
         self.darkbet += charge
 
-    @property
-    def stack(self):
+    def get_stack(self):
         return self.parent.stack
+    def set_stack(self, stack):
+        self.parent.stack = stack
+    stack = property(get_stack, set_stack)
 
     def fold(self):
         self.active = False

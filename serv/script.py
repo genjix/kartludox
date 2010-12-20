@@ -463,6 +463,7 @@ class Script:
                     # Awards it back to them.
                     bettor.darkbet -= unpot.size
                     bettor.stack += unpot.size
+                    assert(bettor.stack == bettor.parent.stack)
 
             street = street_statemachine.current_street
             if street == street_statemachine.Flop:
