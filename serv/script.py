@@ -456,7 +456,7 @@ class Script:
                 if len(pots) == 1:  # only one uncontested_pot
                     yield CollectedMoney(player, unpot.size)
                     street_statemachine.finish()
-                    pots.remove(unpot)
+                    pots.pots.remove(unpot)
                 else:
                     assert(not uncontested_pots)
                     yield UncalledBet(player, unpot.size)
