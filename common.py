@@ -3,7 +3,7 @@ def loadStyleSheet(sheetName):
     file = QFile(sheetName)
     file.open(QFile.ReadOnly)
     styleSheet = file.readAll()
-    return styleSheet
+    return str(styleSheet)
 
 # data dir
 # custom user settings

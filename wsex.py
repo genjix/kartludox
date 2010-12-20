@@ -9,6 +9,8 @@ from twisted.words.protocols import irc
 from twisted.internet import reactor, protocol
 from twisted.python import log
 
+import common
+
 dealername = 'donisto'
 
 class ConnectionDialog(QDialog):
@@ -58,7 +60,7 @@ class Adapter(irc.IRCClient):
         if channel == self.channel:
             if dealername in user:
                 dealmsg = json.loads(msg)
-                if 'dealer' in dealmsg:
+                if 'table' in dealmsg:
                     self.window.set_table(dealmsg)
                 else:
                     print dealmsg
@@ -123,13 +125,86 @@ class TableWindow(QMainWindow):
         self.player_list = QTreeWidget()
         self.player_list.setColumnCount(2)
         self.player_list.setHeaderLabels(['Nickname', 'Stack'])
+        player_dock = QDockWidget(self.tr('Players'))
+        allowed_areas = Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea
+        player_dock.setAllowedAreas(allowed_areas)
+        player_dock.setWidget(self.player_list)
+        self.addDockWidget(Qt.LeftDockWidgetArea, player_dock)
 
-        self.setCentralWidget(self.player_list)
+        notes = QTextEdit()
+        notes_dock = QDockWidget(self.tr("Notes"))
+        allowed_areas = Qt.LeftDockWidgetArea|Qt.RightDockWidgetArea
+        notes_dock.setAllowedAreas(allowed_areas)
+        notes_dock.setWidget(notes)
+        self.addDockWidget(Qt.LeftDockWidgetArea, notes_dock)
+
+        self.blank_card = self.load_card('flipside_black_simple')
+        self.cards = (QLabel(), QLabel())
+        self.cards[0].setPixmap(self.blank_card)
+        self.cards[1].setPixmap(self.blank_card)
+
+        self.fold_button = self.create_action_button('Fold')
+        self.call_button = self.create_action_button('Call')
+        self.raise_button = self.create_action_button('Raise')
+
+        bottom_section = QWidget()
+        bottom_layout = QHBoxLayout(bottom_section)
+        bottom_layout.addStretch()
+        bottom_layout.addWidget(self.cards[0])
+        bottom_layout.addWidget(self.cards[1])
+        bottom_layout.addSpacing(20)
+        bottom_layout.addWidget(self.fold_button)
+        bottom_layout.addWidget(self.call_button)
+        bottom_layout.addWidget(self.raise_button)
+        self.load_bottom_stylesheet(bottom_section)
+
+        self.raise_edit_box = QLineEdit()
+        valid_raise = QDoubleValidator(0.0, -1.0, 2, self.raise_edit_box)
+        self.raise_edit_box.setValidator(valid_raise)
+        self.raise_edit_box.setMaximumSize(40, 28)
+        self.raise_edit_box.setText('1')
+        self.raise_slider = QSlider(Qt.Vertical)
+        self.raise_slider.setTickPosition(self.raise_slider.TicksBelow)
+        slider_layout = QVBoxLayout()
+        slider_layout.addWidget(self.raise_slider)
+        slider_layout.addWidget(self.raise_edit_box)
+
+        self.action_view = QTextEdit()
+
+        top_section = QWidget()
+        top_layout = QHBoxLayout(top_section)
+        top_layout.addWidget(self.action_view)
+        top_layout.addLayout(slider_layout)
+
+        main_widget = QWidget()
+        main_layout = QVBoxLayout(main_widget)
+        main_layout.addWidget(top_section)
+        main_layout.addWidget(bottom_section)
+
+        self.setCentralWidget(main_widget)
         self.show()
+
+    def load_bottom_stylesheet(self, bottom_widget):
+        if QDir.setCurrent('./data/gfx/table/default/'):
+            bottom_widget.setStyleSheet(common.loadStyleSheet('style.css'))
+        QDir.setCurrent('../../../../')
+
+    def create_action_button(self, name):
+        button = QPushButton(name)
+        button.setObjectName(name + 'Button')
+        button.setCheckable(True)
+        button.setSizePolicy(QSizePolicy.Preferred,
+                             QSizePolicy.Minimum)
+        return button
+
+    def load_card(self, cardname):
+        full_path = 'data/gfx/cards/nobus/%s.png'%cardname
+        image = QImage(full_path)
+        return QPixmap.fromImage(image)
 
     def set_table(self, msg):
         players = []
-        for seat in msg['players']:
+        for seat in msg['table']:
             if seat is not None:
                 playname = seat['player']
                 stack = str(seat['stack'])
@@ -144,8 +219,8 @@ class TableWindow(QMainWindow):
 
     def closeEvent(self, event):
         print('Attempting to close the main window!')
-        reactor.stop()
         event.accept()
+        reactor.stop()
 
 if __name__ == '__main__':
     table = TableWindow()
