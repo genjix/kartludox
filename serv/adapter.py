@@ -3,6 +3,9 @@ import json
 import table
 import script
 
+debug_oneman = False
+debug_nick = 'genjix'
+
 class Schedule:
     def __init__(self, message):
         self.started = False
@@ -43,7 +46,10 @@ class Handler:
         players = cardsDealt.players
         for player in players:
             c = cardsDealt.get_player_hand(player)
-            self.adapter.privmsg('genjix', {'cards': c})
+            if not debug_oneman:
+                self.adapter.privmsg(player.nickname, {'cards': c})
+            else:
+                self.adapter.privmsg(debug_nick, {'cards': c})
     def displayAct(self):
         if isinstance(self.currentAct, script.CardsDealt):
             self.pmHands(self.currentAct)
@@ -98,25 +104,25 @@ class Adapter:
         self.cash.setStartupDelayTime(0)
 
         ###
-        self.cash.addPlayer('a', 0)
-        self.cash.addPlayer('b', 1)
-        self.cash.addPlayer('c', 2)
-        self.cash.addPlayer('d', 3)
-        self.cash.addMoney('a', 5000)
-        self.cash.addMoney('b', 5000)
-        self.cash.addMoney('c', 6000)
-        self.cash.addMoney('d', 8000)
-        self.cash.sitIn('a')
-        self.cash.sitIn('b')
-        self.cash.sitIn('c')
-        self.cash.sitIn('d')
-        self.cash.setAutopost('a', True)
-        self.cash.setAutopost('b', True)
-        self.cash.setAutopost('c', True)
-        self.cash.setAutopost('d', True)
-    def msg(self, user, message):
-        print('%s: %s'%(user, message))
+        if debug_oneman:
+            self.cash.addPlayer('a', 0)
+            self.cash.addPlayer('b', 1)
+            self.cash.addPlayer('c', 2)
+            self.cash.addPlayer('d', 3)
+            self.cash.addMoney('a', 5000)
+            self.cash.addMoney('b', 5000)
+            self.cash.addMoney('c', 6000)
+            self.cash.addMoney('d', 8000)
+            self.cash.sitIn('a')
+            self.cash.sitIn('b')
+            self.cash.sitIn('c')
+            self.cash.sitIn('d')
+            self.cash.setAutopost('a', True)
+            self.cash.setAutopost('b', True)
+            self.cash.setAutopost('c', True)
+            self.cash.setAutopost('d', True)
 
+    def debug_strip(self, message):
         message = message.split(' ')
         command = message[0]
         if len(message) > 1:
@@ -128,13 +134,24 @@ class Adapter:
         else:
             player = None
             param = None
+        return player, command, param
 
-        """player = user
+    def strip_message(self, user, message):
+        player = user
         try:
             command, param = message.split(' ')
         except ValueError:
             command = message
-            param = None"""
+            param = None
+        return player, command, param
+
+    def msg(self, user, message):
+        print('%s: %s'%(user, message))
+
+        if debug_oneman:
+            player, command, param = self.debug_strip(message)
+        else:
+            player, command, param = self.strip_message(user, message)
 
         if self.cash is not None:
             print self.cash
