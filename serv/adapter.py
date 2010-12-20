@@ -31,7 +31,7 @@ class Handler:
         self.script = scriptObj
         self.actIter = scriptObj.run()
 
-        self.adapter.reply(json.dumps({'status': 'newhand'}))
+        self.adapter.reply(json.dumps({'status': 'newhand', 'message': ''}))
         self.adapter.show_table()
 
         while not isinstance(self.currentAct, script.Action):
@@ -219,5 +219,5 @@ class Adapter:
         self.prot.msg(self.chan, message)
     def privmsg(self, user, message):
         message['table'] = self.chan
-        self.prot.msg(user, '%s'%message)
+        self.prot.msg(user, '%s'%json.dumps(message))
 

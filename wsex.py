@@ -82,13 +82,35 @@ class Adapter(irc.IRCClient):
                     self.window.set_table(dealmsg)
                 elif 'error' in dealmsg:
                     self.window.report_error(dealmsg)
+                elif 'status' in dealmsg:
+                    self.window.report_status(dealmsg)
+                elif 'actions' in dealmsg:
+                    self.window.allow_actions(dealmsg)
+                elif 'flop' in dealmsg:
+                    self.window.show_flop(dealmsg)
+                elif 'turn' in dealmsg:
+                    self.window.show_turn(dealmsg)
+                elif 'river' in dealmsg:
+                    self.window.show_river(dealmsg)
+                elif 'showhands' in dealmsg:
+                    self.window.show_hands(dealmsg)
+                elif 'showrankings' in dealmsg:
+                    self.window.show_rankings(dealmsg)
+                elif 'collected' in dealmsg:
+                    self.window.show_collected(dealmsg)
+                elif 'uncalled' in dealmsg:
+                    self.window.show_uncalled(dealmsg)
                 else:
                     print dealmsg
             else:
                 if msg[0] == '!':
-                    pass
+                    self.window.show_action(user, msg[1:])
                 else:
                     self.window.chat_message(user, msg)
+        elif channel == self.nickname and user == dealername:
+            dealmsg = json.loads(msg)
+            if 'cards' in dealmsg:
+                self.window.show_hand(dealmsg)
 
     def send_message(self, msg):
         self.msg(self.channel, msg)
@@ -165,12 +187,14 @@ class TableWindow(QMainWindow):
 
         self.blank_card = self.load_card('flipside_black_simple')
         self.cards = (QLabel(), QLabel())
-        self.cards[0].setPixmap(self.blank_card)
-        self.cards[1].setPixmap(self.blank_card)
+        self.blank_cards()
 
         self.fold_button = self.create_action_button('Fold')
+        self.fold_button.clicked.connect(self.fold_clicked)
         self.call_button = self.create_action_button('Call')
+        self.call_button.clicked.connect(self.call_clicked)
         self.raise_button = self.create_action_button('Raise')
+        self.raise_button.clicked.connect(self.raise_clicked)
 
         bottom_section = QWidget()
         bottom_layout = QHBoxLayout(bottom_section)
@@ -217,6 +241,14 @@ class TableWindow(QMainWindow):
         self.connected = False
         self.protocol = None
 
+        self.hide_actions()
+
+        self.current_actions = None
+
+    def blank_cards(self):
+        self.cards[0].setPixmap(self.blank_card)
+        self.cards[1].setPixmap(self.blank_card)
+
     def create_actions(self):
         self.join_action = QAction('Join', self, triggered=self.prompt_join)
         self.join_action.setEnabled(False)
@@ -241,21 +273,24 @@ class TableWindow(QMainWindow):
         prompt.exec_()
         return prompt.number
 
+    def send_command(self, command):
+        self.protocol.msg(self.channel_name, '!%s'%command)
+
     def prompt_join(self):
         if self.protocol:
             seat_num = self.get_number_from_user()
-            self.protocol.msg(self.channel_name, '!join %d'%seat_num)
+            self.send_command('join %d'%seat_num)
             self.buyin_action.setEnabled(True)
 
     def prompt_buyin(self):
         if self.protocol:
             buyin = self.get_number_from_user()
-            self.protocol.msg(self.channel_name, '!buyin %d'%buyin)
+            self.send_command('buyin %d'%buyin)
             self.sitin_action.setEnabled(True)
 
     def prompt_sitin(self):
         if self.protocol:
-            self.protocol.msg(self.channel_name, '!sitin')
+            self.send_command('sitin')
             self.sitin_action.setEnabled(False)
             self.sitout_action.setEnabled(True)
 
@@ -273,7 +308,6 @@ class TableWindow(QMainWindow):
     def create_action_button(self, name):
         button = QPushButton(name)
         button.setObjectName(name + 'Button')
-        button.setCheckable(True)
         button.setSizePolicy(QSizePolicy.Preferred,
                              QSizePolicy.Minimum)
         return button
@@ -299,6 +333,19 @@ class TableWindow(QMainWindow):
                 stack = str(seat['stack'])
                 treeitem = QTreeWidgetItem([playname, stack])
                 players.append(treeitem)
+        if self.new_hand:
+            self.new_hand = False
+            for i, seat in enumerate(msg['table']):
+                if seat is None:
+                    self.add_line('Seat %d: -'%i)
+                else:
+                    stack = seat['stack']
+                    playname = seat['player']
+                    if seat['sittingout']:
+                        playname = '/%s/'%playname
+                    self.add_line('Seat %d: %s (%d BTC)'%(i, playname, stack))
+            dealname = msg['table'][msg['dealer']]['player']
+            self.add_line('%s is the dealer'%dealname)
         self.player_list.clear()
         self.player_list.addTopLevelItems(players)
 
@@ -307,13 +354,177 @@ class TableWindow(QMainWindow):
         errmsg = msg['message']
         self.add_line('<font color="red">%s: %s</font>'%(error, errmsg))
 
+    def report_status(self, msg):
+        status = msg['status']
+        stmsg = msg['message']
+        self.add_line('<b>%s: %s</b>'%(status, stmsg))
+        if status == 'newhand':
+            self.new_hand = True
+            self.blank_cards()
+            self.hide_actions()
+
+    def allow_actions(self, msg):
+        self.hide_actions()
+        if msg['player'] != self.nickname:
+            return
+        actions = msg['actions']
+        if 'postsb' in actions:
+            self.fold_button.setText('SB %d'%actions['postsb'][0])
+            self.fold_button.show()
+        elif 'postbb' in actions:
+            self.fold_button.setText('BB %d'%actions['postbb'][0])
+            self.fold_button.show()
+        elif 'postsbbb' in actions:
+            self.fold_button.setText('SB+BB %d'%actions['postsbbb'][0])
+            self.fold_button.show()
+        else:
+            self.fold_button.setText('Fold')
+            self.fold_button.show()
+            if 'check' in actions:
+                self.call_button.setText('Check')
+                self.call_button.show()
+            elif 'call' in actions:
+                self.call_button.setText('Call %d'%actions['call'][0])
+                self.call_button.show()
+            if 'raise' in actions:
+                raise_range = actions['raise']
+                self.raise_button.setText('Raise %d'%raise_range[0])
+                self.raise_button.show()
+            elif 'bet' in actions:
+                ###
+                pass
+        self.current_actions = actions
+
+    def fold_clicked(self):
+        acts = self.current_actions
+        if 'postsb' in acts:
+            self.send_command('postsb')
+        elif 'postbb' in acts:
+            self.send_command('postbb')
+        elif 'postsbbb' in acts:
+            self.send_command('postsbbb')
+        elif 'fold' in acts:
+            self.send_command('fold')
+        else:
+            raise Exception('no other fold action with this button!')
+
+    def call_clicked(self):
+        acts = self.current_actions
+        if 'check' in acts:
+            self.send_command('check')
+        elif 'call' in acts:
+            self.send_command('call')
+
+    def raise_clicked(self):
+        acts = self.current_actions
+        if 'raise' in acts:
+            self.send_command('raise %d'%acts['raise'][0])
+
+    def hide_actions(self):
+        self.fold_button.hide()
+        self.call_button.hide()
+        self.raise_button.hide()
+
     def chat_message(self, user, msg):
         self.add_line('%s says: %s'%(user, msg))
 
     def add_line(self, line):
         text = self.action_view.toHtml()
-        text = '%s\n%s'%(text, line)
+        text = '%s<br />%s'%(text, line)
         self.action_view.setHtml(text)
+        sb = self.action_view.verticalScrollBar()
+        sb.setSliderPosition(sb.maximum())
+
+    def show_hand(self, msg):
+        hand = msg['cards']
+        for i, card in enumerate(hand):
+            cardpix = self.load_card(card)
+            self.cards[i].setPixmap(cardpix)
+
+    def get_html_card(self, cardname):
+        return "<img src='data/gfx/cards/nobus/%s.png' />"%cardname
+
+    def show_flop(self, msg):
+        c = self.get_html_card
+        flop = msg['flop']
+        pots = msg['pots']
+        total_potsize = 0
+        for p in pots:
+            total_potsize += p['size']
+        self.add_line('<br /><b>Flop</b> (Pot: %d BTC)<br />%s %s %s'%(
+            total_potsize, c(flop[0]), c(flop[1]), c(flop[2])))
+
+    def show_turn(self, msg):
+        c = self.get_html_card
+        flop = msg['turn']
+        pots = msg['pots']
+        total_potsize = 0
+        for p in pots:
+            total_potsize += p['size']
+        self.add_line('<br /><b>Turn</b> (Pot: %d BTC)<br />%s %s %s %s'%(
+            total_potsize, c(flop[0]), c(flop[1]), c(flop[2]), c(flop[3])))
+
+    def show_river(self, msg):
+        c = self.get_html_card
+        flop = msg['river']
+        pots = msg['pots']
+        total_potsize = 0
+        for p in pots:
+            total_potsize += p['size']
+        self.add_line('<br /><b>River</b> (Pot: %d BTC)<br />%s %s %s %s %s'%(
+            total_potsize, c(flop[0]), c(flop[1]), c(flop[2]), c(flop[3]),
+            c(flop[4])))
+
+    def show_action(self, user, msg, hero=False):
+        if 'raise' in msg:
+            msg = msg.split(' ')
+            msg = msg[0], int(msg[1])
+            peract = 'raises to %d'%msg[1]
+        elif 'call' in msg:
+            peract = 'calls'
+        elif 'check' in msg:
+            peract = 'checks'
+        elif 'postsb' in msg:
+            peract = 'posts small blind'
+        elif 'postbb' in msg:
+            peract = 'posts big blind'
+        elif 'postsbbb' in msg:
+            peract = 'posts small and big blind'
+        elif 'fold' in msg:
+            peract = 'folds'
+        elif ('show' in msg or 'join' in msg or 'buyin' in msg):
+            return
+        else:
+            print 'ERROR:', msg
+            peract = None
+        if peract is not None:
+            if hero:
+                self.add_line('<font color="green">%s: %s</font>'%(user, peract))
+            else:
+                self.add_line('%s: %s'%(user, peract))
+
+    def show_hands(self, msg):
+        c = self.get_html_card
+        for contest in msg['showhands']:
+            player = contest['player']
+            cards = contest['cards']
+            self.add_line('%s shows %s %s'%(player, c(cards[0]), c(cards[1])))
+
+    def show_rankings(self, msg):
+        for contest in msg['showrankings']:
+            player = contest['player']
+            handname = contest['handname']
+            self.add_line('%s has %s'%(player, handname))
+
+    def show_collected(self, msg):
+        player = msg['player']
+        amount = msg['collected']
+        self.add_line('%s collected %d BTC from the pot.'%(player, amount))
+
+    def show_uncalled(self, msg):
+        player = msg['player']
+        uncalled = msg['uncalled']
+        self.add_line('Uncalled bet of %d BTC returned to %s.'%(uncalled, player))
 
     def process(self):
         app.processEvents()
