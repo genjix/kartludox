@@ -28,8 +28,8 @@ class Handler:
         self.script = scriptObj
         self.actIter = scriptObj.run()
 
-        self.adapter.show_table()
         self.adapter.reply(json.dumps({'status': 'newhand'}))
+        self.adapter.show_table()
 
         while not isinstance(self.currentAct, script.Action):
             try:
