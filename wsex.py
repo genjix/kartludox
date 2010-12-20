@@ -1,12 +1,15 @@
 from PySide.QtCore import *
 from PySide.QtGui import *
 import sys
+import json
 
 app = QApplication(sys.argv)
 
 from twisted.words.protocols import irc
 from twisted.internet import reactor, protocol
 from twisted.python import log
+
+dealername = 'donisto'
 
 class ConnectionDialog(QDialog):
     def __init__(self, parent):
@@ -31,6 +34,9 @@ class Adapter(irc.IRCClient):
     @property
     def channel(self):
         return self.factory.channel
+    @property
+    def window(self):
+        return self.factory.window
 
     def connectionMade(self):
         irc.IRCClient.connectionMade(self)
@@ -45,11 +51,17 @@ class Adapter(irc.IRCClient):
     def joined(self, channel):
         if channel != self.channel:
             raise Exception('In wrong channel!')
+        self.send_message('!show')
        
     def privmsg(self, user, channel, msg):
         """Called when we receive a message."""
         if channel == self.channel:
-            self.send_message('hello')
+            if dealername in user:
+                dealmsg = json.loads(msg)
+                if 'dealer' in dealmsg:
+                    self.window.set_table(dealmsg)
+                else:
+                    print dealmsg
 
     def send_message(self, msg):
         self.msg(self.channel, msg)
@@ -108,9 +120,23 @@ class TableWindow(QMainWindow):
         fact = AdapterFactory(self)
         reactor.connectTCP(self.network_name, 6667, fact)
 
-        textedit = QTextEdit()
-        self.setCentralWidget(textedit)
+        self.player_list = QTreeWidget()
+        self.player_list.setColumnCount(2)
+        self.player_list.setHeaderLabels(['Nickname', 'Stack'])
+
+        self.setCentralWidget(self.player_list)
         self.show()
+
+    def set_table(self, msg):
+        players = []
+        for seat in msg['players']:
+            if seat is not None:
+                playname = seat['player']
+                stack = str(seat['stack'])
+                treeitem = QTreeWidgetItem([playname, stack])
+                players.append(treeitem)
+        self.player_list.clear()
+        self.player_list.addTopLevelItems(players)
 
     def process(self):
         app.processEvents()
