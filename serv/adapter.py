@@ -29,12 +29,13 @@ class Handler:
         self.actIter = scriptObj.run()
 
         self.adapter.show_table()
+        self.adapter.reply(json.dumps({'status': 'newhand'}))
 
         while not isinstance(self.currentAct, script.Action):
             try:
                 self.currentAct = self.actIter.next()
             except StopIteration:
-                self.adapter.reply('start() END...')
+                #self.adapter.reply('start() END...')
                 raise Exception('Internal Error: script didn\'t do anything!')
             else:
                 self.displayAct()
@@ -71,7 +72,7 @@ class Handler:
                 self.currentAct = self.actIter.next()
             self.displayAct()
         except StopIteration:
-            self.adapter.reply('END!!')
+            #self.adapter.reply('END!!')
             # if adapter stops then this becomes none.
             if self.script is not None:
                 # restart next hand.
