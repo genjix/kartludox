@@ -29,6 +29,22 @@ class ConnectionDialog(QDialog):
         main_layout.addWidget(confirm)
         self.setLayout(main_layout)
 
+class NumberDialog(QDialog):
+    def __init__(self, parent):
+        super(NumberDialog, self).__init__()
+        self.number_edit = QLineEdit('0')
+        confirm = QPushButton('OK')
+        confirm.clicked.connect(self.accept)
+
+        main_layout = QVBoxLayout()
+        main_layout.addWidget(self.number_edit)
+        main_layout.addWidget(confirm)
+        self.setLayout(main_layout)
+    
+    @property
+    def number(self):
+        return int(self.number_edit.text())
+
 class Adapter(irc.IRCClient):        
     @property
     def nickname(self):
@@ -54,16 +70,25 @@ class Adapter(irc.IRCClient):
         if channel != self.channel:
             raise Exception('In wrong channel!')
         self.send_message('!show')
+        self.window.protocol = self
        
     def privmsg(self, user, channel, msg):
         """Called when we receive a message."""
+        user = user.split('!', 1)[0]
         if channel == self.channel:
-            if dealername in user:
+            if dealername == user:
                 dealmsg = json.loads(msg)
                 if 'table' in dealmsg:
                     self.window.set_table(dealmsg)
+                elif 'error' in dealmsg:
+                    self.window.report_error(dealmsg)
                 else:
                     print dealmsg
+            else:
+                if msg[0] == '!':
+                    pass
+                else:
+                    self.window.chat_message(user, msg)
 
     def send_message(self, msg):
         self.msg(self.channel, msg)
@@ -170,6 +195,7 @@ class TableWindow(QMainWindow):
         slider_layout.addWidget(self.raise_edit_box)
 
         self.action_view = QTextEdit()
+        self.action_view.setReadOnly(True)
 
         top_section = QWidget()
         top_layout = QHBoxLayout(top_section)
@@ -182,7 +208,62 @@ class TableWindow(QMainWindow):
         main_layout.addWidget(bottom_section)
 
         self.setCentralWidget(main_widget)
+        self.create_actions()
+        self.create_toolbars()
         self.show()
+
+        # Set by dealer
+        self.new_hand = False
+        self.connected = False
+        self.protocol = None
+
+    def create_actions(self):
+        self.join_action = QAction('Join', self, triggered=self.prompt_join)
+        self.join_action.setEnabled(False)
+        self.buyin_action = QAction('Buyin', self, triggered=self.prompt_buyin)
+        self.buyin_action.setEnabled(False)
+        self.sitin_action = QAction('Sit in', self,
+                                    triggered=self.prompt_sitin)
+        self.sitin_action.setEnabled(False)
+        self.sitout_action = QAction('Sit out', self,
+                                     triggered=self.prompt_sitout)
+        self.sitout_action.setEnabled(False)
+
+    def create_toolbars(self):
+        self.toolbar = self.addToolBar('TableTool')
+        self.toolbar.addAction(self.join_action)
+        self.toolbar.addAction(self.buyin_action)
+        self.toolbar.addAction(self.sitin_action)
+        self.toolbar.addAction(self.sitout_action)
+
+    def get_number_from_user(self):
+        prompt = NumberDialog(self)
+        prompt.exec_()
+        return prompt.number
+
+    def prompt_join(self):
+        if self.protocol:
+            seat_num = self.get_number_from_user()
+            self.protocol.msg(self.channel_name, '!join %d'%seat_num)
+            self.buyin_action.setEnabled(True)
+
+    def prompt_buyin(self):
+        if self.protocol:
+            buyin = self.get_number_from_user()
+            self.protocol.msg(self.channel_name, '!buyin %d'%buyin)
+            self.sitin_action.setEnabled(True)
+
+    def prompt_sitin(self):
+        if self.protocol:
+            self.protocol.msg(self.channel_name, '!sitin')
+            self.sitin_action.setEnabled(False)
+            self.sitout_action.setEnabled(True)
+
+    def prompt_sitout(self):
+        if self.protocol:
+            self.protocol.msg(self.channel_name, '!sitout')
+            self.sitin_action.setEnabled(True)
+            self.sitout_action.setEnabled(False)
 
     def load_bottom_stylesheet(self, bottom_widget):
         if QDir.setCurrent('./data/gfx/table/default/'):
@@ -203,15 +284,36 @@ class TableWindow(QMainWindow):
         return QPixmap.fromImage(image)
 
     def set_table(self, msg):
+        if not self.connected:
+            self.join_action.setEnabled(True)
+            self.connected = True
         players = []
-        for seat in msg['table']:
+        dealer = msg['dealer']
+        for i, seat in enumerate(msg['table']):
             if seat is not None:
                 playname = seat['player']
+                if seat['sittingout']:
+                    playname = '/%s/'%playname
+                if dealer == i:
+                    playname = '* %s'%playname
                 stack = str(seat['stack'])
                 treeitem = QTreeWidgetItem([playname, stack])
                 players.append(treeitem)
         self.player_list.clear()
         self.player_list.addTopLevelItems(players)
+
+    def report_error(self, msg):
+        error = msg['error']
+        errmsg = msg['message']
+        self.add_line('<font color="red">%s: %s</font>'%(error, errmsg))
+
+    def chat_message(self, user, msg):
+        self.add_line('%s says: %s'%(user, msg))
+
+    def add_line(self, line):
+        text = self.action_view.toHtml()
+        text = '%s\n%s'%(text, line)
+        self.action_view.setHtml(text)
 
     def process(self):
         app.processEvents()
