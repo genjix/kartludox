@@ -461,9 +461,9 @@ class Script:
                     assert(not uncontested_pots)
                     yield UncalledBet(player, unpot.size)
                     # Awards it back to them.
-                    bettor.darkbet -= unpot.size
-                    bettor.stack += unpot.size
                     assert(bettor.stack == bettor.parent.stack)
+                bettor.darkbet -= unpot.size
+                bettor.stack += unpot.size
 
             street = street_statemachine.current_street
             if street == street_statemachine.Flop:
