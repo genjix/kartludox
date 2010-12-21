@@ -401,6 +401,8 @@ class TableWindow(QMainWindow):
         self.hide_actions()
         if msg['player'] != self.nickname:
             return
+        self.activateWindow()
+        self.raise_()
         actions = msg['actions']
         if 'postsb' in actions:
             self.fold_button.setText('SB %d'%actions['postsb'][0])

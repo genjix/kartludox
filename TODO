@@ -11,6 +11,7 @@ app remember prev settings
 WANT: panels move the main view.
 WANT: move slider up to avoid misclicking raise.
 
+PRIORITY: simple client for debugging.
 TODO: bet when currentbet = 0
 TODO: wait for BB
 TODO: migrate case/style

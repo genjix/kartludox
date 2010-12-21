@@ -3,7 +3,7 @@ import json
 import table
 import script
 
-debug_oneman = False
+debug_oneman = True
 debug_nick = 'genjix'
 
 class Schedule:
