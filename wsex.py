@@ -217,6 +217,8 @@ class TableWindow(QMainWindow):
         slider_layout = QVBoxLayout()
         slider_layout.addWidget(self.raise_slider)
         slider_layout.addWidget(self.raise_edit_box)
+        self.raise_edit_box.textChanged.connect(self.raise_box_changed)
+        self.raise_slider.valueChanged.connect(self.raise_slider_changed)
 
         self.action_view = QTextEdit()
         self.action_view.setReadOnly(True)
@@ -244,6 +246,35 @@ class TableWindow(QMainWindow):
         self.hide_actions()
 
         self.current_actions = None
+
+    def raising_range(self):
+        if 'raise' in self.current_actions:
+            return self.current_actions['raise']
+        return 1, 1
+
+    def raise_box_changed(self, value):
+        try:
+            value = float(value)
+        except ValueError:
+            return
+        else:
+            ra, rb = self.raising_range()
+            interval = rb - ra
+            if interval == 0:
+                value = ra
+            else:
+                value = 99.0 * (value - ra) / interval
+            self.raise_slider.setValue(round(value))
+
+    def raise_slider_changed(self, value):
+        # Slider is between 0 and 99.
+        ra, rb = self.raising_range()
+        interval = rb - ra
+        i = value / 99.0
+        value = i*interval + ra
+        raise_text = '%.0f'%value
+        self.raise_edit_box.setText(raise_text)
+        self.raise_button.setText('Raise %s'%raise_text)
 
     def blank_cards(self):
         self.cards[0].setPixmap(self.blank_card)
@@ -275,6 +306,9 @@ class TableWindow(QMainWindow):
 
     def send_command(self, command):
         self.protocol.msg(self.channel_name, '!%s'%command)
+        # hack! should never do this!!
+        self.protocol.msg(self.channel_name, '!show')
+        self.show_action(self.nickname, command)
 
     def prompt_join(self):
         if self.protocol:
@@ -388,8 +422,12 @@ class TableWindow(QMainWindow):
                 self.call_button.show()
             if 'raise' in actions:
                 raise_range = actions['raise']
-                self.raise_button.setText('Raise %d'%raise_range[0])
+                raise_text = str(raise_range[0])
+                self.raise_button.setText('Raise %s'%raise_text)
+                self.raise_edit_box.setText(raise_text)
                 self.raise_button.show()
+                self.raise_edit_box.show()
+                self.raise_slider.show()
             elif 'bet' in actions:
                 ###
                 pass
@@ -418,12 +456,19 @@ class TableWindow(QMainWindow):
     def raise_clicked(self):
         acts = self.current_actions
         if 'raise' in acts:
-            self.send_command('raise %d'%acts['raise'][0])
+            try:
+                bet = int(self.raise_edit_box.text())
+            except ValueError:  
+                self.send_command('raise %d'%acts['raise'][0])
+            else:
+                self.send_command('raise %d'%bet)
 
     def hide_actions(self):
         self.fold_button.hide()
         self.call_button.hide()
         self.raise_button.hide()
+        self.raise_edit_box.hide()
+        self.raise_slider.hide()
 
     def chat_message(self, user, msg):
         self.add_line('%s says: %s'%(user, msg))
@@ -494,6 +539,14 @@ class TableWindow(QMainWindow):
             peract = 'folds'
         elif ('show' in msg or 'join' in msg or 'buyin' in msg):
             return
+        elif 'sitin' in msg:
+            peract = 'sits in'
+        elif 'sitout' in msg:
+            peract = 'sits out'
+        elif 'buyin' in msg:
+            msg = msg.split(' ')
+            msg = msg[0], int(msg[1])
+            peract = 'adds %d to the table.'%msg[1]
         else:
             print 'ERROR:', msg
             peract = None
