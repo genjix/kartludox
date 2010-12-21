@@ -61,7 +61,8 @@ class Handler:
         if player is None:
             self.adapter.reply('You didn\'t specify a player.')
             return
-        elif player != self.currentAct.player.nickname:
+        elif (isinstance(self.currentAct, script.Action) and
+              player != self.currentAct.player.nickname):
             # People are allowed to sit out, out of turn
             if (response[0] != script.Action.SitOut and
                 response[0] != script.Action.AutopostBlinds):
