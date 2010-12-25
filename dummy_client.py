@@ -152,6 +152,7 @@ class Screen:
         self.lines = []
         self.input_text = ''
         self.adapter = None
+        self.offset = 0
 
         curses.start_color()
         curses.use_default_colors()
@@ -179,11 +180,13 @@ class Screen:
         self.stdscr.border(0)
         window_rows = self.rows - 3
         for i in range(window_rows):
-            lindex = i
+            lindex = i + self.offset
             if len(self.lines) > window_rows:
                 lindex += len(self.lines) - window_rows
             if lindex >= len(self.lines):
                 break
+            elif lindex < 0:
+                self.stdscr.addstr(i + 1, 1, '', self.Normal)
             else:
                 col, line = self.lines[lindex]
                 self.stdscr.addstr(i + 1, 1, line, col)
@@ -214,6 +217,16 @@ class Screen:
                     self.add_line(self.Speech, speech)
                 self.adapter.speak(self.input_text)
                 self.input_text = ''
+        elif c == curses.KEY_DOWN:
+            self.offset += 1
+        elif c == curses.KEY_UP:
+            self.offset -= 1
+        elif c == curses.KEY_PPAGE:
+            self.offset -= 10
+        elif c == curses.KEY_NPAGE:
+            self.offset += 10
+        elif c > 256:
+            return
         else:
             if len(self.input_text) < self.columns - 3:
                 self.input_text += chr(c)
