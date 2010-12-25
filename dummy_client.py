@@ -232,7 +232,7 @@ if __name__ == '__main__':
     stdscr = curses.initscr()
     screen = Screen(stdscr)
     stdscr.refresh()
-    factory = AdapterFactory('#pangaea', 'genjix', screen)
+    factory = AdapterFactory('#pangaea', 'zipio', screen)
     reactor.addReader(screen)
     reactor.connectTCP('irc.freenode.org', 6667, factory)
     reactor.run()

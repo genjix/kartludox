@@ -4,7 +4,7 @@ import table
 import script
 
 debug_oneman = True
-debug_nick = 'genjix'
+debug_nick = 'zipio'
 
 class Schedule:
     def __init__(self, message):
