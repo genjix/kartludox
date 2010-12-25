@@ -398,7 +398,7 @@ class Script:
         yield CardsDealt(active_players, card_deck.get_player_hand)
 
         street_statemachine = StreetStateMachine2(active_players, self.board,
-                                            card_deck.new_card)
+                                                  card_deck.new_card)
 
         pots = None
         while not street_statemachine.finished():

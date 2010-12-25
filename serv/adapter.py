@@ -31,7 +31,8 @@ class Handler:
         self.script = scriptObj
         self.actIter = scriptObj.run()
 
-        self.adapter.reply(json.dumps({'status': 'newhand', 'message': ''}))
+        self.adapter.reply(json.dumps({'status': 'newhand',
+                                       'message': '989332122236'}))
         self.adapter.show_table()
 
         while not isinstance(self.currentAct, script.Action):
@@ -173,7 +174,8 @@ class Adapter:
             else:
                 seats.append({'player': s.nickname, 'stack': s.stack,
                               'sittingout': s.sitting_out})
-        notate['table'] = seats
+        notate['seats'] = seats
+        notate['table'] = self.chan
         self.reply(json.dumps(notate))
 
     def runCommand(self, player, command, param):
