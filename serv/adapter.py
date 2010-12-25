@@ -175,7 +175,7 @@ class Adapter:
                 seats.append({'player': s.nickname, 'stack': s.stack,
                               'sittingout': s.sitting_out})
         notate['seats'] = seats
-        notate['table'] = self.chan
+        #notate['table'] = self.chan
         self.reply(json.dumps(notate))
 
     def runCommand(self, player, command, param):
