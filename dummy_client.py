@@ -242,10 +242,15 @@ class Screen:
         curses.endwin()
 
 if __name__ == '__main__':
+    import sys
+    if len(sys.argv) > 1:
+        nickname = sys.argv[1]
+    else:
+        nickname = 'zipio'
     stdscr = curses.initscr()
     screen = Screen(stdscr)
     stdscr.refresh()
-    factory = AdapterFactory('#pangaea', 'zipio', screen)
+    factory = AdapterFactory('#pangaea', nickname, screen)
     reactor.addReader(screen)
     reactor.connectTCP('irc.freenode.org', 6667, factory)
     reactor.run()
