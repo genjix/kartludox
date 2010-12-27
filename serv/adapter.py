@@ -188,15 +188,30 @@ class Adapter:
 
     def runCommand(self, player, command, param):
         if command == 'join':
-            self.cash.addPlayer(player, int(param))
+            seat = int(param)
+            self.cash.addPlayer(player, seat)
+            joined = {'update': 'playerjoin',
+                      'player': player, 'seat': seat}
+            self.reply(json.dumps(joined))
         elif command == 'buyin':
-            if not self.cash.addMoney(player, int(param)):
-                self.reply('Rebuy will be added after current hand.')
+            buyin = int(param)
+            seat, player_object = self.cash.lookupPlayer(player)
+            if not self.cash.addMoney(player_object, buyin):
+                buyin = {'update': 'rebuyafterhand', 'player': player,
+                         'buyin': buyin}
+            else:
+                buyin = {'update': 'playerbuyin', 'player': player,
+                         'stack': player_object.stack, 'buyin': buyin}
+            self.reply(json.dumps(buyin))
         elif command == 'sitin':
             self.cash.sitIn(player)
+            sitin = {'update': 'playersitin', 'player': player}
+            self.reply(json.dumps(sitin))
         elif command == 'sitout':
             self.cash.sitOut(player)
             self.handler.update(player, (script.Action.SitOut,))
+            sitout = {'update': 'playersitout', 'player': player}
+            self.reply(json.dumps(sitout))
         elif command == 'autopost':
             self.cash.setAutopost(player, True)
             self.handler.update(player, (script.Action.AutopostBlinds,))
@@ -218,13 +233,6 @@ class Adapter:
             self.handler.update(player, (script.Action.Raise, int(param)))
         elif command == 'show':
             self.show_table()
-
-        # debug command only
-        elif command == 'ereg':
-            self.cash.addPlayer(player, int(player))
-            if not self.cash.addMoney(player, int(player)):
-                self.reply('Rebuy will be added after current hand.')
-            self.cash.sitIn(player)
 
     def reply(self, message):
         self.prot.msg(self.chan, message)

@@ -212,13 +212,12 @@ class Table:
             raise self.SeatTaken(seat, self.seats[seat].nickname)
         self.seats[seat] = Player(nickname)
 
-    def addMoney(self, nickname, amount):
+    def addMoney(self, player, amount):
         """Remember that amount is in terms of tiny bb, not real money.
         If player is sitting in and playing, it is added to a list
         for until after the current hand is finished.
         returns True when money has been added.
         returns False when money will be added after current hand."""
-        seat, player = self.lookupPlayer(nickname)
         # Protect against silliness
         if amount < 0:
             raise Table.BuyinNegative(amount, player.stack)
