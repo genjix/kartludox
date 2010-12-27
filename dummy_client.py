@@ -20,9 +20,6 @@ class Adapter(irc.IRCClient):
     def dealer_name(self):
         return 'donisto'
 
-    def gather_input(self):
-        return ''
-
     def signedOn(self):
         """Called when bot has succesfully signed on to server."""
         self.join(self.channel)
@@ -85,10 +82,6 @@ class Adapter(irc.IRCClient):
                         self.screen.add_line(self.screen.DealerSpecial, line)
                     else:
                         self.screen.add_line(self.screen.Dealer, line)
-                if 'actions' in frame and frame['player'] == self.nickname:
-                    response = self.gather_input()
-                    self.speak(response)
-                    self.screen.add_line(self.screen.Action, '> %s'%response)
         else:
             if msg[0] == '!':
                 self.screen.add_line(self.screen.Action, 
@@ -132,6 +125,13 @@ class Screen:
     def columns(self):
         return self.stdscr.getmaxyx()[1]
 
+    @property
+    def nickname(self):
+        if self.adapter is not None:
+            return self.adapter.nickname
+        else:
+            return ''
+
     Normal = 1
     Speech = 2
     Dealer = 3
@@ -139,6 +139,7 @@ class Screen:
     Action = 5
     Error = 6
     Private = 7
+    Nickname = 8
 
     def __init__(self, stdscr):
         self.stdscr = stdscr
@@ -165,11 +166,14 @@ class Screen:
         curses.init_pair(self.Error, curses.COLOR_RED, -1)
         curses.init_pair(self.Private,
                          curses.COLOR_BLACK, curses.COLOR_WHITE)
+        curses.init_pair(self.Nickname, curses.COLOR_BLACK, curses.COLOR_WHITE)
 
         self.redisplay()
 
     def set_adapter(self, adapter):
         self.adapter = adapter
+        self.redisplay_nickname()
+        self.stdscr.refresh()
     
     def add_line(self, colour, text):
         colour = curses.color_pair(colour)
@@ -191,7 +195,13 @@ class Screen:
                 col, line = self.lines[lindex]
                 self.stdscr.addstr(i + 1, 1, line, col)
         self.redisplay_input()
+        self.redisplay_nickname()
         self.stdscr.refresh()
+
+    def redisplay_nickname(self):
+        nickpos = self.columns - len(self.nickname) - 2
+        self.stdscr.addstr(1, nickpos, self.nickname,
+                           curses.color_pair(self.Nickname))
 
     def redisplay_input(self):
         # paint grey background box
