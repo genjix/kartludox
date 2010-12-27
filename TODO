@@ -11,13 +11,15 @@ app remember prev settings
 WANT: panels move the main view.
 WANT: move slider up to avoid misclicking raise.
 
-PRIORITY: simple client for debugging.
 TODO: bet when currentbet = 0
 TODO: wait for BB
 TODO: migrate case/style
 TODO: timebank
 TODO: timeToDie/player leaving channel (auto sitout, set timetodie)
 TODO: log HH for debugging purposes
+TODO: non-transient player commands should have a success response confirming action.
+BUG: uncalled bet amount, not totally accurate always (or is it?... check this.)
+BUG: IllegalRaise should not crash the game.
 
 tab show hide/panel. focus on notes.
 
