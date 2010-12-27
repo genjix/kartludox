@@ -3,7 +3,7 @@ import json
 import table
 import script
 
-debug_oneman = True
+debug_oneman = False
 debug_nick = 'zipio'
 
 class Schedule:
@@ -39,8 +39,9 @@ class Handler:
             try:
                 self.currentAct = self.actIter.next()
             except StopIteration:
-                #self.adapter.reply('start() END...')
-                raise Exception('Internal Error: script didn\'t do anything!')
+                emptyscript = {'internalerror': 'emptyscript',
+                               'message': "script didn't do anything!"}
+                self.adapter.reply(json.dumps(emptyscript))
             else:
                 self.displayAct()
     def pmHands(self, cardsDealt):
@@ -60,14 +61,19 @@ class Handler:
         if not self.running:
             return
         if player is None:
-            self.adapter.reply('You didn\'t specify a player.')
+            # Only valid for debugging!
+            noplay = {'error': 'noplayer',
+                      'message': "You didnt't specify a player."}
+            self.adapter.reply(json.dumps(noplay))
             return
         elif (isinstance(self.currentAct, script.Action) and
               player != self.currentAct.player.nickname):
             # People are allowed to sit out, out of turn
             if (response[0] != script.Action.SitOut and
                 response[0] != script.Action.AutopostBlinds):
-                self.adapter.reply('Don\'t act out of turn!')
+                outturn = {'error': 'notyourturn',
+                           'message': "Don't act out of turn."}
+                self.adapter.reply(json.dumps(outturn))
             return
         if response[0] not in self.currentAct.actionNames():
             self.displayAct()
@@ -158,6 +164,8 @@ class Adapter:
         if self.cash is not None:
             print self.cash
 
+        # Make command lower case for clumsy users
+        command = command.lower()
         try:
             self.runCommand(player, command, param)
         except Exception as e:
