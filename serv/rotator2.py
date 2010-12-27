@@ -1,14 +1,14 @@
 import itertools
 
-class AllIn:
+class AllIn(Exception):
     """Exception for when a player is all-in."""
     def __init__(self, bettor):
         self.bettor = bettor
-    def __repr__(self):
+    def __str__(self):
         b = self.bettor
-        return '%s is all-in for %d'%(b.parent.nickname, b.bet)
+        return '%s is all-in for %d'%(b.nickname, b.bet)
 
-class IllegalRaise:
+class IllegalRaise(Exception):
     """Exception for an illegal raise size. Either:
       - Not allowed to raise.
       - Raise below the minimum.
@@ -16,8 +16,9 @@ class IllegalRaise:
     def __init__(self, bettor, rsize):
         self.bettor = bettor
         self.rsize = rsize
-    def __repr__(self):
-        return 'Non-allowed raise %d for:\n%s'%(self.rsize, self.bettor)
+    def __str__(self):
+        return 'Non-allowed raise %d for %s'%(self.rsize,
+                                                self.bettor.nickname)
 
 class BettingPlayer(object):
     """ Represents the betting 'part' of a player.
@@ -63,6 +64,10 @@ class BettingPlayer(object):
         self.parent.stack = stack
     stack = property(get_stack, set_stack)
 
+    @property
+    def nickname(self):
+        return self.parent.nickname
+
     def fold(self):
         self.active = False
 
@@ -92,7 +97,7 @@ class BettingPlayer(object):
 
     def __repr__(self):
         srep = '%s stack=%d bets=(%d, %d) active=%s\n'%\
-                    (self.parent.nickname, self.parent.stack, self.bet,
+                    (self.nickname, self.parent.stack, self.bet,
                      self.darkbet, self.active)
         srep += 'call=%d'%self.call_price
         if self.can_raise:
