@@ -74,9 +74,11 @@ class Handler:
                 outturn = {'error': 'notyourturn',
                            'message': "Don't act out of turn."}
                 self.adapter.reply(json.dumps(outturn))
-            return
+                return
         if response[0] not in self.currentAct.actionNames():
-            self.displayAct()
+            invalidact = {'error': 'invalidaction',
+                          'message': 'Invalid action specified.'}
+            self.adapter.reply(json.dumps(invalidact))
             return
         try:
             self.currentAct = self.actIter.send(response)
