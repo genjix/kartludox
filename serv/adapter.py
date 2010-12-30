@@ -213,10 +213,11 @@ class Adapter:
             sitin = {'update': 'playersitin', 'player': player}
             self.reply(json.dumps(sitin))
         elif command == 'sitout':
-            self.cash.sitOut(player)
-            self.handler.update(player, (script.Action.SitOut,))
+            # sitting out should always happen before the action itself
             sitout = {'update': 'playersitout', 'player': player}
             self.reply(json.dumps(sitout))
+            self.cash.sitOut(player)
+            self.handler.update(player, (script.Action.SitOut,))
         elif command == 'autopost':
             self.cash.setAutopost(player, True)
             self.handler.update(player, (script.Action.AutopostBlinds,))
