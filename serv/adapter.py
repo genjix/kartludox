@@ -99,6 +99,9 @@ class Handler:
         self.actIter = None
         self.currentAct = None
         # award pot to remaining player sitting in.
+        gamestopped = {'update': 'gamestopped',
+                       'message': 'Game halted.'}
+        self.adapter.reply(json.dumps(gamestopped))
         print 'stopped'
 
 class Adapter:
