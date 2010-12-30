@@ -7,14 +7,14 @@ debug_oneman = False
 debug_nick = 'zipio'
 
 class Schedule:
-    def __init__(self, message):
+    def __init__(self, send_json):
         self.started = False
-        self.message = message
+        self.send_json = send_json
     def callback(self, functor, secs):
         # If already scheduled then make sure not to schedule event twice.
         if not self.started:
             msg = 'A new game will begin in %d seconds.'%secs
-            self.message(json.dumps({'update': 'newgame', 'message': msg}))
+            self.send_json({'update': 'newgame', 'message': msg})
         started = True
         reactor.callLater(secs, functor)
     def clear(self):
@@ -31,8 +31,8 @@ class Handler:
         self.script = scriptObj
         self.actIter = scriptObj.run()
 
-        self.adapter.reply(json.dumps({'update': 'newhand',
-                                       'message': '989332122236'}))
+        self.send_json({'update': 'newhand',
+                                       'message': '989332122236'})
         self.adapter.show_table()
 
         while not isinstance(self.currentAct, script.Action):
@@ -41,7 +41,7 @@ class Handler:
             except StopIteration:
                 emptyscript = {'internalerror': 'emptyscript',
                                'message': "script didn't do anything!"}
-                self.adapter.reply(json.dumps(emptyscript))
+                self.send_json(emptyscript)
             else:
                 self.displayAct()
     def pmHands(self, cardsDealt):
@@ -56,7 +56,7 @@ class Handler:
         if isinstance(self.currentAct, script.CardsDealt):
             self.pmHands(self.currentAct)
         else:
-            self.adapter.reply(json.dumps(self.currentAct.notation()))
+            self.send_json(self.currentAct.notation())
     def update(self, player, response):
         if not self.running:
             return
@@ -64,7 +64,7 @@ class Handler:
             # Only valid for debugging!
             noplay = {'error': 'noplayer',
                       'message': "You didnt't specify a player."}
-            self.adapter.reply(json.dumps(noplay))
+            self.send_json(noplay)
             return
         elif (isinstance(self.currentAct, script.Action) and
               player != self.currentAct.player.nickname):
@@ -73,12 +73,12 @@ class Handler:
                 response[0] != script.Action.AutopostBlinds):
                 outturn = {'error': 'notyourturn',
                            'message': "Don't act out of turn."}
-                self.adapter.reply(json.dumps(outturn))
+                self.send_json(outturn)
                 return
         if response[0] not in self.currentAct.actionNames():
             invalidact = {'error': 'invalidaction',
                           'message': 'Invalid action specified.'}
-            self.adapter.reply(json.dumps(invalidact))
+            self.send_json(invalidact)
             return
         try:
             self.currentAct = self.actIter.send(response)
@@ -88,7 +88,6 @@ class Handler:
                 self.currentAct = self.actIter.next()
             self.displayAct()
         except StopIteration:
-            #self.adapter.reply('END!!')
             # if adapter stops then this becomes none.
             if self.script is not None:
                 # restart next hand.
@@ -101,8 +100,10 @@ class Handler:
         # award pot to remaining player sitting in.
         gamestopped = {'update': 'gamestopped',
                        'message': 'Game halted.'}
-        self.adapter.reply(json.dumps(gamestopped))
-        print 'stopped'
+        self.send_json(gamestopped)
+
+    def send_json(self, notation):
+        self.adapter.send_json(notation)
 
 class Adapter:
     def __init__(self, prot, chan):
@@ -111,7 +112,7 @@ class Adapter:
         self.prot = prot
         self.chan = chan
         self.cash = table.Table(9, 0.25, 0.5, 0, 5000, 25000)
-        self.cash.registerScheduler(Schedule(self.reply))
+        self.cash.registerScheduler(Schedule(self.send_json))
         self.handler = Handler(self)
         self.cash.registerHandler(self.handler)
         self.cash.setStartupDelayTime(0)
@@ -174,8 +175,8 @@ class Adapter:
         try:
             self.runCommand(player, command, param)
         except Exception as e:
-            self.reply(json.dumps({'error': e.__class__.__name__,
-                                   'message': str(e)}))
+            self.dump_json({'error': e.__class__.__name__,
+                            'message': str(e)})
             raise
 
     def show_table(self):
@@ -189,7 +190,7 @@ class Adapter:
                               'sittingout': s.sitting_out})
         notate['seats'] = seats
         #notate['table'] = self.chan
-        self.reply(json.dumps(notate))
+        self.send_json(notate)
 
     def runCommand(self, player, command, param):
         if command == 'join':
@@ -197,7 +198,7 @@ class Adapter:
             self.cash.addPlayer(player, seat)
             joined = {'update': 'playerjoin',
                       'player': player, 'seat': seat}
-            self.reply(json.dumps(joined))
+            self.send_json(joined)
         elif command == 'buyin':
             buyin = int(param)
             seat, player_object = self.cash.lookupPlayer(player)
@@ -207,15 +208,15 @@ class Adapter:
             else:
                 buyin = {'update': 'playerbuyin', 'player': player,
                          'stack': player_object.stack, 'buyin': buyin}
-            self.reply(json.dumps(buyin))
+            self.send_json(buyin)
         elif command == 'sitin':
             self.cash.sitIn(player)
             sitin = {'update': 'playersitin', 'player': player}
-            self.reply(json.dumps(sitin))
+            self.send_json(sitin)
         elif command == 'sitout':
             # sitting out should always happen before the action itself
             sitout = {'update': 'playersitout', 'player': player}
-            self.reply(json.dumps(sitout))
+            self.send_json(sitout)
             self.cash.sitOut(player)
             self.handler.update(player, (script.Action.SitOut,))
         elif command == 'autopost':
@@ -240,8 +241,9 @@ class Adapter:
         elif command == 'show':
             self.show_table()
 
-    def reply(self, message):
-        self.prot.msg(self.chan, message)
+    def send_json(self, notation):
+        self.prot.msg(self.chan, json.dumps(notation))
+
     def privmsg(self, user, message):
         message['table'] = self.chan
         self.prot.msg(user, '%s'%json.dumps(message))
