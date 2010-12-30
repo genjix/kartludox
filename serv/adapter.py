@@ -14,7 +14,7 @@ class Schedule:
         # If already scheduled then make sure not to schedule event twice.
         if not self.started:
             msg = 'A new game will begin in %d seconds.'%secs
-            self.message(json.dumps({'status': 'newgame', 'message': msg}))
+            self.message(json.dumps({'update': 'newgame', 'message': msg}))
         started = True
         reactor.callLater(secs, functor)
     def clear(self):
@@ -31,7 +31,7 @@ class Handler:
         self.script = scriptObj
         self.actIter = scriptObj.run()
 
-        self.adapter.reply(json.dumps({'status': 'newhand',
+        self.adapter.reply(json.dumps({'update': 'newhand',
                                        'message': '989332122236'}))
         self.adapter.show_table()
 
