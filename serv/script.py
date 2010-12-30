@@ -373,7 +373,6 @@ class Script:
         for player in active_seats:
             bettor = rotator2.BettingPlayer()
             player.link(bettor)
-            player.newBetPart()
 
         self.small_blind = self.table.sb
         self.big_blind = table.convFact

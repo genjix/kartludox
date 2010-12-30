@@ -112,10 +112,10 @@ class Adapter:
         self.prot = prot
         self.chan = chan
         self.cash = table.Table(9, 0.25, 0.5, 0, 5000, 25000)
-        self.cash.registerScheduler(Schedule(self.send_json))
+        self.cash.register_scheduler(Schedule(self.send_json))
         self.handler = Handler(self)
-        self.cash.registerHandler(self.handler)
-        self.cash.setStartupDelayTime(0)
+        self.cash.register_handler(self.handler)
+        self.cash.startup_delay_time = 0
 
         ###
         if debug_oneman:
@@ -175,7 +175,7 @@ class Adapter:
         try:
             self.runCommand(player, command, param)
         except Exception as e:
-            self.dump_json({'error': e.__class__.__name__,
+            self.send_json({'error': e.__class__.__name__,
                             'message': str(e)})
             raise
 
