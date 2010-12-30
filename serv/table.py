@@ -4,14 +4,14 @@ random.seed(time.time())
 import script
 
 convFact = 100
-def tiny_to_real(tinybb, bigblind):
+def tinyToReal(tinybb, bigBlind):
     """All calculations are done in terms of tiny bb's.
     A tiny bb = 1 bb / 100
     This function converts from tiny bb -> real money"""
-    return tinybb * bigblind / float(convFact)
-def real_to_tiny(real, bigblind):
+    return tinybb * bigBlind / float(convFact)
+def realToTiny(real, bigBlind):
     """See tinyToReal."""
-    return int(real * convFact / float(bigblind))
+    return int(real * convFact / float(bigBlind))
 
 class Player(object):
     PaidNothing = 0
@@ -19,22 +19,42 @@ class Player(object):
     PaidBB = 2
     PaidSBBB = 3
 
-    PAID_NOTHING = 0
-    WAITING_BB = 1
-    PAID_BB = 2
-    PAID_SB_BB = 3
+    class PaidState:
+        Nothing = 0
+        WaitingBB = 1
+        PaidBB = 2
+        PaidSBBB = 3
 
-    @classmethod
-    def paid_repr(cls, state):
-        if state == cls.PAID_NOTHING:
-            return '-'
-        elif state == cls.WAITING_BB:
-            return '*'
-        elif state == cls.PAID_BB:
-            return 'bb'
-        elif state == cls.PAID_SB_BB:
-            return 'sb/bb'
-        raise Exception('Internal Error: No such paid state %i')
+        @classmethod
+        def strRepr(cls, state):
+            if state == cls.Nothing:
+                return '-'
+            elif state == cls.WaitingBB:
+                return '*'
+            elif state == cls.PaidBB:
+                return 'bb'
+            elif state == cls.PaidSBBB:
+                return 'sb/bb'
+            raise Exception('Internal Error: No such paid state %i')
+
+    class Bets:
+        def __init__(self, parent):
+            self.parent = parent
+            self.betPlaced = 0
+            self.stillActive = True
+            self.isAllIn = False
+            # Bets not counted in the playing like antes
+            self.darkBet = 0
+
+        def pay(self, charge):
+            self.parent.stack -= charge
+            self.betPlaced += charge
+        def payDark(self, charge):
+            self.parent.stack -= charge
+            self.darkBet += charge
+
+        def __repr__(self):
+            return self.parent.nickname
 
     class Settings:
         def __init__(self, parent):
@@ -44,12 +64,28 @@ class Player(object):
     def __init__(self, nickname):
         self.nickname = nickname
         self.stack = 0
-        self.paid_state = Player.PAID_NOTHING
-        self.sitting_out = True
+        self.paidState = Player.PaidState.Nothing
+        self.sitOut = True
         self.cards = None
         # Stores bets and actions by player
+        self.betPart = None
         self.bettor = None
         self.settings = self.Settings(self)
+
+    def get_sitting_out(self):
+        return self.sitOut
+    def set_sitting_out(self, sitout):
+        self.sitOut = sitout
+    sitting_out = property(get_sitting_out, set_sitting_out)
+
+    def get_paid_state(self):
+        return self.paidState
+    def set_paid_state(self, paidstate):
+        self.paidState = paidstate
+    paid_state = property(get_paid_state, set_paid_state)
+
+    def newBetPart(self):
+        self.betPart = self.Bets(self)
 
     def link(self, bettor):
         self.bettor = bettor
@@ -57,14 +93,12 @@ class Player(object):
 
     def __repr__(self):
         if self.cards:
-            cards_repr = '[%s %s]'%self.cards
+            cardsRepr = '[%s %s]'%self.cards
         else:
-            cards_repr = '[--]'
-        sitout_str = self.sitting_out and 'Out' or 'In'
-        paids_str = Player.paid_repr(self.paid_state)
-        return '%s (%g bb) %s Sitting %s %s'%(self.nickname, self.stack/100.0,
-                                              cards_repr, sitout_str,
-                                              paids_str)
+            cardsRepr = '[--]'
+        return '%s (%g bb) %s Sitting %s %s'%(self.nickname, self.stack/100.0, \
+            cardsRepr, self.sitOut and 'Out' or 'In',
+            Player.PaidState.strRepr(self.paidState))
 
 class Schedule:
     def __init__(self):
@@ -86,10 +120,10 @@ class Handler:
         print 'stop'
 
 class GameState:
-    STOPPED = 0
-    STARTING = 1
-    RUNNING = 2
-    HALTING = 3
+    Stopped = 0
+    Starting = 1
+    Running = 2
+    Halting = 3
 
 class Table:
     class InvalidSeat(Exception):
@@ -133,38 +167,41 @@ class Table:
             self.minimum = minimum
         def __str__(self):
             tc = convFact
-            s = "Buyin from '%s' of %d bb doesn't meet table minimum of %d bb"
-            return s%(self.nickname, self.amount / tc, self.minimum / tc)
+            return "Buyin from '%s' of %d bb doesn't meet table minimum of %d bb"%\
+                (self.nickname, self.amount / tc, self.minimum / tc)
 
-    def __init__(self, numPlayers, sb, bb, ante, min_buyin, max_buyin):
+    def __init__(self, numPlayers, sb, bb, ante, minBuyin, maxBuyin):
         self.numPlayers = numPlayers
         # Only the BB is in real money terms.
         self.bb = bb
         # There's no use keeping the SB value in real money terms,
         # so we convert it to tiny bb internally.
-        self.sb = real_to_tiny(sb, bb)
-        self.ante = real_to_tiny(ante, bb)
-        self.min_buyin = min_buyin
-        self.max_buyin = max_buyin
+        self.sb = realToTiny(sb, bb)
+        self.ante = realToTiny(ante, bb)
+        self.minBuyin = minBuyin
+        self.maxBuyin = maxBuyin
         self.seats = [None for x in range(numPlayers)]
         self.dealer = None
-        self.game_state = GameState.STOPPED
+        self.gameState = GameState.Stopped
         self.scheduler = None
         self.handler = None
         # Delay until new game is started to allow
         # players to join a game when a bunch of people sit in
-        self.startup_delay_time = 8
+        self.gameStartupDelayTime = 8
         # rebuy list of (player, amount) tuples
         # at end of hand these are added to players stacks
         self.rebuys = []
-    def register_scheduler(self, scheduler):
+    def registerScheduler(self, scheduler):
         """The scheduler provides the mechanism to have a function
         called at some later time."""
         self.scheduler = scheduler
-    def register_handler(self, handler):
+    def registerHandler(self, handler):
         """The handler is notified when the game starts. It passes
         responses from wherever back to the script."""
         self.handler = handler
+
+    def setStartupDelayTime(self, delay):
+        self.gameStartupDelayTime = delay
 
     def addPlayer(self, nickname, seat):
         """New players are automatically sat out when joining a table,
@@ -186,7 +223,7 @@ class Table:
             raise Table.BuyinNegative(amount, player.stack)
 
         # if sitting out or no game running, then buyin
-        if player.sitting_out or self.game_state != GameState.RUNNING:
+        if player.sitOut or self.gameState != GameState.Running:
             self.addMoneyPlayer(player, amount)
             return True
 
@@ -197,12 +234,12 @@ class Table:
         """Actually do the rebuy and add the money."""
 
         # When you first sit in you must rebuy to above a minimum
-        if player.stack == 0 and amount < self.min_buyin:
-            raise Table.BuyinTooSmall(player, amount, self.min_buyin)
+        if player.stack == 0 and amount < self.minBuyin:
+            raise Table.BuyinTooSmall(player, amount, self.minBuyin)
 
         totalStack = player.stack + amount
-        if totalStack > self.max_buyin:
-            totalStack = self.max_buyin
+        if totalStack > self.maxBuyin:
+            totalStack = self.maxBuyin
 
         self.debitPlayer(player, totalStack - player.stack)
 
@@ -222,7 +259,7 @@ class Table:
         seat, player = self.lookupPlayer(nickname)
         if player.stack == 0:
             raise Table.NotBoughtIn(nickname)
-        player.sitting_out = False
+        player.sitOut = False
         # schedule new game to start if need be.
         self.checkState()
 
@@ -230,13 +267,15 @@ class Table:
         """Sit player out.
         If seated players drops below 2 then game stops running."""
         seat, player = self.lookupPlayer(nickname)
-        self.sit_out_player(player)
+        self.sitOutPlayer(player)
 
     def sit_out_player(self, player):
         """Sit player out.
         Uses player object rather than nickname string."""
-        player.sitting_out = True
+        player.sitOut = True
         self.checkState()
+    def sitOutPlayer(self, player):
+        self.sit_out_player(player)
 
     def setAutopost(self, nickname, autopost):
         """Set autopost blinds on a player."""
@@ -258,21 +297,21 @@ class Table:
         # if a game isn't running yet then lets start one
         # must be at least 2 people sitting in
         seatedPlayers = \
-            [p for p in self.seats if p != None and not p.sitting_out]
+            [p for p in self.seats if p != None and not p.sitOut]
         if len(seatedPlayers) > 1:
-            if (self.game_state == GameState.STOPPED or
-                self.game_state == GameState.HALTING):
+            if self.gameState == GameState.Stopped or \
+              self.gameState == GameState.Halting:
                 # Change state machine to transitioning to new game
-                self.game_state = GameState.STARTING
+                self.gameState = GameState.Starting
                 # schedule new game to start in a few seconds...
                 if self.scheduler:
                     self.scheduler.callback(self.start,
-                                            self.startup_delay_time)
+                        self.gameStartupDelayTime)
         else:
-            if (self.game_state == GameState.STARTING or
-                self.game_state == GameState.RUNNING):
+            if self.gameState == GameState.Starting or \
+              self.gameState == GameState.Running:
                 # State machine status update
-                self.game_state = GameState.HALTING
+                self.gameState = GameState.Halting
                 # Clear scheduler
                 self.scheduler.clear()
                 # stop the game
@@ -280,24 +319,24 @@ class Table:
 
     def start(self):
         """Start the game."""
-        if self.game_state != GameState.STARTING:
-            if self.game_state == GameState.RUNNING:
+        if self.gameState != GameState.Starting:
+            if self.gameState == GameState.Running:
                 print('Game already running.')
             else:
                 print('Start game cancelled.')
             return
-        self.game_state = GameState.RUNNING
+        self.gameState = GameState.Running
         print('Game started.')
         # select a random dealer
         occupiedSeats = \
-            [i for i, p in enumerate(self.seats) if p and not p.sitting_out]
+            [i for i, p in enumerate(self.seats) if p and not p.sitOut]
         self.dealer = random.choice(occupiedSeats)
 
         # Let everyone off paying for the first hand!
         # (Except the blinds)
         for player in self.seats:
-            if player is not None and not player.sitting_out:
-                player.paidState = player.PAID_SB_BB
+            if player is not None and not player.sitOut:
+                player.paidState = player.PaidState.PaidSBBB
         # Start the actual game
         scr = script.Script(self)
         if self.handler:
@@ -311,22 +350,22 @@ class Table:
             rotatedSeats[self.dealer+1:] + rotatedSeats[:self.dealer+1]
         # Filter empty seats and sitting out players
         filterSeats = [i for i in rotatedSeats \
-            if self.seats[i] is not None and not self.seats[i].sitting_out]
+            if self.seats[i] is not None and not self.seats[i].sitOut]
         # Return next suitable candidate
         self.dealer = filterSeats[0]
 
     def halt(self):
         """Halt the current running game."""
-        if self.game_state != GameState.HALTING:
+        if self.gameState != GameState.Halting:
             print('Internal Error?')
             return
-        self.game_state = GameState.STOPPED
+        self.gameState = GameState.Stopped
         print('Game halted.')
         if self.handler:
             self.handler.stop()
         for player in self.seats:
             if player is not None:
-                player.paidState = player.PAID_NOTHING
+                player.paidState = player.PaidState.Nothing
 
     def __repr__(self):
         s = ''
@@ -338,8 +377,8 @@ class Table:
 
 if __name__ == '__main__':
     cash = Table(9, 0.25, 0.5, 0, 5000, 25000)
-    cash.register_scheduler(Schedule())
-    cash.register_handler(Handler())
+    cash.registerScheduler(Schedule())
+    cash.registerHandler(Handler())
     cash.addPlayer('john', 0)
     cash.addMoney('john', 5000)
     cash.addPlayer('mison', 1)
