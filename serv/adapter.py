@@ -1,4 +1,5 @@
 from twisted.internet import reactor
+import re
 import json
 import table
 import script
@@ -14,7 +15,7 @@ class Schedule:
         # If already scheduled then make sure not to schedule event twice.
         if not self.started:
             msg = 'A new game will begin in %d seconds.'%secs
-            self.send_json({'update': 'newgame', 'message': msg})
+            self.send_json({'update': 'new game', 'message': msg})
         started = True
         reactor.callLater(secs, functor)
     def clear(self):
@@ -26,25 +27,26 @@ class Handler:
         self.adapter = adapter
         self.stop()
 
-    def start(self, scriptObj):
+    def start(self, script_obj):
         self.running = True
-        self.script = scriptObj
-        self.actIter = scriptObj.run()
+        self.script = script_obj
+        self.actIter = script_obj.run()
 
-        self.send_json({'update': 'newhand',
+        self.send_json({'update': 'new hand',
                                        'message': '989332122236'})
         self.adapter.show_table()
 
-        while not isinstance(self.currentAct, script.Action):
+        while not isinstance(self.current_action, script.Action):
             try:
-                self.currentAct = self.actIter.next()
+                self.current_action = self.actIter.next()
             except StopIteration:
-                emptyscript = {'internalerror': 'emptyscript',
+                emptyscript = {'internal error': 'empty script',
                                'message': "script didn't do anything!"}
                 self.send_json(emptyscript)
             else:
-                self.displayAct()
-    def pmHands(self, cardsDealt):
+                self.display_action()
+
+    def privmsg_hands(self, cardsDealt):
         players = cardsDealt.players
         for player in players:
             c = cardsDealt.get_player_hand(player)
@@ -52,53 +54,56 @@ class Handler:
                 self.adapter.privmsg(player.nickname, {'cards': c})
             else:
                 self.adapter.privmsg(debug_nick, {'cards': c})
-    def displayAct(self):
-        if isinstance(self.currentAct, script.CardsDealt):
-            self.pmHands(self.currentAct)
+
+    def display_action(self):
+        if isinstance(self.current_action, script.CardsDealt):
+            self.privmsg_hands(self.current_action)
         else:
-            self.send_json(self.currentAct.notation())
+            self.send_json(self.current_action.notation())
+
     def update(self, player, response):
         if not self.running:
             return
         if player is None:
             # Only valid for debugging!
-            noplay = {'error': 'noplayer',
+            noplay = {'error': 'no player',
                       'message': "You didnt't specify a player."}
             self.send_json(noplay)
             return
-        elif (isinstance(self.currentAct, script.Action) and
-              player != self.currentAct.player.nickname):
+        elif (isinstance(self.current_action, script.Action) and
+              player != self.current_action.player.nickname):
             # People are allowed to sit out, out of turn
             if (response[0] != script.Action.SitOut and
                 response[0] != script.Action.AutopostBlinds):
-                outturn = {'error': 'notyourturn',
+                outturn = {'error': 'not your turn',
                            'message': "Don't act out of turn."}
                 self.send_json(outturn)
                 return
-        if response[0] not in self.currentAct.actionNames():
-            invalidact = {'error': 'invalidaction',
+        if response[0] not in self.current_action.actionNames():
+            invalidact = {'error': 'invalid action',
                           'message': 'Invalid action specified.'}
             self.send_json(invalidact)
             return
         try:
-            self.currentAct = self.actIter.send(response)
+            self.current_action = self.actIter.send(response)
             # handle cards dealt .etc here
-            while not isinstance(self.currentAct, script.Action):
-                self.displayAct()
-                self.currentAct = self.actIter.next()
-            self.displayAct()
+            while not isinstance(self.current_action, script.Action):
+                self.display_action()
+                self.current_action = self.actIter.next()
+            self.display_action()
         except StopIteration:
             # if adapter stops then this becomes none.
             if self.script is not None:
                 # restart next hand.
                 self.start(self.script)
+
     def stop(self):
         self.running = False
         self.script = None
         self.actIter = None
-        self.currentAct = None
+        self.current_action = None
         # award pot to remaining player sitting in.
-        gamestopped = {'update': 'gamestopped',
+        gamestopped = {'update': 'game stopped',
                        'message': 'Game halted.'}
         self.send_json(gamestopped)
 
@@ -173,10 +178,20 @@ class Adapter:
         # Make command lower case for clumsy users
         command = command.lower()
         try:
-            self.runCommand(player, command, param)
+            self.run_cmd(player, command, param)
         except Exception as e:
-            self.send_json({'error': e.__class__.__name__,
-                            'message': str(e)})
+            try:
+                notation = e.notation()
+            except AttributeError:
+                notation = {}
+            # This block converts BuyinTooSmall -> buyin too small
+            replacement = lambda match: ' %s'%match.group(1).lower()
+            classname = e.__class__.__name__
+            classname = re.sub(r'([A-Z])', replacement, classname)[1:]
+            # Use that class name for the error message title.
+            notation['error'] = classname
+            notation['message'] = str(e)
+            self.send_json(notation)
             raise
 
     def show_table(self):
@@ -187,35 +202,50 @@ class Adapter:
                 seats.append(None)
             else:
                 seats.append({'player': s.nickname, 'stack': s.stack,
-                              'sittingout': s.sitting_out})
+                              'sitting out': s.sitting_out})
         notate['seats'] = seats
         #notate['table'] = self.chan
         self.send_json(notate)
 
-    def runCommand(self, player, command, param):
+    def leave(self, nickname):
+        """Make a player leave the table. Called by the protocol."""
+        seat, player = self.cash.lookup_player(nickname)
+        self.cash.sit_out_player(player)
+        self.cash.empty_seat(player, seat)
+
+    def run_cmd(self, player, command, param):
+        # Actions not requiring table registration
         if command == 'join':
             seat = int(param)
             self.cash.addPlayer(player, seat)
-            joined = {'update': 'playerjoin',
-                      'player': player, 'seat': seat}
+            joined = {'update': 'player join', 'player': player, 'seat': seat}
             self.send_json(joined)
+            return
+        elif command == 'show':
+            self.show_table()
+            return
+
+        # Actions that DO require registration
+        nickname = player
+        seat, player_object = self.cash.lookup_player(nickname)
+        if command == 'leave':
+            self.leave(nickname)
         elif command == 'buyin':
             buyin = int(param)
-            seat, player_object = self.cash.lookupPlayer(player)
             if not self.cash.addMoney(player_object, buyin):
-                buyin = {'update': 'rebuyafterhand', 'player': player,
+                buyin = {'update': 'rebuy after hand', 'player': player,
                          'buyin': buyin}
             else:
-                buyin = {'update': 'playerbuyin', 'player': player,
+                buyin = {'update': 'player buyin', 'player': player,
                          'stack': player_object.stack, 'buyin': buyin}
             self.send_json(buyin)
         elif command == 'sitin':
             self.cash.sitIn(player)
-            sitin = {'update': 'playersitin', 'player': player}
+            sitin = {'update': 'player sitin', 'player': player}
             self.send_json(sitin)
         elif command == 'sitout':
             # sitting out should always happen before the action itself
-            sitout = {'update': 'playersitout', 'player': player}
+            sitout = {'update': 'player sitout', 'player': player}
             self.send_json(sitout)
             self.cash.sitOut(player)
             self.handler.update(player, (script.Action.SitOut,))
@@ -238,8 +268,6 @@ class Adapter:
             self.handler.update(player, (script.Action.Bet, int(param)))
         elif command == 'raise':
             self.handler.update(player, (script.Action.Raise, int(param)))
-        elif command == 'show':
-            self.show_table()
 
     def send_json(self, notation):
         self.prot.msg(self.chan, json.dumps(notation))

@@ -138,7 +138,7 @@ class ShowHands:
         cards = []
         for p in self.players:
             cards.append({'player': p.nickname, 'cards': self.gethand(p)})
-        return {'showhands': cards}
+        return {'show hands': cards}
 
 class ShowDown:
     def __init__(self, pots):
@@ -154,7 +154,7 @@ class ShowRankings:
         for player, handrank in self.rankings.items():
             hand_rankings.append({'player': player.nickname,
                                   'handname': awarder.hand_name(handrank)})
-        return {'showrankings': hand_rankings}
+        return {'show rankings': hand_rankings}
 
 class BlindsEnforcer:
     def __init__(self, small_blind, big_blind):

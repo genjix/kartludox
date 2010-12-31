@@ -33,9 +33,9 @@ class GamerBot(irc.IRCClient):
         self.msg(channel, "\x0300,01 black friend =)\x03")"""
         #self.msg(channel, "\x0314[ \x03\x0304Ah\x03\x0314 ] [ \x03\x0303Jc\x03\x0314 ] [ \x03\x03027d\x03\x0314 ] [ \x03\x028s\x0314 ]\x03")
 
-    def privmsg(self, user, channel, msg):
+    def privmsg(self, prefix, channel, msg):
         """This will get called when the bot receives a message."""
-        user = user.split('!', 1)[0]
+        user = self.parse_nickname(prefix)
 
         try:
             if msg == '!release':
@@ -65,17 +65,37 @@ class GamerBot(irc.IRCClient):
             self.msg(channel, msg)
             print("<%s> %s" % (self.nickname, msg))
 
-    def action(self, user, channel, msg):
+    def action(self, prefix, channel, msg):
         """This will get called when the bot sees someone do an action."""
-        user = user.split('!', 1)[0]
+        user = self.parse_nickname(prefix)
         print("* %s %s" % (user, msg))
 
     # irc callbacks
     def irc_NICK(self, prefix, params):
         """Called when an IRC user changes their nickname."""
-        old_nick = prefix.split('!')[0]
+        old_nick = self.parse_nickname(prefix)
         new_nick = params[0]
         print("%s is now known as %s" % (old_nick, new_nick))
+
+    def irc_QUIT(self, prefix, params):
+        nickname = self.parse_nickname(prefix)
+        for table_adapter in self.adapter.values():
+            try:
+                table_adapter.leave(nickname)
+            except adapter.table.Table.NoSuchPlayer:
+                pass
+
+    def irc_PART(self, prefix, params):
+        nickname = self.parse_nickname(prefix)
+        channel = params[0]
+        try:
+            self.adapter[channel].leave(nickname)
+        except KeyError:
+            pass
+        print nickname, channel
+
+    def parse_nickname(self, prefix):
+        return prefix.split('!', 1)[0]
 
     # For fun, override the method that determines how a nickname is changed on
     # collisions. The default method appends an underscore.

@@ -93,44 +93,75 @@ class GameState:
 
 class Table:
     class InvalidSeat(Exception):
-        def __init__(self, seatid):
+        def __init__(self, nickname, seatid):
+            self.nickname = nickname
             self.seatid = seatid
+        def notation(self):
+            return {'nickname': self.nickname, 'seatid': self.seatid}
         def __str__(self):
             return 'Invalid seat ID %d'%self.seatid
 
-    class SeatTaken(Exception):
-        def __init__(self, seatid, otherNickname):
-            self.seatid = seatid
-            self.otherNickname = otherNickname
+    class WrongPlayerInSeat(Exception):
+        def __init__(self, nickname, other_nickname, seatid):
+            self.nickname = nickname
+            self.other_nickname = other_nickname
+            self.seatid = seat
+        def notation(self):
+            return {'nickname': self.nickname, 'seatid': seatid,
+                    'other nickname': self.other_nickname}
         def __str__(self):
-            return "Seat %d already taken by player '%s'"%\
-                (self.seatid, self.otherNickname)
+            return 'Internal Error: %s seated at seat %d claimed by %s'% \
+                (self.nickname, self.seatid, self.other_nickname)
+
+    class SeatTaken(Exception):
+        def __init__(self, nickname, seatid, other_nickname):
+            self.nickname = nickname
+            self.seatid = seatid
+            self.other_nickname = other_nickname
+        def notation(self):
+            return {'seatid': self.seatid, 'nickname': self.nickname,
+                    'other nickname': self.other_nickname}
+        def __str__(self):
+            return "Seat %d already taken by player '%s'"%(self.seatid,
+                                                           self.other_nickname)
+
     class NoSuchPlayer(Exception):
         def __init__(self, nickname):
             self.nickname = nickname
+        def notation(self):
+            return {'nickname': self.nickname}
         def __str__(self):
             return "No such nickname '%s'"%self.nickname
 
     class BuyinNegative(Exception):
-        def __init__(self, amount, stackSize):
+        def __init__(self, nickname, amount, stack_size):
+            self.nickname = nickname
             self.amount = amount
-            self.stackSize = stackSize
+            self.stack_size = stack_size
+        def notation(self):
+            return {'nickname': self.nickname, 'amount': self.amount,
+                    'stacksize': self.stack_size}
         def __str__(self):
-            return 'Negative %d to stack size %d is illegal'%\
-                (self.amount, self.stackSize)
+            return 'Negative %d to stack size %d is illegal'%(self.amount,
+                                                              self.stack_size)
 
     class NotBoughtIn(Exception):
         def __init__(self, nickname):
             self.nickname = nickname
+        def notation(self):
+            return {'nickname': self.nickname}
         def __str__(self):
             return "Cannot seat player '%s' with zero stack size"%\
                 self.nickname
 
     class BuyinTooSmall(Exception):
-        def __init__(self, player, amount, minimum):
-            self.nickname = player.nickname
+        def __init__(self, nickname, amount, minimum):
+            self.nickname = nickname
             self.amount = amount
             self.minimum = minimum
+        def notation(self):
+            return {'nickname': self.nickname, 'amount': self.amount,
+                    'minimum': self.minimum}
         def __str__(self):
             tc = convFact
             s = "Buyin from '%s' of %d bb doesn't meet table minimum of %d bb"
@@ -170,9 +201,9 @@ class Table:
         """New players are automatically sat out when joining a table,
         and need to buyin first."""
         if seat < 0 or seat >= len(self.seats):
-            raise self.InvalidSeat(seat)
+            raise self.InvalidSeat(nickname, seat)
         if self.seats[seat] != None:
-            raise self.SeatTaken(seat, self.seats[seat].nickname)
+            raise self.SeatTaken(nickname, seat, self.seats[seat].nickname)
         self.seats[seat] = Player(nickname)
 
     def addMoney(self, player, amount):
@@ -183,7 +214,7 @@ class Table:
         returns False when money will be added after current hand."""
         # Protect against silliness
         if amount < 0:
-            raise Table.BuyinNegative(amount, player.stack)
+            raise Table.BuyinNegative(player.nickname, amount, player.stack)
 
         # if sitting out or no game running, then buyin
         if player.sitting_out or self.game_state != GameState.RUNNING:
@@ -198,7 +229,7 @@ class Table:
 
         # When you first sit in you must rebuy to above a minimum
         if player.stack == 0 and amount < self.min_buyin:
-            raise Table.BuyinTooSmall(player, amount, self.min_buyin)
+            raise Table.BuyinTooSmall(player.nickname, amount, self.min_buyin)
 
         totalStack = player.stack + amount
         if totalStack > self.max_buyin:
@@ -226,7 +257,7 @@ class Table:
         # schedule new game to start if need be.
         self.checkState()
 
-    def sitOut(self, nickname):
+    def sit_out(self, nickname):
         """Sit player out.
         If seated players drops below 2 then game stops running."""
         seat, player = self.lookupPlayer(nickname)
@@ -238,6 +269,14 @@ class Table:
         player.sitting_out = True
         self.checkState()
 
+    def empty_seat(self, player, seat):
+        nickname = player.nickname
+        if seat < 0 or seat >= len(self.seats):
+            raise self.InvalidSeat(nickname, seat)
+        elif self.seats[seat] != player:
+            raise WrongPlayerInSeat(self.seats[seat], nickname)
+        self.seats[seat] = None
+
     def setAutopost(self, nickname, autopost):
         """Set autopost blinds on a player."""
         seat, player = self.lookupPlayer(nickname)
@@ -248,6 +287,8 @@ class Table:
         self.seats[seat] = None
         self.checkState()
 
+    def lookup_player(self, nickname):
+        return self.lookupPlayer(nickname)
     def lookupPlayer(self, nickname):
         for seat, player in enumerate(self.seats):
             if player != None and player.nickname == nickname:
