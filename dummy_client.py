@@ -252,11 +252,11 @@ class Screen:
         curses.endwin()
 
 if __name__ == '__main__':
-    import sys
-    if len(sys.argv) > 1:
-        nickname = sys.argv[1]
-    else:
-        nickname = 'zipio'
+    import random
+    import time
+    import string
+    random.seed(time.time())
+    nickname = ''.join(random.choice(string.letters) for i in xrange(6))
     stdscr = curses.initscr()
     screen = Screen(stdscr)
     stdscr.refresh()
