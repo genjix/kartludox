@@ -437,7 +437,7 @@ class Script:
                         assert(to_call > 0)
                         choice_actions.add(Action.CALL, to_call)
                     if bettor.can_raise:
-                        if rotator.last_raise > 0:
+                        if rotator.current_bet > 0:
                             bet_or_raise = Action.RAISE
                         else:
                             bet_or_raise = Action.BET
