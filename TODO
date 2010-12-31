@@ -11,11 +11,8 @@ app remember prev settings
 WANT: panels move the main view.
 WANT: move slider up to avoid misclicking raise.
 
-TODO: bet when currentbet = 0
 TODO: wait for BB
 TODO: timebank
-TODO: log HH for debugging purposes
-TODO: remove redundancy by using lookup table in action...
 TODO: boilerplate yield for script. ability to flatten returned generators (how about pre/post code tho?). itertools.chain(...)
 BUG: uncalled bet amount, not totally accurate always (or is it?... check this.)
 BUG: IllegalRaise should not crash the game.
