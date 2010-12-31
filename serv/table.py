@@ -197,16 +197,17 @@ class Table:
         responses from wherever back to the script."""
         self.handler = handler
 
-    def addPlayer(self, nickname, seat):
+    def add_player(self, nickname, seatid):
         """New players are automatically sat out when joining a table,
         and need to buyin first."""
-        if seat < 0 or seat >= len(self.seats):
-            raise self.InvalidSeat(nickname, seat)
-        if self.seats[seat] != None:
-            raise self.SeatTaken(nickname, seat, self.seats[seat].nickname)
-        self.seats[seat] = Player(nickname)
+        if seatid < 0 or seatid >= len(self.seats):
+            raise self.InvalidSeat(nickname, seatid)
+        if self.seats[seatid] != None:
+            raise self.SeatTaken(nickname, seatid, self.seats[seatid].nickname)
+        self.seats[seatid] = Player(nickname)
+        return self.seats[seatid]
 
-    def addMoney(self, player, amount):
+    def add_money(self, player, amount):
         """Remember that amount is in terms of tiny bb, not real money.
         If player is sitting in and playing, it is added to a list
         for until after the current hand is finished.
@@ -218,26 +219,25 @@ class Table:
 
         # if sitting out or no game running, then buyin
         if player.sitting_out or self.game_state != GameState.RUNNING:
-            self.addMoneyPlayer(player, amount)
+            self.perform_buyin(player, amount)
             return True
+        else:
+            self.rebuys.append((player, amount))
+            return False
 
-        self.rebuys.append((player, amount))
-        return False
-
-    def addMoneyPlayer(self, player, amount):
+    def perform_buyin(self, player, amount):
         """Actually do the rebuy and add the money."""
-
         # When you first sit in you must rebuy to above a minimum
         if player.stack == 0 and amount < self.min_buyin:
             raise Table.BuyinTooSmall(player.nickname, amount, self.min_buyin)
 
-        totalStack = player.stack + amount
-        if totalStack > self.max_buyin:
-            totalStack = self.max_buyin
+        total_stack = player.stack + amount
+        if total_stack > self.max_buyin:
+            total_stack = self.max_buyin
 
-        self.debitPlayer(player, totalStack - player.stack)
+        self.debit_player(player, total_stack - player.stack)
 
-    def debitPlayer(self, player, amount):
+    def debit_player(self, player, amount):
         """Moves fund from player account and adds to stack."""
         # If player has relevant funds
         if True:
@@ -246,28 +246,21 @@ class Table:
     def execute_pending_rebuys(self):
         """Called at the end of every hand. Does any pending rebuys."""
         for player, amount in self.rebuys:
-            self.addMoneyPlayer(player, amount)
+            self.perform_buyin(player, amount)
         self.rebuys = []
 
-    def sitIn(self, nickname):
-        seat, player = self.lookupPlayer(nickname)
+    def sit_in(self, player):
         if player.stack == 0:
-            raise Table.NotBoughtIn(nickname)
+            raise Table.NotBoughtIn(player.nickname)
         player.sitting_out = False
         # schedule new game to start if need be.
-        self.checkState()
+        self.check_state()
 
-    def sit_out(self, nickname):
+    def sit_out(self, player):
         """Sit player out.
         If seated players drops below 2 then game stops running."""
-        seat, player = self.lookupPlayer(nickname)
-        self.sit_out_player(player)
-
-    def sit_out_player(self, player):
-        """Sit player out.
-        Uses player object rather than nickname string."""
         player.sitting_out = True
-        self.checkState()
+        self.check_state()
 
     def empty_seat(self, player, seat):
         nickname = player.nickname
@@ -276,31 +269,24 @@ class Table:
         elif self.seats[seat] != player:
             raise WrongPlayerInSeat(self.seats[seat], nickname)
         self.seats[seat] = None
+        self.check_state()
 
-    def setAutopost(self, nickname, autopost):
+    def set_autopost(self, player, autopost):
         """Set autopost blinds on a player."""
-        seat, player = self.lookupPlayer(nickname)
         player.settings.autopost = autopost
 
-    def removePlayer(self, nickname):
-        seat, player = self.lookupPlayer(nickname)
-        self.seats[seat] = None
-        self.checkState()
-
     def lookup_player(self, nickname):
-        return self.lookupPlayer(nickname)
-    def lookupPlayer(self, nickname):
         for seat, player in enumerate(self.seats):
             if player != None and player.nickname == nickname:
                 return seat, player
         raise Table.NoSuchPlayer(nickname)
 
-    def checkState(self):
+    def check_state(self):
         # if a game isn't running yet then lets start one
         # must be at least 2 people sitting in
-        seatedPlayers = \
+        seated_players = \
             [p for p in self.seats if p != None and not p.sitting_out]
-        if len(seatedPlayers) > 1:
+        if len(seated_players) > 1:
             if (self.game_state == GameState.STOPPED or
                 self.game_state == GameState.HALTING):
                 # Change state machine to transitioning to new game
@@ -330,15 +316,15 @@ class Table:
         self.game_state = GameState.RUNNING
         print('Game started.')
         # select a random dealer
-        occupiedSeats = \
+        occupied_seats = \
             [i for i, p in enumerate(self.seats) if p and not p.sitting_out]
-        self.dealer = random.choice(occupiedSeats)
+        self.dealer = random.choice(occupied_seats)
 
         # Let everyone off paying for the first hand!
         # (Except the blinds)
         for player in self.seats:
             if player is not None and not player.sitting_out:
-                player.paidState = player.PAID_SB_BB
+                player.paid_state = player.PAID_SB_BB
         # Start the actual game
         scr = script.Script(self)
         if self.handler:
@@ -346,15 +332,15 @@ class Table:
 
     def next_dealer(self):
         # Get list of indices of the seats
-        rotatedSeats = [i for i, p in enumerate(self.seats)]
+        rotated_seats = [i for i, p in enumerate(self.seats)]
         # Rotate it around the current dealer position + 1
-        rotatedSeats = \
-            rotatedSeats[self.dealer+1:] + rotatedSeats[:self.dealer+1]
+        rotated_seats = \
+            rotated_seats[self.dealer+1:] + rotated_seats[:self.dealer+1]
         # Filter empty seats and sitting out players
-        filterSeats = [i for i in rotatedSeats \
+        filter_seats = [i for i in rotated_seats \
             if self.seats[i] is not None and not self.seats[i].sitting_out]
         # Return next suitable candidate
-        self.dealer = filterSeats[0]
+        self.dealer = filter_seats[0]
 
     def halt(self):
         """Halt the current running game."""
@@ -367,7 +353,7 @@ class Table:
             self.handler.stop()
         for player in self.seats:
             if player is not None:
-                player.paidState = player.PAID_NOTHING
+                player.paid_state = player.PAID_NOTHING
 
     def __repr__(self):
         s = ''
@@ -381,17 +367,18 @@ if __name__ == '__main__':
     cash = Table(9, 0.25, 0.5, 0, 5000, 25000)
     cash.register_scheduler(Schedule())
     cash.register_handler(Handler())
-    cash.addPlayer('john', 0)
-    cash.addMoney('john', 5000)
-    cash.addPlayer('mison', 1)
-    cash.addMoney('mison', 10000)
-    cash.addPlayer('lorea', 2)
-    cash.addMoney('lorea', 10000)
-    cash.addPlayer('honn', 3)
-    cash.addMoney('honn', 10000)
-    cash.sitIn('honn')
-    cash.sitIn('lorea')
+    j = cash.add_player('john', 0)
+    cash.add_money(j, 5000)
+    p = cash.add_player('mison', 1)
+    cash.add_money(p, 10000)
+    p = cash.add_player(p, 2)
+    cash.add_money(p, 10000)
+    p = cash.add_player('honn', 3)
+    cash.add_money(p, 10000)
+    cash.sit_in(p)
+    cash.sit_in(j)
     print cash
-    cash.sitOut('honn')
-    cash.sitIn('honn')
+    cash.sit_out(p)
+    cash.sit_in(p)
     cash.start()
+

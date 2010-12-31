@@ -8,58 +8,58 @@ class Action:
     """This class represents a set of possible choices for a player
     at a given time.
     An example might be:
-       [ (Fold,), (Call, 400), (Raise, 900, 18000) ]
+       [ (FOLD,), (CALL, 400), (RAISE, 900, 18000) ]
     Values are in tinybb.
     """
-    SitIn =     0  # ** = No parameters
-    SitOut =    1  # **
-    PostSB =    2
-    PostBB =    3
-    PostSBBB =  4
-    PostAnte =  5  # undefined
-    Fold =      6
-    Call =      7
-    Check =     8  # **
-    Bet =       9  # 2 parameters- min and max possible raises 
-    Raise =     10 # 2 parameters- min and max possible raises 
-    AllIn =     11
-    LeaveSeat = 12 # **
-    WaitBB =    13
-    AutopostBlinds = 14
+    SIT_IN =      0  # ** = No parameters
+    SIT_OUT =     1  # **
+    POST_SB =     2
+    POST_BB =     3
+    POST_SB_BB =  4
+    POST_ANTE =   5  # undefined
+    FOLD =        6
+    CALL =        7
+    CHECK =       8  # **
+    BET =         9  # 2 parameters- min and max possible raises 
+    RAISE =       10 # 2 parameters- min and max possible raises 
+    ALL_IN =      11
+    LEAVE_SEAT =  12 # **
+    WAIT_BB =     13
+    AUTOPOST_BLINDS = 14
 
     actionRepr = {
-        SitIn:      'sitin',
-        SitOut:     'sitout',
-        PostSB:     'postsb',
-        PostBB:     'postbb',
-        PostSBBB:   'postsbbb',
-        PostAnte:   'postante',
-        Fold:       'fold',
-        Call:       'call',
-        Check:      'check',
-        Bet:        'bet',
-        Raise:      'raise',
-        AllIn:      'allin',
-        LeaveSeat:  'leave',
-        WaitBB:     'waitbb',
-        AutopostBlinds: 'autopost'
+        SIT_IN:       'sitin',
+        SIT_OUT:      'sitout',
+        POST_SB:      'postsb',
+        POST_BB:      'postbb',
+        POST_SB_BB:   'postsbbb',
+        POST_ANTE:    'postante',
+        FOLD:         'fold',
+        CALL:         'call',
+        CHECK:        'check',
+        BET:          'bet',
+        RAISE:        'raise',
+        ALL_IN:       'allin',
+        LEAVE_SEAT:   'leave',
+        WAIT_BB:      'waitbb',
+        AUTOPOST_BLINDS: 'autopost'
     }
 
     """actionRepr = {
-        SitIn:      'Sit In',
-        SitOut:     'Sit Out',
-        PostSB:     'Post Small-Blind',
-        PostBB:     'Post Big-Blind',
-        PostSBBB:   'Post Small & Big Blinds',
-        PostAnte:   'Post Ante',
-        Fold:       'Fold',
-        Call:       'Call',
-        Check:      'Check',
-        Bet:        'Bet',
-        Raise:      'Raise',
-        AllIn:      'Go All In',
-        LeaveSeat:  'Leave Seat',
-        WaitBB:     'Wait for BB'
+        SIT_IN:      'Sit In',
+        SIT_OUT:     'Sit Out',
+        POST_SB:     'Post Small-Blind',
+        POST_BB:     'Post Big-Blind',
+        POST_SB_BB:   'Post Small & Big Blinds',
+        POST_ANTE:   'Post Ante',
+        FOLD:       'Fold',
+        CALL:       'Call',
+        CHECK:      'Check',
+        BET:        'Bet',
+        RAISE:      'Raise',
+        ALL_IN:      'Go All In',
+        LEAVE_SEAT:  'Leave Seat',
+        WAIT_BB:     'Wait for BB'
     }"""
 
     def __init__(self, player):
@@ -74,7 +74,7 @@ class Action:
         else:
             self.actions.append((action, arg0, arg1))
 
-    def actionNames(self):
+    def action_names(self):
         return [a[0] for a in self.actions]
 
     def findAction(self, actName):
@@ -161,7 +161,7 @@ class BlindsEnforcer:
         self.small_blind = small_blind
         self.big_blind = big_blind
 
-        self.blind_todo = [Action.PostSBBB, Action.PostBB, Action.PostSB]
+        self.blind_todo = [Action.POST_SB_BB, Action.POST_BB, Action.POST_SB]
         self.blind_state = self.blind_todo.pop()
         self.active_players = []
         self.blind_payment = [None, None]
@@ -169,18 +169,18 @@ class BlindsEnforcer:
     def prompt(self, player):
         if player is None:
             return False
-        if self.blind_state == Action.PostBB:
-            player.paid_state = player.PaidNothing
-        elif self.blind_state == Action.PostSB:
-            player.paid_state = player.PaidBB
+        if self.blind_state == Action.POST_BB:
+            player.paid_state = player.PAID_NOTHING
+        elif self.blind_state == Action.POST_SB:
+            player.paid_state = player.PAID_BB
 
         # Everything below this point requires player to be sitting-in
         if player.sitting_out:
             return False
 
         # Non-blinds player has already paid blinds
-        if (self.blind_state == Action.PostSBBB and
-            player.paid_state == player.PaidSBBB):
+        if (self.blind_state == Action.POST_SB_BB and
+            player.paid_state == player.PAID_SB_BB):
             self.active_players.append(player)
             return False
 
@@ -201,28 +201,28 @@ class BlindsEnforcer:
     def choice_actions(self, player):
         """Build choice action list for person need to pay blinds."""
         choice_actions = Action(player)
-        choice_actions.add(Action.AutopostBlinds)
-        choice_actions.add(Action.SitOut)
-        assert(self.blind_state in (Action.PostSB, Action.PostBB, 
-                                    Action.PostSBBB))
+        choice_actions.add(Action.AUTOPOST_BLINDS)
+        choice_actions.add(Action.SIT_OUT)
+        assert(self.blind_state in (Action.POST_SB, Action.POST_BB, 
+                                    Action.POST_SB_BB))
         bettor = player.bettor
-        if self.blind_state == Action.PostSB:
-            choice_actions.add(Action.PostSB, self.small_blind)
+        if self.blind_state == Action.POST_SB:
             self.calc_payment(bettor, self.small_blind, 0)
-        elif self.blind_state == Action.PostBB:
+        elif self.blind_state == Action.POST_BB:
             self.calc_payment(bettor, self.big_blind, 0)
-        elif self.blind_state == Action.PostSBBB:
+        elif self.blind_state == Action.POST_SB_BB:
             self.calc_payment(bettor, self.big_blind, self.small_blind)
-            choice_actions.add(Action.WaitBB)
+            choice_actions.add(Action.WAIT_BB)
         choice_actions.add(self.blind_state, sum(self.blind_payment))
         return choice_actions
 
     def blind_to_paidstate(self, blind_state):
-        assert(blind_state in (Action.PostSB, Action.PostBB, Action.PostSBBB))
-        if blind_state == Action.PostBB:
-            return table.Player.PaidBB
+        assert(blind_state in (Action.POST_SB, Action.POST_BB,
+                               Action.POST_SB_BB))
+        if blind_state == Action.POST_BB:
+            return table.Player.PAID_BB
         else:
-            return table.Player.PaidSBBB
+            return table.Player.PAID_SB_BB
 
     def do_autopost(self, player):
         response = (self.blind_state,)
@@ -234,10 +234,10 @@ class BlindsEnforcer:
         # Discard args as not needed here.
         response = response[0]
         
-        if response == Action.AutopostBlinds:
+        if response == Action.AUTOPOST_BLINDS:
             player.settings.autopost = True
             response = self.blind_state
-        assert(response in (self.blind_state, Action.SitOut, Action.WaitBB))
+        assert(response in (self.blind_state, Action.SIT_OUT, Action.WAIT_BB))
 
         if response == self.blind_state:
             player.paid_state = self.blind_to_paidstate(self.blind_state)
@@ -366,7 +366,7 @@ class Script:
         #
         # Rotate clockwise until we find a non-sitting out player
         # Make them pay the relevant blind.
-        # Move to next blind: PostSB -> PostBB -> PostSB/BB
+        # Move to next blind: POST_SB -> POST_BB -> POST_SB_BB
 
         active_seats = self.active_seats()
         # Set up bet holding objects
@@ -411,19 +411,19 @@ class Script:
                     if player.sitting_out:
                         continue
                     choice_actions = Action(player)
-                    choice_actions.add(Action.SitOut)
-                    choice_actions.add(Action.Fold)
+                    choice_actions.add(Action.SIT_OUT)
+                    choice_actions.add(Action.FOLD)
                     to_call = bettor.call_price - bettor.bet
                     if to_call == 0:
-                        choice_actions.add(Action.Check)
+                        choice_actions.add(Action.CHECK)
                     else:
                         assert(to_call > 0)
-                        choice_actions.add(Action.Call, to_call)
+                        choice_actions.add(Action.CALL, to_call)
                     if bettor.can_raise:
                         if rotator.last_raise > 0:
-                            bet_or_raise = Action.Raise
+                            bet_or_raise = Action.RAISE
                         else:
-                            bet_or_raise = Action.Bet
+                            bet_or_raise = Action.BET
                         choice_actions.add(bet_or_raise, bettor.min_raise,
                                            bettor.max_raise)
                     response = yield choice_actions
@@ -432,11 +432,11 @@ class Script:
                     else:
                         response, param = response[0], int(response[1])
 
-                    if response == Action.Fold or response == Action.SitOut:
+                    if response == Action.FOLD or response == Action.SIT_OUT:
                         rotator.fold(bettor)
-                    elif response == Action.Call:
+                    elif response == Action.CALL:
                         rotator.call(bettor)
-                    elif response == Action.Raise or response == Action.Bet:
+                    elif response == Action.RAISE or response == Action.BET:
                         assert(param is not None)
                         rotator.raiseto(bettor, param)
 
@@ -496,9 +496,9 @@ class Script:
         # Set everyone with zero stack size to sit out
         for player in active_players:
             if player.stack == 0:
-                self.table.sit_out_player(player)
+                self.table.sit_out(player)
 
-        if self.table.gameState == table.GameState.Running:
+        if self.table.game_state == table.GameState.RUNNING:
             # Find next dealer
             self.table.next_dealer()
 

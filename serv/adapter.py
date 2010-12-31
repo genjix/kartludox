@@ -73,13 +73,13 @@ class Handler:
         elif (isinstance(self.current_action, script.Action) and
               player != self.current_action.player.nickname):
             # People are allowed to sit out, out of turn
-            if (response[0] != script.Action.SitOut and
-                response[0] != script.Action.AutopostBlinds):
+            if (response[0] != script.Action.SIT_OUT and
+                response[0] != script.Action.AUTOPOST_BLINDS):
                 outturn = {'error': 'not your turn',
                            'message': "Don't act out of turn."}
                 self.send_json(outturn)
                 return
-        if response[0] not in self.current_action.actionNames():
+        if response[0] not in self.current_action.action_names():
             invalidact = {'error': 'invalid action',
                           'message': 'Invalid action specified.'}
             self.send_json(invalidact)
@@ -180,9 +180,9 @@ class Adapter:
         try:
             self.run_cmd(player, command, param)
         except Exception as e:
-            try:
+            if hasattr(e, 'notation'):
                 notation = e.notation()
-            except AttributeError:
+            else:
                 notation = {}
             # This block converts BuyinTooSmall -> buyin too small
             replacement = lambda match: ' %s'%match.group(1).lower()
@@ -210,15 +210,16 @@ class Adapter:
     def leave(self, nickname):
         """Make a player leave the table. Called by the protocol."""
         seat, player = self.cash.lookup_player(nickname)
-        self.cash.sit_out_player(player)
+        self.cash.sit_out(player)
         self.cash.empty_seat(player, seat)
 
-    def run_cmd(self, player, command, param):
+    def run_cmd(self, nickname, command, param):
         # Actions not requiring table registration
         if command == 'join':
-            seat = int(param)
-            self.cash.addPlayer(player, seat)
-            joined = {'update': 'player join', 'player': player, 'seat': seat}
+            seatid = int(param)
+            self.cash.add_player(nickname, seatid)
+            joined = {'update': 'player join', 'player': nickname,
+                      'seat': seatid}
             self.send_json(joined)
             return
         elif command == 'show':
@@ -226,48 +227,47 @@ class Adapter:
             return
 
         # Actions that DO require registration
-        nickname = player
-        seat, player_object = self.cash.lookup_player(nickname)
+        seat, player = self.cash.lookup_player(nickname)
         if command == 'leave':
             self.leave(nickname)
         elif command == 'buyin':
             buyin = int(param)
-            if not self.cash.addMoney(player_object, buyin):
-                buyin = {'update': 'rebuy after hand', 'player': player,
+            if not self.cash.add_money(player, buyin):
+                buyin = {'update': 'rebuy after hand', 'player': nickname,
                          'buyin': buyin}
             else:
-                buyin = {'update': 'player buyin', 'player': player,
-                         'stack': player_object.stack, 'buyin': buyin}
+                buyin = {'update': 'player buyin', 'player': nickname,
+                         'stack': player.stack, 'buyin': buyin}
             self.send_json(buyin)
         elif command == 'sitin':
-            self.cash.sitIn(player)
-            sitin = {'update': 'player sitin', 'player': player}
+            self.cash.sit_in(player)
+            sitin = {'update': 'player sitin', 'player': nickname}
             self.send_json(sitin)
         elif command == 'sitout':
             # sitting out should always happen before the action itself
-            sitout = {'update': 'player sitout', 'player': player}
+            sitout = {'update': 'player sitout', 'player': nickname}
             self.send_json(sitout)
-            self.cash.sitOut(player)
-            self.handler.update(player, (script.Action.SitOut,))
+            self.cash.sit_out(player)
+            self.handler.update(nickname, (script.Action.SIT_OUT,))
         elif command == 'autopost':
             self.cash.setAutopost(player, True)
-            self.handler.update(player, (script.Action.AutopostBlinds,))
+            self.handler.update(nickname, (script.Action.AUTOPOST_BLINDS,))
         elif command == 'postsb':
-            self.handler.update(player, (script.Action.PostSB,))
+            self.handler.update(nickname, (script.Action.POST_SB,))
         elif command == 'postbb':
-            self.handler.update(player, (script.Action.PostBB,))
+            self.handler.update(nickname, (script.Action.POST_BB,))
         elif command == 'postsbbb':
-            self.handler.update(player, (script.Action.PostSBBB,))
+            self.handler.update(nickname, (script.Action.POST_SB_BB,))
         elif command == 'call':
-            self.handler.update(player, (script.Action.Call,))
+            self.handler.update(nickname, (script.Action.CALL,))
         elif command == 'check':
-            self.handler.update(player, (script.Action.Check,))
+            self.handler.update(nickname, (script.Action.CHECK,))
         elif command == 'fold':
-            self.handler.update(player, (script.Action.Fold,))
+            self.handler.update(nickname, (script.Action.FOLD,))
         elif command == 'bet':
-            self.handler.update(player, (script.Action.Bet, int(param)))
+            self.handler.update(nickname, (script.Action.BET, int(param)))
         elif command == 'raise':
-            self.handler.update(player, (script.Action.Raise, int(param)))
+            self.handler.update(nickname, (script.Action.RAISE, int(param)))
 
     def send_json(self, notation):
         self.prot.msg(self.chan, json.dumps(notation))
