@@ -27,7 +27,7 @@ class Action:
     WAIT_BB =     13
     AUTOPOST_BLINDS = 14
 
-    actionRepr = {
+    action_to_repr = {
         SIT_IN:       'sitin',
         SIT_OUT:      'sitout',
         POST_SB:      'postsb',
@@ -43,6 +43,23 @@ class Action:
         LEAVE_SEAT:   'leave',
         WAIT_BB:      'waitbb',
         AUTOPOST_BLINDS: 'autopost'
+    }
+    repr_to_action = {
+        'sitin':    SIT_IN,
+        'sitout':   SIT_OUT,
+        'postsb':   POST_SB,
+        'postbb':   POST_BB,
+        'postsbbb': POST_SB_BB,
+        'postante': POST_ANTE,
+        'fold':     FOLD,
+        'call':     CALL,
+        'check':    CHECK,
+        'bet':      BET,  
+        'raise':    RAISE,
+        'allin':    ALL_IN,
+        'leave':    LEAVE_SEAT,
+        'waitbb':   WAIT_BB,
+        'autopost': AUTOPOST_BLINDS
     }
 
     """actionRepr = {
@@ -81,12 +98,12 @@ class Action:
         for a in self.actions:
             if a[0] == actName:
                 return a
-        raise KeyError(Action.actionRepr[actName])
+        raise KeyError(Action.action_to_repr[actName])
 
     def notation(self):
         actdict = {}
         for act in self.actions:
-            actName = Action.actionRepr[act[0]]
+            actName = Action.action_to_repr[act[0]]
             actdict[actName] = act[1:]
         notat = {'player': self.player.nickname, 'actions': actdict}
         return notat
