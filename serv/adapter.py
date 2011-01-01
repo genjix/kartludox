@@ -116,39 +116,6 @@ class Adapter:
         self.cash.register_handler(self.handler)
         self.cash.startup_delay_time = 0
 
-        ###
-        if debug_oneman:
-            self.cash.addPlayer('a', 0)
-            self.cash.addPlayer('b', 1)
-            self.cash.addPlayer('c', 2)
-            self.cash.addPlayer('d', 3)
-            self.cash.addMoney('a', 5000)
-            self.cash.addMoney('b', 5000)
-            self.cash.addMoney('c', 6000)
-            self.cash.addMoney('d', 8000)
-            self.cash.sitIn('a')
-            self.cash.sitIn('b')
-            self.cash.sitIn('c')
-            self.cash.sitIn('d')
-            self.cash.setAutopost('a', True)
-            self.cash.setAutopost('b', True)
-            self.cash.setAutopost('c', True)
-            self.cash.setAutopost('d', True)
-
-    def debug_strip(self, message):
-        message = message.split(' ')
-        command = message[0]
-        if len(message) > 1:
-            player = message[1]
-            if len(message) > 2:
-                param = message[2]
-            else:
-                param = None
-        else:
-            player = None
-            param = None
-        return player, command, param
-
     def strip_message(self, user, message):
         player = user
         try:
