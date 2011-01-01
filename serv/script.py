@@ -1,4 +1,8 @@
+#import random as prng
+# Truly random number source
+#random = prng.SystemRandom()
 import random
+
 import table
 import rotator as rotator_m
 import rotator2
@@ -195,11 +199,15 @@ class BlindsEnforcer:
         if player.sitting_out:
             return False
 
-        # Non-blinds player has already paid blinds
-        if (self.blind_state == Action.POST_SB_BB and
-            player.paid_state == player.PAID_SB_BB):
-            self.active_players.append(player)
-            return False
+        if self.blind_state == Action.POST_SB_BB:
+            # Sometimes new players can sit between former BB
+            # and old SB. So we give the BB an upgrade
+            if player.paid_state == player.PAID_BB:
+                player.paid_state = player.PAID_SB_BB
+            # Non-blinds player has already paid blinds
+            if player.paid_state == player.PAID_SB_BB:
+                self.active_players.append(player)
+                return False
 
         return True
 
