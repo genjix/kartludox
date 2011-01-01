@@ -78,6 +78,22 @@ class Handler:
                           'message': 'Invalid action specified.'}
             self.send_json(invalidact)
             return
+        # Check that passed argument is a valid size if it exists
+        selected = self.current_action.find(response[0])
+        if len(selected) == 3:   # actname, minsize, maxsize
+            assert(len(response) > 1)
+            if response[1] < selected[1]:
+                toosmall = {'error': 'invalid small arg',
+                            'message': 'Argument size is too small.',
+                            'min': selected[1], 'arg': response[1]}
+                self.send_json(toosmall)
+                return
+            elif response[1] > selected[2]:
+                toobig = {'error': 'invalid big arg',
+                          'message': 'Argument size is too big.',
+                          'min': selected[2], 'arg': response[1]}
+                self.send_json(toobig)
+                return
         try:
             self.current_action = self.actIter.send(response)
             # handle cards dealt .etc here

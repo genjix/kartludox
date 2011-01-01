@@ -98,7 +98,7 @@ class Action:
     def action_names(self):
         return [a[0] for a in self.actions]
 
-    def findAction(self, actName):
+    def find(self, actName):
         for a in self.actions:
             if a[0] == actName:
                 return a

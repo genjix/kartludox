@@ -15,7 +15,6 @@ REQUEST: PKAce or other to package deps for testers on windows.
 TODO: posted sb from POST_SB_BB don't go anywhere! award them to someone! :p
 TODO: wait for BB
 TODO: timebank
-BUG: IllegalRaise should not crash the game.
 
 tab show hide/panel. focus on notes.
 
