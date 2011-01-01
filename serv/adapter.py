@@ -120,6 +120,15 @@ class Handler:
     def send_json(self, notation):
         self.adapter.send_json(notation)
 
+class NoParameter(Exception):
+    def __init__(self, nickname, command):
+        self.nickname = nickname
+        self.command = command
+    def notation(self):
+        return {'command': self.command, 'player': self.nickname}
+    def __str__(self):
+        return "Command '%s' requires an argument"
+
 class Adapter:
     def __init__(self, prot, chan):
         reload(script)
@@ -190,6 +199,8 @@ class Adapter:
     def run_cmd(self, nickname, command, param):
         # Actions not requiring table registration
         if command == 'join':
+            if param is None:
+                raise NoParameter(nickname, command)
             seatid = int(param)
             self.cash.add_player(nickname, seatid)
             joined = {'update': 'player join', 'player': nickname,
@@ -205,6 +216,8 @@ class Adapter:
         if command == 'leave':
             self.leave(nickname)
         elif command == 'buyin':
+            if param is None:
+                raise NoParameter(nickname, command)
             buyin = int(param)
             if not self.cash.add_money(player, buyin):
                 buyin = {'update': 'rebuy after hand', 'player': nickname,
@@ -239,8 +252,12 @@ class Adapter:
         elif command == 'fold':
             self.handler.update(nickname, (script.Action.FOLD,))
         elif command == 'bet':
+            if param is None:
+                raise NoParameter(nickname, command)
             self.handler.update(nickname, (script.Action.BET, int(param)))
         elif command == 'raise':
+            if param is None:
+                raise NoParameter(nickname, command)
             self.handler.update(nickname, (script.Action.RAISE, int(param)))
 
     def send_json(self, notation):

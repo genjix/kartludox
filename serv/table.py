@@ -96,7 +96,7 @@ class Table:
             self.nickname = nickname
             self.seatid = seatid
         def notation(self):
-            return {'nickname': self.nickname, 'seatid': self.seatid}
+            return {'player': self.nickname, 'seatid': self.seatid}
         def __str__(self):
             return 'Invalid seat ID %d'%self.seatid
 
@@ -106,7 +106,7 @@ class Table:
             self.other_nickname = other_nickname
             self.seatid = seat
         def notation(self):
-            return {'nickname': self.nickname, 'seatid': seatid,
+            return {'player': self.nickname, 'seatid': seatid,
                     'other nickname': self.other_nickname}
         def __str__(self):
             return 'Internal Error: %s seated at seat %d claimed by %s'% \
@@ -118,8 +118,8 @@ class Table:
             self.seatid = seatid
             self.other_nickname = other_nickname
         def notation(self):
-            return {'seatid': self.seatid, 'nickname': self.nickname,
-                    'other nickname': self.other_nickname}
+            return {'seatid': self.seatid, 'player': self.nickname,
+                    'other player': self.other_nickname}
         def __str__(self):
             return "Seat %d already taken by player '%s'"%(self.seatid,
                                                            self.other_nickname)
@@ -128,7 +128,7 @@ class Table:
         def __init__(self, nickname):
             self.nickname = nickname
         def notation(self):
-            return {'nickname': self.nickname}
+            return {'player': self.nickname}
         def __str__(self):
             return "No such nickname '%s'"%self.nickname
 
@@ -138,7 +138,7 @@ class Table:
             self.amount = amount
             self.stack_size = stack_size
         def notation(self):
-            return {'nickname': self.nickname, 'amount': self.amount,
+            return {'player': self.nickname, 'amount': self.amount,
                     'stacksize': self.stack_size}
         def __str__(self):
             return 'Negative %d to stack size %d is illegal'%(self.amount,
@@ -148,7 +148,7 @@ class Table:
         def __init__(self, nickname):
             self.nickname = nickname
         def notation(self):
-            return {'nickname': self.nickname}
+            return {'player': self.nickname}
         def __str__(self):
             return "Cannot seat player '%s' with zero stack size"%\
                 self.nickname
@@ -159,7 +159,7 @@ class Table:
             self.amount = amount
             self.minimum = minimum
         def notation(self):
-            return {'nickname': self.nickname, 'amount': self.amount,
+            return {'player': self.nickname, 'amount': self.amount,
                     'minimum': self.minimum}
         def __str__(self):
             tc = convFact
