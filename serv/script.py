@@ -486,7 +486,7 @@ class Script:
                     yield UncalledBet(player, unpot.size)
                     # Awards it back to them.
                     assert(bettor.stack == bettor.parent.stack)
-                bettor.darkbet -= unpot.size
+                bettor.carry_bet -= unpot.size
                 bettor.stack += unpot.size
 
             street = street_statemachine.current_street

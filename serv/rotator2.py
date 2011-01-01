@@ -26,6 +26,8 @@ class BettingPlayer(object):
     def __init__(self):
         # The current bet placed.
         self.bet = 0
+        # Bets from previous streets
+        self.carry_bet = 0
         # Dark pool bets are not counted as part of the current bet
         # e.g antes
         self.darkbet = 0
@@ -46,8 +48,12 @@ class BettingPlayer(object):
         """Called at the beginning of each new betting street.
         Places the current bet in the darkpool and resets itself."""
         self.begin_stack = self.parent.stack
-        self.darkbet += self.bet
+        self.carry_bet += self.bet
         self.bet = 0
+
+    @property
+    def total_placed_bets(self):
+        return self.bet + self.carry_bet
 
     def pay(self, charge):
         assert(not charge < 0)

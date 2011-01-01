@@ -11,6 +11,8 @@ app remember prev settings
 WANT: panels move the main view.
 WANT: move slider up to avoid misclicking raise.
 
+REQUEST: PKAce or other to package deps for testers on windows.
+TODO: posted sb from POST_SB_BB don't go anywhere! award them to someone! :p
 TODO: wait for BB
 TODO: timebank
 TODO: boilerplate yield for script. ability to flatten returned generators (how about pre/post code tho?). itertools.chain(...)

@@ -5,7 +5,8 @@ class Pots:
         """Used for tallying bets off relative to each other."""
         def __init__(self, bettor):
             self.bettor = bettor
-            self.total_bet = bettor.bet + bettor.darkbet
+            # antes and posted SB's from POST_SB_BB dont count as placed bets
+            self.total_bet = bettor.total_placed_bets
         def __repr__(self):
             return '%s (%d)'%(self.bettor.parent.nickname, self.total_bet)
 
