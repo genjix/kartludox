@@ -4,9 +4,6 @@ import json
 import table
 import script
 
-debug_oneman = False
-debug_nick = 'zipio'
-
 class Schedule:
     def __init__(self, send_json):
         self.started = False
@@ -50,10 +47,7 @@ class Handler:
         players = cardsDealt.players
         for player in players:
             c = cardsDealt.get_player_hand(player)
-            if not debug_oneman:
-                self.adapter.privmsg(player.nickname, {'cards': c})
-            else:
-                self.adapter.privmsg(debug_nick, {'cards': c})
+            self.adapter.privmsg(player.nickname, {'cards': c})
 
     def display_action(self):
         if isinstance(self.current_action, script.CardsDealt):
@@ -167,10 +161,7 @@ class Adapter:
     def msg(self, user, message):
         print('%s: %s'%(user, message))
 
-        if debug_oneman:
-            player, command, param = self.debug_strip(message)
-        else:
-            player, command, param = self.strip_message(user, message)
+        player, command, param = self.strip_message(user, message)
 
         if self.cash is not None:
             print self.cash
