@@ -15,8 +15,6 @@ REQUEST: PKAce or other to package deps for testers on windows.
 TODO: posted sb from POST_SB_BB don't go anywhere! award them to someone! :p
 TODO: wait for BB
 TODO: timebank
-TODO: boilerplate yield for script. ability to flatten returned generators (how about pre/post code tho?). itertools.chain(...)
-BUG: uncalled bet amount, not totally accurate always (or is it?... check this.)
 BUG: IllegalRaise should not crash the game.
 
 tab show hide/panel. focus on notes.
