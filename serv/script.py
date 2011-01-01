@@ -478,9 +478,15 @@ class Script:
                 bettor = unpot.contestors[0]
                 player = bettor.parent
                 if len(pots) == 1:  # only one uncontested_pot
-                    yield CollectedMoney(player, unpot.size)
+                    total_pot = unpot.size
+                    for bettor in bettors:
+                        total_pot += bettor.darkbet
+                        # Not that this matters...
+                        bettor.darkbet = 0
+                    yield CollectedMoney(player, total_pot)
                     street_statemachine.finish()
-                    pots.pots.remove(unpot)
+                    #pots.pots.remove(unpot)
+                    pots = None
                 else:
                     assert(not uncontested_pots)
                     yield UncalledBet(player, unpot.size)
@@ -497,6 +503,7 @@ class Script:
             elif street == street_statemachine.River:
                 response = yield RiverDealt(self.board, pots)
 
+        # not None and not []
         if pots:
             first_pot = pots.pots[0]
             all_contestors = first_pot.contestors
@@ -508,7 +515,15 @@ class Script:
             rankings = award_hands.calculate_rankings()
             response = yield ShowRankings(rankings)
             winners = award_hands.calculate_winners()
+            # temporary until code clean up
+            total_dark = 0
+            for bettor in bettors:
+                total_dark += bettor.darkbet
+                # Not that this matters...
+                bettor.darkbet = 0
             for player, potsize in winners:
+                potsize += total_dark
+                total_dark = 0
                 yield CollectedMoney(player, potsize)
                 player.stack += potsize
 

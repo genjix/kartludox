@@ -12,9 +12,9 @@ WANT: panels move the main view.
 WANT: move slider up to avoid misclicking raise.
 
 REQUEST: PKAce or other to package deps for testers on windows.
-TODO: posted sb from POST_SB_BB don't go anywhere! award them to someone! :p
 TODO: wait for BB
 TODO: timebank
+TODO: HUGE code cleanup. sweep sweep sweep.
 
 tab show hide/panel. focus on notes.
 

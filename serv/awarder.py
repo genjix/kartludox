@@ -114,8 +114,10 @@ if __name__ == '__main__':
             def __init__(self, nickname, bet, active):
                 self.parent = self.P(nickname)
                 self.bet = bet
-                self.darkbet = 0
                 self.active = active
+            @property
+            def total_placed_bets(self):
+                return self.bet
             def __repr__(self):
                 return '%s(%d)'%(self.parent.nickname, self.bet)
 
