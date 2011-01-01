@@ -531,12 +531,12 @@ class TableWindow(QMainWindow):
             peract = 'calls'
         elif 'check' in msg:
             peract = 'checks'
-        elif 'postsb' in msg:
-            peract = 'posts small blind'
         elif 'postbb' in msg:
             peract = 'posts big blind'
         elif 'postsbbb' in msg:
             peract = 'posts small and big blind'
+        elif 'postsb' in msg:
+            peract = 'posts small blind'
         elif 'fold' in msg:
             peract = 'folds'
         elif ('show' in msg or 'join' in msg or 'buyin' in msg):
