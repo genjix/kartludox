@@ -82,7 +82,7 @@ class Adapter(irc.IRCClient):
                     self.window.set_table(dealmsg)
                 elif 'error' in dealmsg:
                     self.window.report_error(dealmsg)
-                elif 'status' in dealmsg:
+                elif 'update' in dealmsg:
                     self.window.report_status(dealmsg)
                 elif 'actions' in dealmsg:
                     self.window.allow_actions(dealmsg)
@@ -250,6 +250,8 @@ class TableWindow(QMainWindow):
     def raising_range(self):
         if 'raise' in self.current_actions:
             return self.current_actions['raise']
+        elif 'bet' in self.current_actions:
+            return self.current_actions['bet']
         return 1, 1
 
     def raise_box_changed(self, value):
@@ -274,7 +276,10 @@ class TableWindow(QMainWindow):
         value = i*interval + ra
         raise_text = '%.0f'%value
         self.raise_edit_box.setText(raise_text)
-        self.raise_button.setText('Raise %s'%raise_text)
+        if 'bet' in self.current_actions:
+            self.raise_button.setText('Bet %s'%raise_text)
+        else:
+            self.raise_button.setText('Raise %s'%raise_text)
 
     def blank_cards(self):
         self.cards[0].setPixmap(self.blank_card)
@@ -389,10 +394,13 @@ class TableWindow(QMainWindow):
         self.add_line('<font color="red">%s: %s</font>'%(error, errmsg))
 
     def report_status(self, msg):
-        status = msg['status']
-        stmsg = msg['message']
+        status = msg['update']
+        if 'message' in msg:
+            stmsg = msg['message']
+        else:
+            stmsg = ''
         self.add_line('<b>%s: %s</b>'%(status, stmsg))
-        if status == 'newhand':
+        if status == 'new hand':
             self.new_hand = True
             self.blank_cards()
             self.hide_actions()
@@ -424,25 +432,31 @@ class TableWindow(QMainWindow):
                 self.call_button.show()
             if 'raise' in actions:
                 raise_range = actions['raise']
-                raise_text = str(raise_range[0])
-                self.raise_button.setText('Raise %s'%raise_text)
-                self.raise_edit_box.setText(raise_text)
-                self.raise_button.show()
-                self.raise_edit_box.show()
-                self.raise_slider.show()
+                self.setup_raise(raise_range, False)
             elif 'bet' in actions:
-                ###
-                pass
+                bet_range = actions['bet']
+                self.setup_raise(bet_range, True)
         self.current_actions = actions
+
+    def setup_raise(self, raise_range, doing_betting):
+        raise_text = str(raise_range[0])
+        if doing_betting:
+            self.raise_button.setText('Bet %s'%raise_text)
+        else:
+            self.raise_button.setText('Raise %s'%raise_text)
+        self.raise_edit_box.setText(raise_text)
+        self.raise_button.show()
+        self.raise_edit_box.show()
+        self.raise_slider.show()
 
     def fold_clicked(self):
         acts = self.current_actions
-        if 'postsb' in acts:
-            self.send_command('postsb')
-        elif 'postbb' in acts:
+        if 'postbb' in acts:
             self.send_command('postbb')
         elif 'postsbbb' in acts:
             self.send_command('postsbbb')
+        elif 'postsb' in acts:
+            self.send_command('postsb')
         elif 'fold' in acts:
             self.send_command('fold')
         else:
@@ -464,6 +478,13 @@ class TableWindow(QMainWindow):
                 self.send_command('raise %d'%acts['raise'][0])
             else:
                 self.send_command('raise %d'%bet)
+        elif 'bet' in acts:
+            try:
+                bet = int(self.raise_edit_box.text())
+            except ValueError:
+                self.send_command('bet %d'%acts['bet'][0])
+            else:
+                self.send_command('bet %d'%bet)
 
     def hide_actions(self):
         self.fold_button.hide()
@@ -481,6 +502,8 @@ class TableWindow(QMainWindow):
         self.action_view.setHtml(text)
         sb = self.action_view.verticalScrollBar()
         sb.setSliderPosition(sb.maximum())
+        end_cursor = QTextCursor(self.action_view.document())
+        end_cursor.movePosition(QTextCursor.End)
 
     def show_hand(self, msg):
         hand = msg['cards']
@@ -527,6 +550,10 @@ class TableWindow(QMainWindow):
             msg = msg.split(' ')
             msg = msg[0], int(msg[1])
             peract = 'raises to %d'%msg[1]
+        elif 'bet' in msg:
+            msg = msg.split(' ')
+            msg = msg[0], int(msg[1])
+            peract = 'bets to %d'%msg[1]
         elif 'call' in msg:
             peract = 'calls'
         elif 'check' in msg:
