@@ -78,7 +78,7 @@ class Adapter(irc.IRCClient):
         if channel == self.channel:
             if dealername == user:
                 dealmsg = json.loads(msg)
-                if 'table' in dealmsg:
+                if 'seats' in dealmsg:
                     self.window.set_table(dealmsg)
                 elif 'error' in dealmsg:
                     self.window.report_error(dealmsg)
@@ -92,9 +92,9 @@ class Adapter(irc.IRCClient):
                     self.window.show_turn(dealmsg)
                 elif 'river' in dealmsg:
                     self.window.show_river(dealmsg)
-                elif 'showhands' in dealmsg:
+                elif 'show hands' in dealmsg:
                     self.window.show_hands(dealmsg)
-                elif 'showrankings' in dealmsg:
+                elif 'show rankings' in dealmsg:
                     self.window.show_rankings(dealmsg)
                 elif 'collected' in dealmsg:
                     self.window.show_collected(dealmsg)
@@ -357,10 +357,10 @@ class TableWindow(QMainWindow):
             self.connected = True
         players = []
         dealer = msg['dealer']
-        for i, seat in enumerate(msg['table']):
+        for i, seat in enumerate(msg['seats']):
             if seat is not None:
                 playname = seat['player']
-                if seat['sittingout']:
+                if seat['sitting out']:
                     playname = '/%s/'%playname
                 if dealer == i:
                     playname = '* %s'%playname
@@ -369,16 +369,16 @@ class TableWindow(QMainWindow):
                 players.append(treeitem)
         if self.new_hand:
             self.new_hand = False
-            for i, seat in enumerate(msg['table']):
+            for i, seat in enumerate(msg['seats']):
                 if seat is None:
                     self.add_line('Seat %d: -'%i)
                 else:
                     stack = seat['stack']
                     playname = seat['player']
-                    if seat['sittingout']:
+                    if seat['sitting out']:
                         playname = '/%s/'%playname
                     self.add_line('Seat %d: %s (%d BTC)'%(i, playname, stack))
-            dealname = msg['table'][msg['dealer']]['player']
+            dealname = msg['seats'][msg['dealer']]['player']
             self.add_line('%s is the dealer'%dealname)
         self.player_list.clear()
         self.player_list.addTopLevelItems(players)
@@ -560,13 +560,13 @@ class TableWindow(QMainWindow):
 
     def show_hands(self, msg):
         c = self.get_html_card
-        for contest in msg['showhands']:
+        for contest in msg['show hands']:
             player = contest['player']
             cards = contest['cards']
             self.add_line('%s shows %s %s'%(player, c(cards[0]), c(cards[1])))
 
     def show_rankings(self, msg):
-        for contest in msg['showrankings']:
+        for contest in msg['show rankings']:
             player = contest['player']
             handname = contest['handname']
             self.add_line('%s has %s'%(player, handname))
