@@ -2,9 +2,40 @@ Forums:
 http://poker.bitcoinvegas.com/
 
 Chatroom:
-http://pastecoin.com/cgi-bin/irc.cgi
 (for IRC users irc://irc.freenode.org/pokerface)
 
 Website:
 http://www.kartludox.org/
 
+=========================
+Running the server
+=========================
+
+Only tested under Ubuntu. Install twisted-python, pypoker-eval.
+
+  $ cd srv/
+  $ python irc.py
+
+Join irc://irc.freenode.org/pangaea to verify it's working. The channel & server can be changed by editing irc.py
+
+Run the dummy_client to test.
+
+  $ python dummy_client.py
+
+Once connected, your nickname will appear in the top right. Commands are prefixed with !. To start you will want to !join, then !buyin 10000 and !sitin. After another player sits in (you can run 2 instances of dummy_client) then a new game will begin.
+
+Useful commands:
+
+  !show
+    Display table and who's seated.
+  !postsb
+    Post the small blind.
+  !postbb
+  !fold
+  !call
+  !raise 300
+    Must be within the valid range displayed.
+  !sitout
+    Sit out.
+  !buyin 5000
+    Add 50 big blinds to your stack.
