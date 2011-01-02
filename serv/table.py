@@ -1,4 +1,4 @@
-import random
+import urandom as random
 import time
 import script
 

@@ -139,7 +139,7 @@ class Adapter:
         self.cash.register_scheduler(Schedule(self.send_json))
         self.handler = Handler(self)
         self.cash.register_handler(self.handler)
-        self.cash.startup_delay_time = 0
+        #self.cash.startup_delay_time = 0
 
     def strip_message(self, user, message):
         player = user

@@ -1,7 +1,4 @@
-#import random as prng
-# Truly random number source
-#random = prng.SystemRandom()
-import random
+import urandom as random
 
 import table
 import rotator as rotator_m
