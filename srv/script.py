@@ -62,23 +62,6 @@ class Action:
         'autopost': AUTOPOST_BLINDS
     }
 
-    """actionRepr = {
-        SIT_IN:      'Sit In',
-        SIT_OUT:     'Sit Out',
-        POST_SB:     'Post Small-Blind',
-        POST_BB:     'Post Big-Blind',
-        POST_SB_BB:   'Post Small & Big Blinds',
-        POST_ANTE:   'Post Ante',
-        FOLD:       'Fold',
-        CALL:       'Call',
-        CHECK:      'Check',
-        BET:        'Bet',
-        RAISE:      'Raise',
-        ALL_IN:      'Go All In',
-        LEAVE_SEAT:  'Leave Seat',
-        WAIT_BB:     'Wait for BB'
-    }"""
-
     def __init__(self, player):
         self.player = player
         self.actions = []
@@ -109,9 +92,8 @@ class Action:
         return notat
 
 class CardsDealt:
-    def __init__(self, players, get_player_hand):
+    def __init__(self, players):
         self.players = players
-        self.get_player_hand = get_player_hand
 
 class CollectedMoney:
     def __init__(self, player, amount):
@@ -148,13 +130,12 @@ class RiverDealt(StreetDealt):
         return self.notationBase('river')
 
 class ShowHands:
-    def __init__(self, players, gethand):
+    def __init__(self, players):
         self.players = players
-        self.gethand = gethand
     def notation(self):
         cards = []
         for p in self.players:
-            cards.append({'player': p.nickname, 'cards': self.gethand(p)})
+            cards.append({'player': p.nickname, 'cards': p.cards})
         return {'show hands': cards}
 
 class ShowDown:
@@ -277,22 +258,15 @@ class CardDeck:
         suits = "hdcs"
         self.deck = [rank + suit for rank in ranks for suit in suits]
         random.shuffle(self.deck)
-        # Player hands are stored here in a map for added security
-        # since this object is created on the heap.
-        self.player_hands = {}
 
     def new_card(self):
         return self.deck.pop()
 
     def deal_hands(self, players):
-        for p in players:
-            hand = self.new_card(), self.new_card()
-            self.player_hands[p] = hand
+        for player in players:
+            player.cards = self.new_card(), self.new_card()
 
-    def get_player_hand(self, player):
-        return self.player_hands[player]
-
-class StreetStateMachine2:
+class StreetStateMachine:
     Preflop = 0
     Flop = 1
     Turn = 2
@@ -415,10 +389,10 @@ class Script:
         #------------------
         card_deck = CardDeck()
         card_deck.deal_hands(active_players)
-        yield CardsDealt(active_players, card_deck.get_player_hand)
+        yield CardsDealt(active_players)
 
-        street_statemachine = StreetStateMachine2(active_players, self.board,
-                                                  card_deck.new_card)
+        street_statemachine = StreetStateMachine(active_players, self.board,
+                                                 card_deck.new_card)
 
         pots = None
         while not street_statemachine.finished():
@@ -504,10 +478,9 @@ class Script:
             first_pot = pots.pots[0]
             all_contestors = first_pot.contestors
             invested_players = [b.parent for b in all_contestors]
-            gethand = card_deck.get_player_hand
-            response = yield ShowHands(invested_players, gethand)
-            award_hands = awarder.AwardHands(invested_players, gethand,
-                                             pots, self.board)
+            response = yield ShowHands(invested_players)
+            award_hands = awarder.AwardHands(invested_players, pots,
+                                             self.board)
             rankings = award_hands.calculate_rankings()
             response = yield ShowRankings(rankings)
             winners = award_hands.calculate_winners()

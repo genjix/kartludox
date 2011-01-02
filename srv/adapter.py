@@ -46,7 +46,7 @@ class Handler:
     def privmsg_hands(self, cardsDealt):
         players = cardsDealt.players
         for player in players:
-            c = cardsDealt.get_player_hand(player)
+            c = player.cards
             self.adapter.privmsg(player.nickname, {'cards': c})
 
     def display_action(self):

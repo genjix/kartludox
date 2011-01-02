@@ -82,9 +82,8 @@ def hand_name(handrank):
     return handrank[1][0]
 
 class AwardHands:
-    def __init__(self, invested_players, gethand, pots, board):
+    def __init__(self, invested_players, pots, board):
         self.players = invested_players
-        self.gethand = gethand
         self.pots = pots
         self.board = board
         self.pokereval = pokereval.PokerEval()
@@ -92,7 +91,7 @@ class AwardHands:
 
     def calculate_rankings(self):
         for player in self.players:
-            cards = list(self.gethand(player)) + self.board
+            cards = list(player.cards) + self.board
             self.rankings[player] = self.pokereval.best('hi', cards)
         return self.rankings
 
