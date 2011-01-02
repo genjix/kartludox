@@ -1,3 +1,35 @@
+REQUEST: PKAce or other to package deps for testers on windows.
+TODO: wait for BB
+TODO: timebank
+TODO: HUGE code cleanup. sweep sweep sweep.
+    - make nicer the core runloop like the posting blinds is.
+    - make sure pot sizes are calculated correctly
+    - and that CollectedMoney(...) and UncalledBet(...) boilerplates
+       have lots of core reuse!
+    - comment everything a ton.
+    - reorganise into logical directories that reflect code??? (maybe not)
+    
+        protocol/
+            irc.py
+        nolimit/
+            adapter.py
+            script.py
+        utils/
+            urandom.py
+            config.py   <<< loads settings
+        main.py     <<< creates irc, and attaches adapter
+
+TODO: split off components from script.py ... write unit tests for them.
+TODO: ... followed by lots and lots of testing.
+
+
+
+
+
+---------------------------
+OLD STUFF
+---------------------------
+
 art/branding using manga characters = cool.
 
 shade other buttons when toggle fold/call/raise
@@ -10,11 +42,6 @@ app remember prev settings
 
 WANT: panels move the main view.
 WANT: move slider up to avoid misclicking raise.
-
-REQUEST: PKAce or other to package deps for testers on windows.
-TODO: wait for BB
-TODO: timebank
-TODO: HUGE code cleanup. sweep sweep sweep.
 
 tab show hide/panel. focus on notes.
 
