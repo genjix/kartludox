@@ -1,8 +1,7 @@
 import urandom as random
 
 import table
-import rotator as rotator_m
-import rotator2
+import rotator as rotator_control
 import awarder
 
 class Action:
@@ -320,9 +319,9 @@ class StreetStateMachine2:
     def create_rotator(self, bb):
         if self.current_street == self.Preflop:
             preflop_players = self.players[2:] + self.players[:2]
-            rotator = rotator2.Rotator(preflop_players, bb, bb)
+            rotator = rotator_control.Rotator(preflop_players, bb, bb)
         else:
-            rotator = rotator2.Rotator(self.players, 0, bb)
+            rotator = rotator_control.Rotator(self.players, 0, bb)
         return rotator
 
     def next(self):
@@ -393,7 +392,7 @@ class Script:
         active_seats = self.active_seats()
         # Set up bet holding objects
         for player in active_seats:
-            bettor = rotator2.BettingPlayer()
+            bettor = rotator_control.BettingPlayer()
             player.link(bettor)
 
         self.small_blind = self.table.sb
